@@ -1,3 +1,7 @@
+const createNextIntlPlugin = require('next-intl/plugin')
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -9,6 +13,8 @@ const nextConfig = {
       },
     ],
   },
+  // Transpile Three.js for proper ESM handling
+  transpilePackages: ['three'],
   // Enable experimental features for better performance
   experimental: {
     // Enable server actions
@@ -16,6 +22,15 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000'],
     },
   },
+  // Webpack config for GLSL shaders and 3D assets
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.(glsl|vs|fs|vert|frag)$/,
+      exclude: /node_modules/,
+      use: ['raw-loader'],
+    })
+    return config
+  },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

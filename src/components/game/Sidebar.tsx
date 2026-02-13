@@ -2,20 +2,22 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 const menuItems = [
-  { href: '/game/overview', label: 'Overview' },
-  { href: '/game/resources', label: 'Resources' },
-  { href: '/game/facilities', label: 'Facilities' },
-  { href: '/game/research', label: 'Research' },
-  { href: '/game/shipyard', label: 'Shipyard' },
-  { href: '/game/defense', label: 'Defense' },
-  { href: '/game/fleet', label: 'Fleet' },
-  { href: '/game/galaxy', label: 'Galaxy' },
-  { href: '/game/messages', label: 'Messages' },
-  { href: '/game/alliance', label: 'Alliance' },
-  { href: '/game/highscore', label: 'Highscore' },
+  { href: '/game/overview', key: 'overview' },
+  { href: '/game/resources', key: 'resources' },
+  { href: '/game/facilities', key: 'facilities' },
+  { href: '/game/research', key: 'research' },
+  { href: '/game/shipyard', key: 'shipyard' },
+  { href: '/game/defense', key: 'defense' },
+  { href: '/game/fleet', key: 'fleet' },
+  { href: '/game/galaxy', key: 'galaxy' },
+  { href: '/game/messages', key: 'messages' },
+  { href: '/game/alliance', key: 'alliance' },
+  { href: '/game/highscore', key: 'highscore' },
 ]
 
 function getPlanetImage(planetType: string = 'normal', position: number = 1): string {
@@ -29,6 +31,8 @@ function getPlanetImage(planetType: string = 'normal', position: number = 1): st
 export function Sidebar() {
   const pathname = usePathname()
   const { planets, currentPlanet, selectPlanet, isSidebarOpen } = useGameStore()
+  const t = useTranslations('nav')
+  const tOverview = useTranslations('overview')
 
   if (!isSidebarOpen) return null
 
@@ -68,10 +72,10 @@ export function Sidebar() {
               [{currentPlanet.galaxy}:{currentPlanet.system}:{currentPlanet.position}]
             </p>
             <p className="text-ogame-text-muted text-xs mt-1">
-              Fields: {currentPlanet.fields_used}/{currentPlanet.fields_max}
+              {tOverview('fields')}: {currentPlanet.fields_used}/{currentPlanet.fields_max}
             </p>
             <p className="text-ogame-text-muted text-xs">
-              Temp: {currentPlanet.temp_min}°C to {currentPlanet.temp_max}°C
+              {tOverview('temperature')}: {currentPlanet.temp_min}°C - {currentPlanet.temp_max}°C
             </p>
           </div>
         </div>
@@ -93,7 +97,7 @@ export function Sidebar() {
                 }
               `}
             >
-              <span>{item.label}</span>
+              <span>{t(item.key)}</span>
             </Link>
           )
         })}
@@ -101,12 +105,15 @@ export function Sidebar() {
 
       {/* Footer links */}
       <div className="p-3 border-t border-ogame-border text-xs">
-        <div className="flex flex-col gap-1">
-          <Link href="/game/settings" className="text-ogame-text-muted hover:text-ogame-accent">
-            Settings
-          </Link>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Link href="/game/settings" className="text-ogame-text-muted hover:text-ogame-accent">
+              {t('settings')}
+            </Link>
+            <LanguageSwitcher />
+          </div>
           <Link href="/api-docs" className="text-ogame-text-muted hover:text-ogame-accent">
-            API Documentation
+            {t('apiDocs')}
           </Link>
         </div>
       </div>

@@ -1,48 +1,50 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { formatNumber } from '@/game/formulas'
 
-function getResourceIcon(name: string): string {
+function getResourceIcon(key: string): string {
   const icons: Record<string, string> = {
-    Metal: '/img/objects/buildings/metal_mine_micro.jpg',
-    Crystal: '/img/objects/buildings/crystal_mine_micro.jpg',
-    Deuterium: '/img/objects/buildings/deuterium_synthesizer_micro.jpg',
-    Energy: '/img/objects/buildings/solar_plant_micro.jpg',
-    DarkMatter: '/img/objects/buildings/alliance_depot_micro.jpg',
+    metal: '/img/objects/buildings/metal_mine_micro.jpg',
+    crystal: '/img/objects/buildings/crystal_mine_micro.jpg',
+    deuterium: '/img/objects/buildings/deuterium_synthesizer_micro.jpg',
+    energy: '/img/objects/buildings/solar_plant_micro.jpg',
+    darkMatter: '/img/objects/buildings/alliance_depot_micro.jpg',
   }
-  return icons[name] || icons.Metal
+  return icons[key] || icons.metal
 }
 
 export function ResourceBar() {
   const { currentPlanet, user } = useGameStore()
+  const t = useTranslations('resources')
 
   if (!currentPlanet) return null
 
   const resources = [
     {
-      name: 'Metal',
+      key: 'metal',
       value: currentPlanet.metal,
       max: currentPlanet.metal_max,
       perHour: currentPlanet.metal_per_hour,
       colorClass: 'resource-metal',
     },
     {
-      name: 'Crystal',
+      key: 'crystal',
       value: currentPlanet.crystal,
       max: currentPlanet.crystal_max,
       perHour: currentPlanet.crystal_per_hour,
       colorClass: 'resource-crystal',
     },
     {
-      name: 'Deuterium',
+      key: 'deuterium',
       value: currentPlanet.deuterium,
       max: currentPlanet.deuterium_max,
       perHour: currentPlanet.deuterium_per_hour,
       colorClass: 'resource-deuterium',
     },
     {
-      name: 'Energy',
+      key: 'energy',
       value: currentPlanet.energy_max - currentPlanet.energy_used,
       max: currentPlanet.energy_max,
       perHour: null,
@@ -56,10 +58,10 @@ export function ResourceBar() {
         {/* Resources */}
         <div className="flex items-center gap-6">
           {resources.map((resource) => (
-            <div key={resource.name} className="flex items-center gap-2">
+            <div key={resource.key} className="flex items-center gap-2" title={t(resource.key)}>
               <img
-                src={getResourceIcon(resource.name)}
-                alt={resource.name}
+                src={getResourceIcon(resource.key)}
+                alt={t(resource.key)}
                 className="w-5 h-5 rounded-sm object-cover"
               />
               <div className="flex flex-col">
@@ -85,10 +87,10 @@ export function ResourceBar() {
 
         {/* Dark Matter */}
         {user && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" title={t('darkMatter')}>
             <img
-              src={getResourceIcon('DarkMatter')}
-              alt="Dark Matter"
+              src={getResourceIcon('darkMatter')}
+              alt={t('darkMatter')}
               className="w-5 h-5 rounded-sm object-cover"
             />
             <span className="font-mono resource-dark-matter">
