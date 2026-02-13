@@ -402,17 +402,19 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          token: string
+          token_hash: string
           name: string
-          expires_at: string
+          abilities: Json
+          expires_at: string | null
           last_used_at: string | null
           created_at: string
         }
         Insert: {
           user_id: string
-          token: string
+          token_hash: string
           name: string
-          expires_at: string
+          abilities?: Json
+          expires_at?: string | null
         }
         Update: {
           last_used_at?: string

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { hashToken } from '@/lib/api/auth'
 
 // Use untyped client for API routes to avoid type conflicts
 const supabase = createClient(
@@ -48,13 +49,14 @@ export async function POST(request: NextRequest) {
 
     // Generate API token
     const token = crypto.randomUUID()
+    const tokenHash = await hashToken(token)
     const expiresAt = new Date()
     expiresAt.setDate(expiresAt.getDate() + 30) // 30 days expiry
 
-    // Store token
+    // Store hashed token
     await supabase.from('api_tokens').insert({
       user_id: authData.user.id,
-      token,
+      token_hash: tokenHash,
       name: 'API Access',
       expires_at: expiresAt.toISOString(),
     })

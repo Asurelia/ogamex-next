@@ -13,6 +13,17 @@ export interface AuthenticatedUser {
 }
 
 /**
+ * Hash a token using SHA-256
+ */
+export async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(token)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
  * Validate API token and return authenticated user
  */
 export async function validateApiToken(request: NextRequest): Promise<AuthenticatedUser | null> {
@@ -23,12 +34,13 @@ export async function validateApiToken(request: NextRequest): Promise<Authentica
   }
 
   const token = authHeader.slice(7)
+  const tokenHash = await hashToken(token)
 
-  // Check token in database
+  // Check hashed token in database
   const { data: tokenData } = await supabase
     .from('api_tokens')
-    .select('user_id, expires_at')
-    .eq('token', token)
+    .select('id, user_id, expires_at')
+    .eq('token_hash', tokenHash)
     .single()
 
   if (!tokenData) {
@@ -36,7 +48,7 @@ export async function validateApiToken(request: NextRequest): Promise<Authentica
   }
 
   // Check expiry
-  if (new Date(tokenData.expires_at) < new Date()) {
+  if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
     return null
   }
 
@@ -55,7 +67,7 @@ export async function validateApiToken(request: NextRequest): Promise<Authentica
   await supabase
     .from('api_tokens')
     .update({ last_used_at: new Date().toISOString() })
-    .eq('token', token)
+    .eq('id', tokenData.id)
 
   return user
 }
