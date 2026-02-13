@@ -7,9 +7,10 @@ import { calculateUnitCost, calculateUnitTime, formatNumber, formatDuration } fr
 import { SHIPS } from '@/game/constants'
 
 export default function ShipyardPage() {
-  const { currentPlanet } = useGameStore()
+  const { currentPlanet, updatePlanetResources } = useGameStore()
   const [amounts, setAmounts] = useState<Record<number, number>>({})
   const [loading, setLoading] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   if (!currentPlanet) {
     return <div className="text-ogame-text-muted">Loading...</div>
@@ -37,20 +38,27 @@ export default function ShipyardPage() {
     }
 
     setLoading(shipId)
+    setError(null)
+
     try {
       const supabase = getSupabaseClient()
 
       // Deduct resources
+      const newResources = {
+        metal: currentPlanet.metal - cost.metal,
+        crystal: currentPlanet.crystal - cost.crystal,
+        deuterium: currentPlanet.deuterium - cost.deuterium,
+      }
+
       const { error: updateError } = await supabase
         .from('planets')
-        .update({
-          metal: currentPlanet.metal - cost.metal,
-          crystal: currentPlanet.crystal - cost.crystal,
-          deuterium: currentPlanet.deuterium - cost.deuterium,
-        })
+        .update(newResources)
         .eq('id', currentPlanet.id)
 
       if (updateError) throw updateError
+
+      // Update local state immediately
+      updatePlanetResources(currentPlanet.id, newResources)
 
       // Calculate time per unit
       const timePerUnit = calculateUnitTime(
@@ -82,8 +90,10 @@ export default function ShipyardPage() {
 
       // Clear amount
       setAmounts({ ...amounts, [shipId]: 0 })
-    } catch (error) {
-      console.error('Failed to build ships:', error)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to build ships'
+      setError(message)
+      setTimeout(() => setError(null), 5000)
     } finally {
       setLoading(null)
     }
@@ -91,6 +101,13 @@ export default function ShipyardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Error display */}
+      {error && (
+        <div className="p-3 bg-red-900/50 border border-red-500 rounded-sm text-red-200">
+          {error}
+        </div>
+      )}
+
       {/* Page header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-ogame-text-header">Shipyard</h1>

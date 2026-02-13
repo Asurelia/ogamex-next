@@ -21,8 +21,9 @@ export function BuildingCard({
   naniteFactoryLevel,
   universeSpeed = 1,
 }: BuildingCardProps) {
-  const { currentPlanet, buildingQueue, setBuildingQueue } = useGameStore()
+  const { currentPlanet, buildingQueue, setBuildingQueue, updatePlanetResources } = useGameStore()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const nextLevel = currentLevel + 1
   const cost = calculateBuildingCost(building.id, nextLevel)
@@ -47,20 +48,27 @@ export function BuildingCard({
     if (!currentPlanet || !canAfford || isInQueue || queueFull) return
 
     setLoading(true)
+    setError(null)
+
     try {
       const supabase = getSupabaseClient()
 
       // Deduct resources
+      const newResources = {
+        metal: currentPlanet.metal - cost.metal,
+        crystal: currentPlanet.crystal - cost.crystal,
+        deuterium: currentPlanet.deuterium - cost.deuterium,
+      }
+
       const { error: updateError } = await supabase
         .from('planets')
-        .update({
-          metal: currentPlanet.metal - cost.metal,
-          crystal: currentPlanet.crystal - cost.crystal,
-          deuterium: currentPlanet.deuterium - cost.deuterium,
-        })
+        .update(newResources)
         .eq('id', currentPlanet.id)
 
       if (updateError) throw updateError
+
+      // Update local state immediately
+      updatePlanetResources(currentPlanet.id, newResources)
 
       // Add to queue
       const now = new Date()
@@ -86,8 +94,11 @@ export function BuildingCard({
       if (newQueueItem) {
         setBuildingQueue([...buildingQueue, newQueueItem])
       }
-    } catch (error) {
-      console.error('Failed to start building:', error)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to start building'
+      setError(message)
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000)
     } finally {
       setLoading(false)
     }
@@ -96,6 +107,11 @@ export function BuildingCard({
   return (
     <div className="ogame-panel">
       <div className="ogame-panel-content">
+        {error && (
+          <div className="mb-3 p-2 bg-red-900/50 border border-red-500 rounded-sm text-red-200 text-sm">
+            {error}
+          </div>
+        )}
         <div className="flex gap-4">
           {/* Building image placeholder */}
           <div className="w-24 h-24 rounded-sm bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center flex-shrink-0">
