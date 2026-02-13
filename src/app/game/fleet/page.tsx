@@ -61,13 +61,13 @@ export default function FleetPage() {
   }
 
   const missions = [
-    { id: 'attack', label: 'Attack', icon: '⚔️' },
-    { id: 'transport', label: 'Transport', icon: '📦' },
-    { id: 'deployment', label: 'Deployment', icon: '🏠' },
-    { id: 'espionage', label: 'Espionage', icon: '🔍' },
-    { id: 'colonization', label: 'Colonize', icon: '🌍' },
-    { id: 'recycle', label: 'Recycle', icon: '♻️' },
-    { id: 'expedition', label: 'Expedition', icon: '🧭' },
+    { id: 'attack', label: 'Attack', icon: '1' },
+    { id: 'transport', label: 'Transport', icon: '3' },
+    { id: 'deployment', label: 'Deployment', icon: '4' },
+    { id: 'espionage', label: 'Espionage', icon: '6' },
+    { id: 'colonization', label: 'Colonize', icon: '7' },
+    { id: 'recycle', label: 'Recycle', icon: '8' },
+    { id: 'expedition', label: 'Expedition', icon: '15' },
   ]
 
   // Calculate fleet info for display
@@ -292,8 +292,12 @@ export default function FleetPage() {
 
                   return (
                     <div key={ship.id} className="flex items-center gap-3 p-2 bg-ogame-border/30 rounded-sm">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-900 rounded-sm flex items-center justify-center">
-                        <span className="text-xl">{getShipEmoji(ship.key)}</span>
+                      <div className="w-12 h-12 rounded-sm overflow-hidden">
+                        <img
+                          src={getShipImage(ship.key)}
+                          alt={ship.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-ogame-text-header truncate">{ship.name}</div>
@@ -423,7 +427,11 @@ export default function FleetPage() {
                       : 'border-ogame-border hover:border-ogame-text-muted'
                   }`}
                 >
-                  <div className="text-2xl mb-1">{m.icon}</div>
+                  <img
+                    src={`/img/fleet/${m.icon}.gif`}
+                    alt={m.label}
+                    className="w-8 h-8 mx-auto mb-1"
+                  />
                   <div className="text-sm text-ogame-text-header">{m.label}</div>
                 </button>
               ))}
@@ -603,25 +611,6 @@ export default function FleetPage() {
   )
 }
 
-function getShipEmoji(key: string): string {
-  const emojis: Record<string, string> = {
-    light_fighter: '✈️',
-    heavy_fighter: '🛩️',
-    cruiser: '🚢',
-    battleship: '⚓',
-    battlecruiser: '🗡️',
-    bomber: '💣',
-    destroyer: '💀',
-    deathstar: '☠️',
-    small_cargo: '📦',
-    large_cargo: '🚚',
-    colony_ship: '🏠',
-    recycler: '♻️',
-    espionage_probe: '🔍',
-    solar_satellite: '🛰️',
-    crawler: '🐛',
-    reaper: '⚰️',
-    pathfinder: '🧭',
-  }
-  return emojis[key] || '🚀'
+function getShipImage(key: string): string {
+  return `/img/objects/units/${key}_small.jpg`
 }

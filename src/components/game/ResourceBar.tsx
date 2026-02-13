@@ -3,6 +3,17 @@
 import { useGameStore } from '@/stores/gameStore'
 import { formatNumber } from '@/game/formulas'
 
+function getResourceIcon(name: string): string {
+  const icons: Record<string, string> = {
+    Metal: '/img/objects/buildings/metal_mine_micro.jpg',
+    Crystal: '/img/objects/buildings/crystal_mine_micro.jpg',
+    Deuterium: '/img/objects/buildings/deuterium_synthesizer_micro.jpg',
+    Energy: '/img/objects/buildings/solar_plant_micro.jpg',
+    DarkMatter: '/img/objects/buildings/alliance_depot_micro.jpg',
+  }
+  return icons[name] || icons.Metal
+}
+
 export function ResourceBar() {
   const { currentPlanet, user } = useGameStore()
 
@@ -15,7 +26,6 @@ export function ResourceBar() {
       max: currentPlanet.metal_max,
       perHour: currentPlanet.metal_per_hour,
       colorClass: 'resource-metal',
-      icon: '⚙️',
     },
     {
       name: 'Crystal',
@@ -23,7 +33,6 @@ export function ResourceBar() {
       max: currentPlanet.crystal_max,
       perHour: currentPlanet.crystal_per_hour,
       colorClass: 'resource-crystal',
-      icon: '💎',
     },
     {
       name: 'Deuterium',
@@ -31,7 +40,6 @@ export function ResourceBar() {
       max: currentPlanet.deuterium_max,
       perHour: currentPlanet.deuterium_per_hour,
       colorClass: 'resource-deuterium',
-      icon: '🧪',
     },
     {
       name: 'Energy',
@@ -39,7 +47,6 @@ export function ResourceBar() {
       max: currentPlanet.energy_max,
       perHour: null,
       colorClass: currentPlanet.energy_used <= currentPlanet.energy_max ? 'resource-energy' : 'text-ogame-negative',
-      icon: '⚡',
     },
   ]
 
@@ -50,7 +57,11 @@ export function ResourceBar() {
         <div className="flex items-center gap-6">
           {resources.map((resource) => (
             <div key={resource.name} className="flex items-center gap-2">
-              <span className="text-lg">{resource.icon}</span>
+              <img
+                src={getResourceIcon(resource.name)}
+                alt={resource.name}
+                className="w-5 h-5 rounded-sm object-cover"
+              />
               <div className="flex flex-col">
                 <div className="flex items-center gap-1">
                   <span className={`font-mono ${resource.colorClass}`}>
@@ -75,7 +86,11 @@ export function ResourceBar() {
         {/* Dark Matter */}
         {user && (
           <div className="flex items-center gap-2">
-            <span className="text-lg">🔮</span>
+            <img
+              src={getResourceIcon('DarkMatter')}
+              alt="Dark Matter"
+              className="w-5 h-5 rounded-sm object-cover"
+            />
             <span className="font-mono resource-dark-matter">
               {formatNumber(user.dark_matter)}
             </span>

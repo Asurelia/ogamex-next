@@ -137,8 +137,12 @@ export default function DefensePage() {
             <div key={defense.id} className="ogame-panel">
               <div className="ogame-panel-content">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 rounded-sm bg-gradient-to-br from-red-700 to-red-900 flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">{getDefenseEmoji(defense.key)}</span>
+                  <div className="w-20 h-20 rounded-sm overflow-hidden flex-shrink-0">
+                    <img
+                      src={getDefenseImage(defense.key)}
+                      alt={defense.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -197,18 +201,19 @@ export default function DefensePage() {
   )
 }
 
-function getDefenseEmoji(key: string): string {
-  const emojis: Record<string, string> = {
-    rocket_launcher: '🚀',
-    light_laser: '🔴',
-    heavy_laser: '🔵',
-    gauss_cannon: '⚡',
-    ion_cannon: '💜',
-    plasma_turret: '🔥',
-    small_shield_dome: '🛡️',
-    large_shield_dome: '🛡️',
-    anti_ballistic_missile: '🎯',
-    interplanetary_missile: '☢️',
+function getDefenseImage(key: string): string {
+  const imageMap: Record<string, string> = {
+    rocket_launcher: 'rocket_launcher',
+    light_laser: 'light_laser',
+    heavy_laser: 'heavy_laser',
+    gauss_cannon: 'gauss_cannon',
+    ion_cannon: 'ion_cannon',
+    plasma_turret: 'plasma_turret',
+    small_shield_dome: 'small_shield_dome',
+    large_shield_dome: 'large_shield_dome',
+    anti_ballistic_missile: 'anti_ballistic_missile',
+    interplanetary_missile: 'interplanetary_missile',
   }
-  return emojis[key] || '🛡️'
+  const imageName = imageMap[key] || key
+  return `/img/objects/units/${imageName}_small.jpg`
 }

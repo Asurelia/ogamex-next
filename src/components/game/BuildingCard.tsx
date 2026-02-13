@@ -113,9 +113,13 @@ export function BuildingCard({
           </div>
         )}
         <div className="flex gap-4">
-          {/* Building image placeholder */}
-          <div className="w-24 h-24 rounded-sm bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center flex-shrink-0">
-            <span className="text-4xl">{getBuildingEmoji(building.key)}</span>
+          {/* Building image */}
+          <div className="w-24 h-24 rounded-sm overflow-hidden flex-shrink-0">
+            <img
+              src={getBuildingImage(building.key)}
+              alt={building.name}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {/* Building info */}
@@ -169,29 +173,30 @@ export function BuildingCard({
   )
 }
 
-function getBuildingEmoji(key: string): string {
-  const emojis: Record<string, string> = {
-    metal_mine: '⛏️',
-    crystal_mine: '💎',
-    deuterium_synthesizer: '🧪',
-    solar_plant: '☀️',
-    fusion_plant: '⚛️',
-    metal_storage: '🏭',
-    crystal_storage: '💠',
-    deuterium_tank: '🛢️',
-    robot_factory: '🤖',
-    nanite_factory: '🔬',
-    shipyard: '🚀',
-    research_lab: '🔭',
-    terraformer: '🌍',
-    alliance_depot: '🏢',
-    missile_silo: '🎯',
-    space_dock: '🛸',
-    lunar_base: '🌙',
-    sensor_phalanx: '📡',
-    jump_gate: '🌀',
+function getBuildingImage(key: string): string {
+  const imageMap: Record<string, string> = {
+    metal_mine: 'metal_mine',
+    crystal_mine: 'crystal_mine',
+    deuterium_synthesizer: 'deuterium_synthesizer',
+    solar_plant: 'solar_plant',
+    fusion_plant: 'fusion_plant',
+    metal_storage: 'metal_store',
+    crystal_storage: 'crystal_store',
+    deuterium_tank: 'deuterium_store',
+    robot_factory: 'robot_factory',
+    nanite_factory: 'nanite_factory',
+    shipyard: 'shipyard',
+    research_lab: 'research_lab',
+    terraformer: 'terraformer',
+    alliance_depot: 'alliance_depot',
+    missile_silo: 'missile_silo',
+    space_dock: 'space_dock',
+    lunar_base: 'lunar_base',
+    sensor_phalanx: 'sensor_phalanx',
+    jump_gate: 'jump_gate',
   }
-  return emojis[key] || '🏗️'
+  const imageName = imageMap[key] || key
+  return `/img/objects/buildings/${imageName}_small.jpg`
 }
 
 function getBuildingDescription(key: string): string {

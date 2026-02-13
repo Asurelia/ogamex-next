@@ -39,22 +39,22 @@ export default function FacilitiesPage() {
         <div className="ogame-panel-content">
           <div className="grid grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl mb-1">🤖</div>
+              <img src="/img/objects/buildings/robot_factory_micro.jpg" alt="Robot Factory" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Robot Factory</div>
               <div className="text-ogame-accent">Level {currentPlanet.robot_factory}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl mb-1">🔬</div>
+              <img src="/img/objects/buildings/nanite_factory_micro.jpg" alt="Nanite Factory" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Nanite Factory</div>
               <div className="text-ogame-accent">Level {currentPlanet.nanite_factory}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl mb-1">🚀</div>
+              <img src="/img/objects/buildings/shipyard_micro.jpg" alt="Shipyard" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Shipyard</div>
               <div className="text-ogame-accent">Level {currentPlanet.shipyard}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl mb-1">🔭</div>
+              <img src="/img/objects/buildings/research_lab_micro.jpg" alt="Research Lab" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Research Lab</div>
               <div className="text-ogame-accent">Level {currentPlanet.research_lab}</div>
             </div>

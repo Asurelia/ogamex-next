@@ -147,8 +147,12 @@ export default function ResearchPage() {
             <div key={tech.id} className="ogame-panel">
               <div className="ogame-panel-content">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 rounded-sm bg-gradient-to-br from-purple-700 to-purple-900 flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">{getResearchEmoji(tech.key)}</span>
+                  <div className="w-20 h-20 rounded-sm overflow-hidden flex-shrink-0">
+                    <img
+                      src={getResearchImage(tech.key)}
+                      alt={tech.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -199,26 +203,27 @@ export default function ResearchPage() {
   )
 }
 
-function getResearchEmoji(key: string): string {
-  const emojis: Record<string, string> = {
-    energy_technology: '⚡',
-    laser_technology: '🔴',
-    ion_technology: '💜',
-    hyperspace_technology: '🌀',
-    plasma_technology: '🔥',
-    combustion_drive: '🔧',
-    impulse_drive: '💨',
-    hyperspace_drive: '🚀',
-    espionage_technology: '🕵️',
-    computer_technology: '💻',
-    astrophysics: '🔭',
-    intergalactic_research_network: '🌐',
-    graviton_technology: '⚫',
-    weapons_technology: '⚔️',
-    shielding_technology: '🛡️',
-    armor_technology: '🛡️',
+function getResearchImage(key: string): string {
+  const imageMap: Record<string, string> = {
+    energy_technology: 'energy_technology',
+    laser_technology: 'laser_technology',
+    ion_technology: 'ion_technology',
+    hyperspace_technology: 'hyperspace_technology',
+    plasma_technology: 'plasma_technology',
+    combustion_drive: 'combustion_drive',
+    impulse_drive: 'impulse_drive',
+    hyperspace_drive: 'hyperspace_drive',
+    espionage_technology: 'espionage_technology',
+    computer_technology: 'computer_technology',
+    astrophysics: 'astrophysics_technology',
+    intergalactic_research_network: 'intergalactic_research_network',
+    graviton_technology: 'graviton_technology',
+    weapons_technology: 'weapons_technology',
+    shielding_technology: 'shielding_technology',
+    armor_technology: 'armor_technology',
   }
-  return emojis[key] || '🔬'
+  const imageName = imageMap[key] || key
+  return `/img/objects/research/${imageName}_small.jpg`
 }
 
 function getResearchDescription(key: string): string {

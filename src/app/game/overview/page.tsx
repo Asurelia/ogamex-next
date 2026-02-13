@@ -4,6 +4,14 @@ import { useGameStore } from '@/stores/gameStore'
 import { formatNumber, formatDuration } from '@/game/formulas'
 import { BUILDINGS } from '@/game/constants'
 
+function getPlanetImage(planetType: string = 'normal', position: number = 1): string {
+  const types = ['desert', 'dry', 'gas', 'ice', 'jungle', 'normal', 'water']
+  const type = types.includes(planetType) ? planetType : 'normal'
+  // Use position to generate a consistent variant (1-10)
+  const variant = ((position - 1) % 10) + 1
+  return `/img/planets/medium/${type}_${variant}.png`
+}
+
 export default function OverviewPage() {
   const { currentPlanet, buildingQueue, researchQueue, fleetMissions } = useGameStore()
 
@@ -28,8 +36,12 @@ export default function OverviewPage() {
           <div className="ogame-panel-content">
             <div className="flex gap-6">
               {/* Planet image */}
-              <div className="w-32 h-32 rounded-lg bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center">
-                <span className="text-6xl">🌍</span>
+              <div className="w-32 h-32 rounded-lg overflow-hidden">
+                <img
+                  src={getPlanetImage(currentPlanet.planet_type, currentPlanet.position)}
+                  alt={currentPlanet.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
 
               {/* Planet details */}

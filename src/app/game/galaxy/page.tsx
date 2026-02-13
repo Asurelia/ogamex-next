@@ -193,23 +193,28 @@ export default function GalaxyPage() {
                     )}
                   </td>
                   <td className="text-center">
-                    {pos.has_moon ? '🌙' : '-'}
+                    {pos.has_moon ? (
+                      <img src="/img/moons/small/1.gif" alt="Moon" className="w-4 h-4 mx-auto" />
+                    ) : '-'}
                   </td>
                   <td className="text-center">
                     {(pos.debris_metal > 0 || pos.debris_crystal > 0) ? (
-                      <span className="text-ogame-accent" title={`M: ${pos.debris_metal} C: ${pos.debris_crystal}`}>
-                        ♻️
-                      </span>
+                      <img
+                        src="/img/fleet/8.gif"
+                        alt="Debris"
+                        title={`M: ${pos.debris_metal} C: ${pos.debris_crystal}`}
+                        className="w-4 h-4 mx-auto"
+                      />
                     ) : '-'}
                   </td>
                   <td className="text-center">
                     {pos.planet_id && pos.user_id !== currentPlanet?.user_id && (
                       <div className="flex justify-center gap-1">
                         <button className="text-xs ogame-button px-2 py-0.5" title="Spy">
-                          🔍
+                          <img src="/img/fleet/6.gif" alt="Spy" className="w-3 h-3 inline" />
                         </button>
                         <button className="text-xs ogame-button px-2 py-0.5" title="Attack">
-                          ⚔️
+                          <img src="/img/fleet/1.gif" alt="Attack" className="w-3 h-3 inline" />
                         </button>
                       </div>
                     )}

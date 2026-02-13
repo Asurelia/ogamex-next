@@ -172,7 +172,14 @@ export default function AlliancePage() {
                 />
               ) : (
                 <div className="w-24 h-24 rounded-sm bg-gradient-to-br from-purple-700 to-purple-900 flex items-center justify-center">
-                  <span className="text-4xl">🤝</span>
+                  <img
+                    src="/img/alliance/alliance_default.png"
+                    alt="Alliance"
+                    className="w-16 h-16 object-contain opacity-70"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
                 </div>
               )}
               <div className="flex-1">

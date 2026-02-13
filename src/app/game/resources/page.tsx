@@ -39,22 +39,22 @@ export default function ResourcesPage() {
         <div className="ogame-panel-content">
           <div className="grid grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl mb-1">⛏️</div>
+              <img src="/img/objects/buildings/metal_mine_micro.jpg" alt="Metal Mine" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Metal Mine</div>
               <div className="text-ogame-accent">Level {currentPlanet.metal_mine}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl mb-1">💎</div>
+              <img src="/img/objects/buildings/crystal_mine_micro.jpg" alt="Crystal Mine" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Crystal Mine</div>
               <div className="text-ogame-accent">Level {currentPlanet.crystal_mine}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl mb-1">🧪</div>
+              <img src="/img/objects/buildings/deuterium_synthesizer_micro.jpg" alt="Deuterium Synthesizer" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Deut. Synth</div>
               <div className="text-ogame-accent">Level {currentPlanet.deuterium_synthesizer}</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl mb-1">⚡</div>
+              <img src="/img/objects/buildings/solar_plant_micro.jpg" alt="Solar Plant" className="w-10 h-10 mx-auto mb-1 rounded" />
               <div className="text-ogame-text-header font-semibold">Energy</div>
               <div className={currentPlanet.energy_max - currentPlanet.energy_used >= 0 ? 'text-ogame-positive' : 'text-ogame-negative'}>
                 {currentPlanet.energy_max - currentPlanet.energy_used} / {currentPlanet.energy_max}

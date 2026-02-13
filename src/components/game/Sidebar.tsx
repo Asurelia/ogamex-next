@@ -5,18 +5,26 @@ import { usePathname } from 'next/navigation'
 import { useGameStore } from '@/stores/gameStore'
 
 const menuItems = [
-  { href: '/game/overview', label: 'Overview', icon: '🏠' },
-  { href: '/game/resources', label: 'Resources', icon: '⛏️' },
-  { href: '/game/facilities', label: 'Facilities', icon: '🏭' },
-  { href: '/game/research', label: 'Research', icon: '🔬' },
-  { href: '/game/shipyard', label: 'Shipyard', icon: '🚀' },
-  { href: '/game/defense', label: 'Defense', icon: '🛡️' },
-  { href: '/game/fleet', label: 'Fleet', icon: '🛸' },
-  { href: '/game/galaxy', label: 'Galaxy', icon: '🌌' },
-  { href: '/game/messages', label: 'Messages', icon: '✉️' },
-  { href: '/game/alliance', label: 'Alliance', icon: '🤝' },
-  { href: '/game/highscore', label: 'Highscore', icon: '🏆' },
+  { href: '/game/overview', label: 'Overview' },
+  { href: '/game/resources', label: 'Resources' },
+  { href: '/game/facilities', label: 'Facilities' },
+  { href: '/game/research', label: 'Research' },
+  { href: '/game/shipyard', label: 'Shipyard' },
+  { href: '/game/defense', label: 'Defense' },
+  { href: '/game/fleet', label: 'Fleet' },
+  { href: '/game/galaxy', label: 'Galaxy' },
+  { href: '/game/messages', label: 'Messages' },
+  { href: '/game/alliance', label: 'Alliance' },
+  { href: '/game/highscore', label: 'Highscore' },
 ]
+
+function getPlanetImage(planetType: string = 'normal', position: number = 1): string {
+  const types = ['desert', 'dry', 'gas', 'ice', 'jungle', 'normal', 'water']
+  const type = types.includes(planetType) ? planetType : 'normal'
+  // Use position to generate a consistent variant (1-10)
+  const variant = ((position - 1) % 10) + 1
+  return `/img/planets/medium/${type}_${variant}.png`
+}
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -45,9 +53,13 @@ export function Sidebar() {
       {currentPlanet && (
         <div className="p-3 border-b border-ogame-border">
           <div className="text-center">
-            {/* Planet image placeholder */}
-            <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-600 to-green-600 flex items-center justify-center">
-              <span className="text-3xl">🌍</span>
+            {/* Planet image */}
+            <div className="w-20 h-20 mx-auto mb-2 rounded-full overflow-hidden">
+              <img
+                src={getPlanetImage(currentPlanet.planet_type, currentPlanet.position)}
+                alt={currentPlanet.name}
+                className="w-full h-full object-cover"
+              />
             </div>
             <h3 className="text-ogame-text-header font-semibold">
               {currentPlanet.name}
@@ -81,7 +93,6 @@ export function Sidebar() {
                 }
               `}
             >
-              <span className="text-lg">{item.icon}</span>
               <span>{item.label}</span>
             </Link>
           )

@@ -138,8 +138,12 @@ export default function ShipyardPage() {
             <div key={ship.id} className="ogame-panel">
               <div className="ogame-panel-content">
                 <div className="flex gap-4">
-                  <div className="w-20 h-20 rounded-sm bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">{getShipEmoji(ship.key)}</span>
+                  <div className="w-20 h-20 rounded-sm overflow-hidden flex-shrink-0">
+                    <img
+                      src={getShipImage(ship.key)}
+                      alt={ship.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -198,25 +202,26 @@ export default function ShipyardPage() {
   )
 }
 
-function getShipEmoji(key: string): string {
-  const emojis: Record<string, string> = {
-    light_fighter: '✈️',
-    heavy_fighter: '🛩️',
-    cruiser: '🚢',
-    battleship: '⚓',
-    battlecruiser: '🗡️',
-    bomber: '💣',
-    destroyer: '💀',
-    deathstar: '☠️',
-    small_cargo: '📦',
-    large_cargo: '🚚',
-    colony_ship: '🏠',
-    recycler: '♻️',
-    espionage_probe: '🔍',
-    solar_satellite: '🛰️',
-    crawler: '🐛',
-    reaper: '⚰️',
-    pathfinder: '🧭',
+function getShipImage(key: string): string {
+  const imageMap: Record<string, string> = {
+    light_fighter: 'light_fighter',
+    heavy_fighter: 'heavy_fighter',
+    cruiser: 'cruiser',
+    battleship: 'battleship',
+    battlecruiser: 'battlecruiser',
+    bomber: 'bomber',
+    destroyer: 'destroyer',
+    deathstar: 'deathstar',
+    small_cargo: 'small_cargo',
+    large_cargo: 'large_cargo',
+    colony_ship: 'colony_ship',
+    recycler: 'recycler',
+    espionage_probe: 'espionage_probe',
+    solar_satellite: 'solar_satellite',
+    crawler: 'crawler',
+    reaper: 'reaper',
+    pathfinder: 'pathfinder',
   }
-  return emojis[key] || '🚀'
+  const imageName = imageMap[key] || key
+  return `/img/objects/units/${imageName}_small.jpg`
 }
