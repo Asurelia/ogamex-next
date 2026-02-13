@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* OGame-style base styles */
+:root {
+  --ogame-bg: #0d1117;
+  --ogame-panel-bg: #131921;
+  --ogame-border: #1f2937;
+  --ogame-text: #f1f1f1;
+  --ogame-text-muted: #9ca3af;
+  --ogame-text-header: #6f9fc8;
+  --ogame-accent: #ff9600;
+  --ogame-metal: #cccccc;
+  --ogame-crystal: #77bbff;
+  --ogame-deuterium: #00cc99;
+  --ogame-energy: #ffcc00;
+  --ogame-dark-matter: #9966ff;
+  --ogame-positive: #00ff00;
+  --ogame-negative: #ff0000;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ogame-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ogame-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* OGame panel styles */
+@layer components {
+  .ogame-panel {
+    @apply bg-ogame-panel border border-ogame-border rounded-sm;
+  }
+
+  .ogame-panel-header {
+    @apply bg-gradient-to-r from-ogame-panel to-[#1a2332] px-4 py-2 border-b border-ogame-border;
+    @apply text-ogame-text-header font-semibold text-sm uppercase tracking-wide;
+  }
+
+  .ogame-panel-content {
+    @apply p-4;
+  }
+
+  .ogame-button {
+    @apply px-4 py-2 bg-gradient-to-b from-[#2a3f5f] to-[#1a2a3f] border border-[#4a6a8f];
+    @apply text-ogame-text-header text-sm font-semibold uppercase tracking-wide;
+    @apply hover:from-[#3a4f6f] hover:to-[#2a3a4f] hover:border-[#5a7a9f];
+    @apply active:from-[#1a2a3f] active:to-[#2a3f5f];
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply transition-all duration-150 rounded-sm;
+  }
+
+  .ogame-button-primary {
+    @apply ogame-button bg-gradient-to-b from-[#4a6f2f] to-[#2a4f1f] border-[#5a8f3f];
+    @apply hover:from-[#5a7f3f] hover:to-[#3a5f2f];
+  }
+
+  .ogame-button-danger {
+    @apply ogame-button bg-gradient-to-b from-[#6f2f2f] to-[#4f1f1f] border-[#8f3f3f];
+    @apply hover:from-[#7f3f3f] hover:to-[#5f2f2f];
+  }
+
+  .ogame-input {
+    @apply bg-[#0a0f14] border border-ogame-border rounded-sm px-3 py-2;
+    @apply text-ogame-text placeholder-ogame-text-muted;
+    @apply focus:outline-none focus:border-ogame-accent focus:ring-1 focus:ring-ogame-accent;
+    @apply transition-colors duration-150;
+  }
+
+  .ogame-link {
+    @apply text-ogame-text-header hover:text-ogame-accent transition-colors duration-150;
+  }
+
+  /* Resource display styles */
+  .resource-metal {
+    @apply text-ogame-metal;
+  }
+
+  .resource-crystal {
+    @apply text-ogame-crystal;
+  }
+
+  .resource-deuterium {
+    @apply text-ogame-deuterium;
+  }
+
+  .resource-energy {
+    @apply text-ogame-energy;
+  }
+
+  .resource-dark-matter {
+    @apply text-ogame-dark-matter;
+  }
+
+  /* Countdown timer */
+  .countdown {
+    @apply font-mono text-ogame-accent;
+  }
+
+  /* Progress bar */
+  .ogame-progress {
+    @apply h-2 bg-[#0a0f14] rounded-full overflow-hidden;
+  }
+
+  .ogame-progress-bar {
+    @apply h-full bg-gradient-to-r from-ogame-accent to-[#ffcc00] transition-all duration-300;
+  }
+
+  /* Table styles */
+  .ogame-table {
+    @apply w-full border-collapse;
+  }
+
+  .ogame-table th {
+    @apply bg-[#1a2332] text-ogame-text-header text-left px-4 py-2 border-b border-ogame-border;
+    @apply text-sm font-semibold uppercase tracking-wide;
+  }
+
+  .ogame-table td {
+    @apply px-4 py-2 border-b border-ogame-border;
+  }
+
+  .ogame-table tr:hover td {
+    @apply bg-[#1a2332];
+  }
+
+  /* Tooltip */
+  .ogame-tooltip {
+    @apply absolute z-50 bg-[#1a2332] border border-ogame-border rounded-sm p-3;
+    @apply text-sm shadow-lg max-w-xs;
+  }
+
+  /* Navigation tabs */
+  .ogame-tab {
+    @apply px-4 py-2 text-ogame-text-muted border-b-2 border-transparent;
+    @apply hover:text-ogame-text hover:border-ogame-border transition-all duration-150;
+  }
+
+  .ogame-tab-active {
+    @apply text-ogame-accent border-ogame-accent;
+  }
+
+  /* Badge */
+  .ogame-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .ogame-badge-info {
+    @apply bg-blue-900/50 text-blue-400 border border-blue-800;
+  }
+
+  .ogame-badge-success {
+    @apply bg-green-900/50 text-green-400 border border-green-800;
+  }
+
+  .ogame-badge-warning {
+    @apply bg-yellow-900/50 text-yellow-400 border border-yellow-800;
+  }
+
+  .ogame-badge-danger {
+    @apply bg-red-900/50 text-red-400 border border-red-800;
+  }
+}
+
+/* Animation for building/research in progress */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--ogame-accent);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--ogame-accent);
+  }
+}
+
+.building-in-progress {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Space background effect */
+.space-background {
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(30, 50, 80, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(20, 40, 70, 0.3) 0%, transparent 50%),
+    linear-gradient(to bottom, #0a0e14 0%, #0d1117 100%);
+}
+
+/* Stars animation */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}

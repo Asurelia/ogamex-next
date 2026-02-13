@@ -1,0 +1,139 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, getApiSupabase, type AuthenticatedUser } from '@/lib/api/auth'
+
+/**
+ * GET /api/v1/planets/[planetId]
+ * Get specific planet details
+ */
+async function getPlanet(
+  request: NextRequest,
+  user: AuthenticatedUser
+) {
+  const planetId = request.nextUrl.pathname.split('/').pop()
+  const supabase = getApiSupabase()
+
+  const { data: planet, error } = await supabase
+    .from('planets')
+    .select('*')
+    .eq('id', planetId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !planet) {
+    return NextResponse.json({ error: 'Planet not found' }, { status: 404 })
+  }
+
+  // Get building queue for this planet
+  const { data: buildingQueue } = await supabase
+    .from('building_queue')
+    .select('*')
+    .eq('planet_id', planetId)
+    .order('created_at', { ascending: true })
+
+  // Get unit queue for this planet
+  const { data: unitQueue } = await supabase
+    .from('unit_queue')
+    .select('*')
+    .eq('planet_id', planetId)
+    .order('created_at', { ascending: true })
+
+  return NextResponse.json({
+    planet: {
+      id: planet.id,
+      name: planet.name,
+      coordinates: {
+        galaxy: planet.galaxy,
+        system: planet.system,
+        position: planet.position,
+      },
+      type: planet.planet_type,
+      diameter: planet.diameter,
+      fields: {
+        used: planet.fields_used,
+        max: planet.fields_max,
+      },
+      temperature: {
+        min: planet.temp_min,
+        max: planet.temp_max,
+      },
+      resources: {
+        metal: Math.floor(planet.metal),
+        crystal: Math.floor(planet.crystal),
+        deuterium: Math.floor(planet.deuterium),
+        energy: planet.energy_max - planet.energy_used,
+      },
+      production: {
+        metal_per_hour: planet.metal_per_hour,
+        crystal_per_hour: planet.crystal_per_hour,
+        deuterium_per_hour: planet.deuterium_per_hour,
+      },
+      buildings: {
+        metal_mine: planet.metal_mine,
+        crystal_mine: planet.crystal_mine,
+        deuterium_synthesizer: planet.deuterium_synthesizer,
+        solar_plant: planet.solar_plant,
+        fusion_plant: planet.fusion_plant,
+        metal_storage: planet.metal_storage,
+        crystal_storage: planet.crystal_storage,
+        deuterium_tank: planet.deuterium_tank,
+        robot_factory: planet.robot_factory,
+        nanite_factory: planet.nanite_factory,
+        shipyard: planet.shipyard,
+        research_lab: planet.research_lab,
+        terraformer: planet.terraformer,
+        alliance_depot: planet.alliance_depot,
+        missile_silo: planet.missile_silo,
+        space_dock: planet.space_dock,
+      },
+      ships: {
+        light_fighter: planet.light_fighter,
+        heavy_fighter: planet.heavy_fighter,
+        cruiser: planet.cruiser,
+        battleship: planet.battleship,
+        battlecruiser: planet.battlecruiser,
+        bomber: planet.bomber,
+        destroyer: planet.destroyer,
+        deathstar: planet.deathstar,
+        small_cargo: planet.small_cargo,
+        large_cargo: planet.large_cargo,
+        colony_ship: planet.colony_ship,
+        recycler: planet.recycler,
+        espionage_probe: planet.espionage_probe,
+        solar_satellite: planet.solar_satellite,
+        crawler: planet.crawler,
+        reaper: planet.reaper,
+        pathfinder: planet.pathfinder,
+      },
+      defense: {
+        rocket_launcher: planet.rocket_launcher,
+        light_laser: planet.light_laser,
+        heavy_laser: planet.heavy_laser,
+        gauss_cannon: planet.gauss_cannon,
+        ion_cannon: planet.ion_cannon,
+        plasma_turret: planet.plasma_turret,
+        small_shield_dome: planet.small_shield_dome,
+        large_shield_dome: planet.large_shield_dome,
+        anti_ballistic_missile: planet.anti_ballistic_missile,
+        interplanetary_missile: planet.interplanetary_missile,
+      },
+    },
+    queues: {
+      building: buildingQueue?.map(q => ({
+        id: q.id,
+        building_id: q.building_id,
+        target_level: q.target_level,
+        ends_at: q.ends_at,
+      })) || [],
+      units: unitQueue?.map(q => ({
+        id: q.id,
+        unit_id: q.unit_id,
+        unit_type: q.unit_type,
+        amount: q.amount,
+        amount_completed: q.amount_completed,
+        ends_at: q.ends_at,
+      })) || [],
+    },
+  })
+}
+
+export const GET = withAuth(getPlanet)
