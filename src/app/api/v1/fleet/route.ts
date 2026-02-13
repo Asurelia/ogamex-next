@@ -64,7 +64,7 @@ async function getFleets(request: NextRequest, user: AuthenticatedUser) {
       departed_at: m.departed_at,
       arrives_at: m.arrives_at,
       returns_at: m.returns_at,
-      returning: m.returning,
+      returning: m.is_returning,
     })) || [],
   })
 }

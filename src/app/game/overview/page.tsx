@@ -205,8 +205,8 @@ export default function OverviewPage() {
                         <td>[{mission.origin_galaxy}:{mission.origin_system}:{mission.origin_position}]</td>
                         <td>[{mission.destination_galaxy}:{mission.destination_system}:{mission.destination_position}]</td>
                         <td>
-                          <span className={`ogame-badge ${mission.returning ? 'ogame-badge-warning' : 'ogame-badge-info'}`}>
-                            {mission.returning ? 'Returning' : 'Outbound'}
+                          <span className={`ogame-badge ${mission.is_returning ? 'ogame-badge-warning' : 'ogame-badge-info'}`}>
+                            {mission.is_returning ? 'Returning' : 'Outbound'}
                           </span>
                         </td>
                         <td className="text-right countdown">{formatDuration(remaining)}</td>

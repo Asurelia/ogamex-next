@@ -286,7 +286,7 @@ export interface Database {
           arrives_at: string
           returns_at: string | null
           // Status
-          returning: boolean
+          is_returning: boolean
           processed: boolean
           cancelled: boolean
           created_at: string
