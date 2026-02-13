@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useGameStore } from '@/stores/gameStore'
 import { formatNumber } from '@/game/formulas'
@@ -23,6 +24,8 @@ export default function HighscorePage() {
   const [scores, setScores] = useState<HighscoreEntry[]>([])
   const [category, setCategory] = useState<ScoreCategory>('total')
   const [loading, setLoading] = useState(true)
+  const t = useTranslations('highscore')
+  const tCommon = useTranslations('common')
 
   useEffect(() => {
     loadHighscores()
@@ -63,10 +66,10 @@ export default function HighscorePage() {
   }
 
   const categories: { id: ScoreCategory; label: string; icon: string }[] = [
-    { id: 'total', label: 'Total', icon: '🏆' },
-    { id: 'economy', label: 'Economy', icon: '💰' },
-    { id: 'research', label: 'Research', icon: '🔬' },
-    { id: 'military', label: 'Military', icon: '⚔️' },
+    { id: 'total', label: t('categories.total'), icon: '🏆' },
+    { id: 'economy', label: t('categories.economy'), icon: '💰' },
+    { id: 'research', label: t('categories.research'), icon: '🔬' },
+    { id: 'military', label: t('categories.military'), icon: '⚔️' },
   ]
 
   const getPointsForCategory = (entry: HighscoreEntry): number => {
@@ -82,7 +85,7 @@ export default function HighscorePage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">Highscore</h1>
+        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
       </div>
 
       {/* Category tabs */}
@@ -107,15 +110,15 @@ export default function HighscorePage() {
       <div className="ogame-panel">
         <div className="ogame-panel-content p-0">
           {loading ? (
-            <p className="text-ogame-text-muted text-center py-8">Loading...</p>
+            <p className="text-ogame-text-muted text-center py-8">{tCommon('loading')}</p>
           ) : (
             <table className="ogame-table">
               <thead>
                 <tr>
-                  <th className="w-16 text-center">Rank</th>
-                  <th>Player</th>
-                  <th>Alliance</th>
-                  <th className="text-right">Points</th>
+                  <th className="w-16 text-center">{t('rank')}</th>
+                  <th>{t('player')}</th>
+                  <th>{t('alliance')}</th>
+                  <th className="text-right">{t('points')}</th>
                 </tr>
               </thead>
               <tbody>

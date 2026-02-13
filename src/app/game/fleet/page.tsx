@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import {
@@ -26,9 +27,12 @@ export default function FleetPage() {
   const [speed, setSpeed] = useState(100)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('fleet')
+  const tRes = useTranslations('resources')
+  const tCommon = useTranslations('common')
 
   if (!currentPlanet) {
-    return <div className="text-ogame-text-muted">Loading...</div>
+    return <div className="text-ogame-text-muted">{tCommon('loading')}</div>
   }
 
   const getShipCount = (key: string): number => {
@@ -61,13 +65,13 @@ export default function FleetPage() {
   }
 
   const missions = [
-    { id: 'attack', label: 'Attack', icon: '1' },
-    { id: 'transport', label: 'Transport', icon: '3' },
-    { id: 'deployment', label: 'Deployment', icon: '4' },
-    { id: 'espionage', label: 'Espionage', icon: '6' },
-    { id: 'colonization', label: 'Colonize', icon: '7' },
-    { id: 'recycle', label: 'Recycle', icon: '8' },
-    { id: 'expedition', label: 'Expedition', icon: '15' },
+    { id: 'attack', label: t('missions.attack'), icon: '1' },
+    { id: 'transport', label: t('missions.transport'), icon: '3' },
+    { id: 'deployment', label: t('missions.deployment'), icon: '4' },
+    { id: 'espionage', label: t('missions.espionage'), icon: '6' },
+    { id: 'colonization', label: t('missions.colonization'), icon: '7' },
+    { id: 'recycle', label: t('missions.recycle'), icon: '8' },
+    { id: 'expedition', label: t('missions.expedition'), icon: '15' },
   ]
 
   // Calculate fleet info for display
@@ -244,9 +248,9 @@ export default function FleetPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">Fleet</h1>
+        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
         <div className="text-ogame-text-muted">
-          Active missions: {fleetMissions.length}
+          {t('activeMissions')}: {fleetMissions.length}
         </div>
       </div>
 
@@ -275,15 +279,15 @@ export default function FleetPage() {
       {step === 'select' && (
         <div className="ogame-panel">
           <div className="ogame-panel-header flex justify-between items-center">
-            <span>Select Ships</span>
+            <span>{t('selectShips')}</span>
             <div className="flex gap-2">
-              <button onClick={selectAll} className="text-xs ogame-button">All</button>
-              <button onClick={selectNone} className="text-xs ogame-button">None</button>
+              <button onClick={selectAll} className="text-xs ogame-button">{tCommon('all')}</button>
+              <button onClick={selectNone} className="text-xs ogame-button">{tCommon('none')}</button>
             </div>
           </div>
           <div className="ogame-panel-content">
             {availableShips.length === 0 ? (
-              <p className="text-ogame-text-muted text-center py-4">No ships available</p>
+              <p className="text-ogame-text-muted text-center py-4">{t('noShips')}</p>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {availableShips.map(ship => {
@@ -301,7 +305,7 @@ export default function FleetPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-ogame-text-header truncate">{ship.name}</div>
-                        <div className="text-xs text-ogame-text-muted">Available: {max}</div>
+                        <div className="text-xs text-ogame-text-muted">{t('available')}: {max}</div>
                       </div>
                       <input
                         type="number"
@@ -319,14 +323,14 @@ export default function FleetPage() {
 
             <div className="mt-4 flex justify-between items-center">
               <span className="text-ogame-text-muted">
-                Selected: {totalSelected} ships
+                {t('selected')}: {totalSelected} {t('ships')}
               </span>
               <button
                 onClick={() => setStep('destination')}
                 disabled={totalSelected === 0}
                 className="ogame-button-primary"
               >
-                Continue
+                {tCommon('continue')}
               </button>
             </div>
           </div>
@@ -336,11 +340,11 @@ export default function FleetPage() {
       {/* Step 2: Destination */}
       {step === 'destination' && (
         <div className="ogame-panel">
-          <div className="ogame-panel-header">Destination</div>
+          <div className="ogame-panel-header">{t('destination')}</div>
           <div className="ogame-panel-content">
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="block text-ogame-text-muted text-sm mb-1">Galaxy</label>
+                <label className="block text-ogame-text-muted text-sm mb-1">{t('galaxy')}</label>
                 <input
                   type="number"
                   min="1"
@@ -351,7 +355,7 @@ export default function FleetPage() {
                 />
               </div>
               <div>
-                <label className="block text-ogame-text-muted text-sm mb-1">System</label>
+                <label className="block text-ogame-text-muted text-sm mb-1">{t('system')}</label>
                 <input
                   type="number"
                   min="1"
@@ -362,7 +366,7 @@ export default function FleetPage() {
                 />
               </div>
               <div>
-                <label className="block text-ogame-text-muted text-sm mb-1">Position</label>
+                <label className="block text-ogame-text-muted text-sm mb-1">{t('position')}</label>
                 <input
                   type="number"
                   min="1"
@@ -375,19 +379,19 @@ export default function FleetPage() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-ogame-text-muted text-sm mb-1">Target Type</label>
+              <label className="block text-ogame-text-muted text-sm mb-1">{t('targetType')}</label>
               <select
                 value={destination.type}
                 onChange={(e) => setDestination({ ...destination, type: e.target.value as 'planet' | 'moon' })}
                 className="ogame-input w-full"
               >
-                <option value="planet">Planet</option>
-                <option value="moon">Moon</option>
+                <option value="planet">{t('planet')}</option>
+                <option value="moon">{t('moon')}</option>
               </select>
             </div>
 
             <div className="mb-4">
-              <label className="block text-ogame-text-muted text-sm mb-1">Speed: {speed}%</label>
+              <label className="block text-ogame-text-muted text-sm mb-1">{t('speed')}: {speed}%</label>
               <input
                 type="range"
                 min="10"
@@ -401,10 +405,10 @@ export default function FleetPage() {
 
             <div className="flex justify-between">
               <button onClick={() => setStep('select')} className="ogame-button">
-                Back
+                {tCommon('back')}
               </button>
               <button onClick={() => setStep('mission')} className="ogame-button-primary">
-                Continue
+                {tCommon('continue')}
               </button>
             </div>
           </div>
@@ -414,7 +418,7 @@ export default function FleetPage() {
       {/* Step 3: Mission */}
       {step === 'mission' && (
         <div className="ogame-panel">
-          <div className="ogame-panel-header">Mission Type</div>
+          <div className="ogame-panel-header">{t('missionType')}</div>
           <div className="ogame-panel-content">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               {missions.map(m => (
@@ -440,10 +444,10 @@ export default function FleetPage() {
             {/* Resources to send */}
             {(missionType === 'transport' || missionType === 'deployment') && (
               <div className="mb-4">
-                <h3 className="text-ogame-text-header mb-2">Resources to Send</h3>
+                <h3 className="text-ogame-text-header mb-2">{t('resourcesToSend')}</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm resource-metal mb-1">Metal</label>
+                    <label className="block text-sm resource-metal mb-1">{tRes('metal')}</label>
                     <input
                       type="number"
                       min="0"
@@ -454,7 +458,7 @@ export default function FleetPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm resource-crystal mb-1">Crystal</label>
+                    <label className="block text-sm resource-crystal mb-1">{tRes('crystal')}</label>
                     <input
                       type="number"
                       min="0"
@@ -465,7 +469,7 @@ export default function FleetPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm resource-deuterium mb-1">Deuterium</label>
+                    <label className="block text-sm resource-deuterium mb-1">{tRes('deuterium')}</label>
                     <input
                       type="number"
                       min="0"
@@ -481,10 +485,10 @@ export default function FleetPage() {
 
             <div className="flex justify-between">
               <button onClick={() => setStep('destination')} className="ogame-button">
-                Back
+                {tCommon('back')}
               </button>
               <button onClick={() => setStep('confirm')} className="ogame-button-primary">
-                Continue
+                {tCommon('continue')}
               </button>
             </div>
           </div>
@@ -496,7 +500,7 @@ export default function FleetPage() {
         const fleetInfo = getFleetInfo()
         return (
           <div className="ogame-panel">
-            <div className="ogame-panel-header">Confirm Mission</div>
+            <div className="ogame-panel-header">{t('confirmMission')}</div>
             <div className="ogame-panel-content">
               {error && (
                 <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-sm text-red-200">
@@ -506,35 +510,35 @@ export default function FleetPage() {
 
               <div className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-ogame-text-muted">Mission:</span>
+                  <span className="text-ogame-text-muted">{t('mission')}:</span>
                   <span className="text-ogame-text-header capitalize">{missionType}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ogame-text-muted">Destination:</span>
+                  <span className="text-ogame-text-muted">{t('destination')}:</span>
                   <span className="text-ogame-text-header">
                     [{destination.galaxy}:{destination.system}:{destination.position}] ({destination.type})
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ogame-text-muted">Ships:</span>
+                  <span className="text-ogame-text-muted">{t('ships')}:</span>
                   <span className="text-ogame-text-header">{totalSelected}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-ogame-text-muted">Speed:</span>
+                  <span className="text-ogame-text-muted">{t('speed')}:</span>
                   <span className="text-ogame-text-header">{speed}%</span>
                 </div>
                 {fleetInfo && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-ogame-text-muted">Distance:</span>
+                      <span className="text-ogame-text-muted">{t('distance')}:</span>
                       <span className="text-ogame-text-header">{formatNumber(fleetInfo.distance)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-ogame-text-muted">Duration:</span>
+                      <span className="text-ogame-text-muted">{t('duration')}:</span>
                       <span className="text-ogame-text-header">{formatDuration(fleetInfo.duration)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-ogame-text-muted">Fuel:</span>
+                      <span className="text-ogame-text-muted">{t('fuel')}:</span>
                       <span className={`${fleetInfo.fuel > currentPlanet.deuterium ? 'text-red-400' : 'resource-deuterium'}`}>
                         {formatNumber(fleetInfo.fuel)}
                       </span>
@@ -543,7 +547,7 @@ export default function FleetPage() {
                 )}
                 {(missionType === 'transport' || missionType === 'deployment') && (resources.metal > 0 || resources.crystal > 0 || resources.deuterium > 0) && (
                   <div className="pt-2 border-t border-ogame-border">
-                    <div className="text-ogame-text-muted mb-2">Resources:</div>
+                    <div className="text-ogame-text-muted mb-2">{tRes('resources')}:</div>
                     <div className="flex gap-4 text-sm">
                       <span className="resource-metal">{formatNumber(resources.metal)} M</span>
                       <span className="resource-crystal">{formatNumber(resources.crystal)} C</span>
@@ -555,14 +559,14 @@ export default function FleetPage() {
 
               <div className="mt-6 flex justify-between">
                 <button onClick={() => setStep('mission')} className="ogame-button" disabled={sending}>
-                  Back
+                  {tCommon('back')}
                 </button>
                 <button
                   onClick={sendFleet}
                   disabled={sending || !fleetInfo || fleetInfo.fuel > currentPlanet.deuterium}
                   className="ogame-button-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {sending ? 'Sending...' : 'Send Fleet'}
+                  {sending ? t('sending') : t('sendFleet')}
                 </button>
               </div>
             </div>
@@ -573,15 +577,15 @@ export default function FleetPage() {
       {/* Active missions */}
       {fleetMissions.length > 0 && (
         <div className="ogame-panel">
-          <div className="ogame-panel-header">Active Missions</div>
+          <div className="ogame-panel-header">{t('activeMissionsTitle')}</div>
           <div className="ogame-panel-content p-0">
             <table className="ogame-table">
               <thead>
                 <tr>
-                  <th>Mission</th>
-                  <th>Destination</th>
-                  <th>Status</th>
-                  <th className="text-right">Arrival</th>
+                  <th>{t('mission')}</th>
+                  <th>{t('destination')}</th>
+                  <th>{t('status')}</th>
+                  <th className="text-right">{t('arrivesIn')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -591,11 +595,11 @@ export default function FleetPage() {
 
                   return (
                     <tr key={fm.id}>
-                      <td className="capitalize">{fm.mission_type.replace('_', ' ')}</td>
+                      <td className="capitalize">{t(`missions.${fm.mission_type}`)}</td>
                       <td>[{fm.destination_galaxy}:{fm.destination_system}:{fm.destination_position}]</td>
                       <td>
                         <span className={`ogame-badge ${fm.is_returning ? 'ogame-badge-warning' : 'ogame-badge-info'}`}>
-                          {fm.is_returning ? 'Returning' : 'Outbound'}
+                          {fm.is_returning ? t('returning') : t('outbound')}
                         </span>
                       </td>
                       <td className="text-right countdown">{formatDuration(remaining)}</td>

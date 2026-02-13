@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { calculateUnitCost, calculateUnitTime, formatNumber, formatDuration } from '@/game/formulas'
@@ -11,9 +12,11 @@ export default function DefensePage() {
   const [amounts, setAmounts] = useState<Record<number, number>>({})
   const [loading, setLoading] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('defense')
+  const tCommon = useTranslations('common')
 
   if (!currentPlanet) {
-    return <div className="text-ogame-text-muted">Loading...</div>
+    return <div className="text-ogame-text-muted">{tCommon('loading')}</div>
   }
 
   const defenseUnits = Object.values(DEFENSE)
@@ -109,9 +112,9 @@ export default function DefensePage() {
 
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">Defense</h1>
+        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
         <div className="text-ogame-text-muted">
-          Shipyard Level: {currentPlanet.shipyard}
+          {t('shipyardLevel')}: {currentPlanet.shipyard}
         </div>
       </div>
 
@@ -152,8 +155,8 @@ export default function DefensePage() {
                     </div>
 
                     <div className="flex gap-4 text-xs text-ogame-text-muted mb-2">
-                      <span>Attack: {formatNumber(defense.weaponPower)}</span>
-                      <span>Shield: {formatNumber(defense.shieldPower)}</span>
+                      <span>{t('attack')}: {formatNumber(defense.weaponPower)}</span>
+                      <span>{t('shield')}: {formatNumber(defense.shieldPower)}</span>
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-2 text-xs">
@@ -187,7 +190,7 @@ export default function DefensePage() {
                         disabled={!canAfford || currentPlanet.shipyard < 1 || loading === defense.id}
                         className="ogame-button-primary text-xs px-3 py-1 ml-auto"
                       >
-                        {loading === defense.id ? '...' : 'Build'}
+                        {loading === defense.id ? '...' : tCommon('build')}
                       </button>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { calculateResearchCost, calculateResearchTime, formatNumber, formatDuration } from '@/game/formulas'
@@ -9,9 +10,11 @@ import { RESEARCH } from '@/game/constants'
 export default function ResearchPage() {
   const { currentPlanet, research, researchQueue, setResearchQueue, user } = useGameStore()
   const [loading, setLoading] = useState<number | null>(null)
+  const t = useTranslations('research')
+  const tCommon = useTranslations('common')
 
   if (!currentPlanet || !research) {
-    return <div className="text-ogame-text-muted">Loading...</div>
+    return <div className="text-ogame-text-muted">{tCommon('loading')}</div>
   }
 
   const researchList = Object.values(RESEARCH)
@@ -96,16 +99,16 @@ export default function ResearchPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">Research</h1>
+        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
         <div className="text-ogame-text-muted">
-          Research Lab Level: {currentPlanet.research_lab}
+          {t('labLevel')}: {currentPlanet.research_lab}
         </div>
       </div>
 
       {/* Research in progress */}
       {researchQueue.length > 0 && (
         <div className="ogame-panel">
-          <div className="ogame-panel-header">Research in Progress</div>
+          <div className="ogame-panel-header">{t('inProgress')}</div>
           <div className="ogame-panel-content">
             {researchQueue.map((item) => {
               const tech = RESEARCH[item.research_id]
@@ -116,8 +119,8 @@ export default function ResearchPage() {
               return (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-ogame-accent/10 rounded-sm building-in-progress">
                   <div>
-                    <span className="text-ogame-text-header">{tech?.name || `Research ${item.research_id}`}</span>
-                    <span className="text-ogame-text-muted ml-2">Level {item.target_level}</span>
+                    <span className="text-ogame-text-header">{tech?.name || `${t('research')} ${item.research_id}`}</span>
+                    <span className="text-ogame-text-muted ml-2">{tCommon('level')} {item.target_level}</span>
                   </div>
                   <div className="countdown">{formatDuration(remaining)}</div>
                 </div>
@@ -181,7 +184,7 @@ export default function ResearchPage() {
 
                     <div className="flex items-center justify-between">
                       <span className="text-ogame-text-muted text-xs">
-                        Time: <span className="countdown">{formatDuration(time)}</span>
+                        {tCommon('time')}: <span className="countdown">{formatDuration(time)}</span>
                       </span>
 
                       <button
@@ -189,7 +192,7 @@ export default function ResearchPage() {
                         disabled={!canAfford || !hasLabRequirement || isResearching || researchQueue.length > 0 || loading === tech.id}
                         className="ogame-button-primary text-xs px-2 py-1"
                       >
-                        {loading === tech.id ? '...' : isResearching ? 'Researching' : researchQueue.length > 0 ? 'Busy' : 'Research'}
+                        {loading === tech.id ? '...' : isResearching ? t('researching') : researchQueue.length > 0 ? t('busy') : t('research')}
                       </button>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import type { Message } from '@/types/database'
@@ -13,6 +14,8 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState<MessageCategory>('all')
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
+  const t = useTranslations('messages')
+  const tCommon = useTranslations('common')
 
   useEffect(() => {
     loadMessages()
@@ -65,12 +68,12 @@ export default function MessagesPage() {
   }
 
   const categories: { id: MessageCategory; label: string; icon: string }[] = [
-    { id: 'all', label: 'All', icon: '📬' },
-    { id: 'espionage', label: 'Espionage', icon: '🔍' },
-    { id: 'battle', label: 'Combat', icon: '⚔️' },
-    { id: 'transport', label: 'Transport', icon: '📦' },
-    { id: 'expedition', label: 'Expedition', icon: '🧭' },
-    { id: 'system', label: 'System', icon: '⚙️' },
+    { id: 'all', label: t('categories.all'), icon: '📬' },
+    { id: 'espionage', label: t('categories.espionage'), icon: '🔍' },
+    { id: 'battle', label: t('categories.combat'), icon: '⚔️' },
+    { id: 'transport', label: t('categories.transport'), icon: '📦' },
+    { id: 'expedition', label: t('categories.expedition'), icon: '🧭' },
+    { id: 'system', label: t('categories.system'), icon: '⚙️' },
   ]
 
   const unreadCount = messages.filter(m => !m.read).length
@@ -79,9 +82,9 @@ export default function MessagesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">Messages</h1>
+        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
         <div className="text-ogame-text-muted">
-          {unreadCount} unread
+          {unreadCount} {t('unread')}
         </div>
       </div>
 
@@ -89,7 +92,7 @@ export default function MessagesPage() {
         {/* Categories */}
         <div className="w-48 flex-shrink-0">
           <div className="ogame-panel">
-            <div className="ogame-panel-header">Categories</div>
+            <div className="ogame-panel-header">{t('categoriesTitle')}</div>
             <div className="p-2">
               {categories.map(cat => (
                 <button
@@ -113,16 +116,16 @@ export default function MessagesPage() {
         <div className="flex-1">
           <div className="ogame-panel">
             <div className="ogame-panel-header flex justify-between items-center">
-              <span>Inbox</span>
+              <span>{t('inbox')}</span>
               <button onClick={loadMessages} className="text-xs ogame-button">
-                Refresh
+                {t('refresh')}
               </button>
             </div>
             <div className="ogame-panel-content p-0">
               {loading ? (
-                <p className="text-ogame-text-muted text-center py-8">Loading...</p>
+                <p className="text-ogame-text-muted text-center py-8">{tCommon('loading')}</p>
               ) : messages.length === 0 ? (
-                <p className="text-ogame-text-muted text-center py-8">No messages</p>
+                <p className="text-ogame-text-muted text-center py-8">{t('noMessages')}</p>
               ) : (
                 <div className="divide-y divide-ogame-border">
                   {messages.map(message => (
@@ -167,7 +170,7 @@ export default function MessagesPage() {
                   onClick={() => deleteMessage(selectedMessage.id)}
                   className="text-xs ogame-button-danger"
                 >
-                  Delete
+                  {tCommon('delete')}
                 </button>
               </div>
               <div className="ogame-panel-content">

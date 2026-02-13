@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
@@ -23,6 +24,8 @@ export default function GalaxyPage() {
   const [system, setSystem] = useState(currentPlanet?.system || 1)
   const [positions, setPositions] = useState<GalaxyPosition[]>([])
   const [loading, setLoading] = useState(false)
+  const t = useTranslations('galaxy')
+  const tCommon = useTranslations('common')
 
   useEffect(() => {
     loadGalaxyView()
@@ -105,7 +108,7 @@ export default function GalaxyPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">Galaxy</h1>
+        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
       </div>
 
       {/* Navigation */}
@@ -113,7 +116,7 @@ export default function GalaxyPage() {
         <div className="ogame-panel-content">
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-ogame-text-muted">Galaxy:</span>
+              <span className="text-ogame-text-muted">{t('galaxy')}:</span>
               <button onClick={() => setGalaxy(Math.max(1, galaxy - 1))} className="ogame-button px-2 py-1">&lt;</button>
               <input
                 type="number"
@@ -127,7 +130,7 @@ export default function GalaxyPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-ogame-text-muted">System:</span>
+              <span className="text-ogame-text-muted">{t('system')}:</span>
               <button onClick={() => navigateSystem(-1)} className="ogame-button px-2 py-1">&lt;</button>
               <input
                 type="number"
@@ -141,7 +144,7 @@ export default function GalaxyPage() {
             </div>
 
             <button onClick={loadGalaxyView} className="ogame-button-primary">
-              {loading ? 'Loading...' : 'View'}
+              {loading ? tCommon('loading') : t('view')}
             </button>
           </div>
         </div>
@@ -150,19 +153,19 @@ export default function GalaxyPage() {
       {/* Galaxy table */}
       <div className="ogame-panel">
         <div className="ogame-panel-header">
-          Solar System [{galaxy}:{system}]
+          {t('solarSystem')} [{galaxy}:{system}]
         </div>
         <div className="ogame-panel-content p-0">
           <table className="ogame-table">
             <thead>
               <tr>
-                <th className="w-12 text-center">Pos</th>
-                <th>Planet</th>
-                <th>Player</th>
-                <th>Alliance</th>
-                <th className="w-16 text-center">Moon</th>
-                <th className="w-24 text-center">Debris</th>
-                <th className="w-24 text-center">Actions</th>
+                <th className="w-12 text-center">{t('pos')}</th>
+                <th>{t('planet')}</th>
+                <th>{t('player')}</th>
+                <th>{t('alliance')}</th>
+                <th className="w-16 text-center">{t('moon')}</th>
+                <th className="w-24 text-center">{t('debris')}</th>
+                <th className="w-24 text-center">{t('actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -173,7 +176,7 @@ export default function GalaxyPage() {
                     {pos.planet_id ? (
                       <span className="text-ogame-text-header">{pos.planet_name}</span>
                     ) : (
-                      <span className="text-ogame-text-muted">Empty</span>
+                      <span className="text-ogame-text-muted">{t('empty')}</span>
                     )}
                   </td>
                   <td>
