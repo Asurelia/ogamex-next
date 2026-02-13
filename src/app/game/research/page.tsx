@@ -7,6 +7,11 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 import { calculateResearchCost, calculateResearchTime, formatNumber, formatDuration } from '@/game/formulas'
 import { RESEARCH } from '@/game/constants'
 
+// Convert key like 'energy_technology' to translation key like 'energyTechnology'
+const getTranslationKey = (key: string): string => {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+}
+
 export default function ResearchPage() {
   const { currentPlanet, research, researchQueue, setResearchQueue, user } = useGameStore()
   const [loading, setLoading] = useState<number | null>(null)
@@ -116,10 +121,13 @@ export default function ResearchPage() {
               const now = new Date()
               const remaining = Math.max(0, Math.floor((endsAt.getTime() - now.getTime()) / 1000))
 
+              const techKey = tech ? getTranslationKey(tech.key) : ''
+              const techName = tech ? (t(techKey as any) || tech.name) : `${t('research')} ${item.research_id}`
+
               return (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-ogame-accent/10 rounded-sm building-in-progress">
                   <div>
-                    <span className="text-ogame-text-header">{tech?.name || `${t('research')} ${item.research_id}`}</span>
+                    <span className="text-ogame-text-header">{techName}</span>
                     <span className="text-ogame-text-muted ml-2">{tCommon('level')} {item.target_level}</span>
                   </div>
                   <div className="countdown">{formatDuration(remaining)}</div>
@@ -146,6 +154,10 @@ export default function ResearchPage() {
           const isResearching = researchQueue.some(q => q.research_id === tech.id)
           const hasLabRequirement = currentPlanet.research_lab >= 1
 
+          const techKey = getTranslationKey(tech.key)
+          const techName = t(techKey as any) || tech.name
+          const techDesc = t(`${techKey}Desc` as any) || ''
+
           return (
             <div key={tech.id} className="ogame-panel">
               <div className="ogame-panel-content">
@@ -153,19 +165,19 @@ export default function ResearchPage() {
                   <div className="w-20 h-20 rounded-sm overflow-hidden flex-shrink-0">
                     <img
                       src={getResearchImage(tech.key)}
-                      alt={tech.name}
+                      alt={techName}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-ogame-text-header font-semibold">{tech.name}</h3>
-                      <span className="text-ogame-accent font-bold">Level {currentLevel}</span>
+                      <h3 className="text-ogame-text-header font-semibold">{techName}</h3>
+                      <span className="text-ogame-accent font-bold">{tCommon('level')} {currentLevel}</span>
                     </div>
 
                     <p className="text-ogame-text-muted text-xs mb-2 line-clamp-2">
-                      {getResearchDescription(tech.key)}
+                      {techDesc}
                     </p>
 
                     <div className="flex flex-wrap gap-2 mb-2 text-xs">
@@ -229,24 +241,3 @@ function getResearchImage(key: string): string {
   return `/img/objects/research/${imageName}_small.jpg`
 }
 
-function getResearchDescription(key: string): string {
-  const descriptions: Record<string, string> = {
-    energy_technology: 'Improves energy efficiency and unlocks advanced power sources.',
-    laser_technology: 'Enables laser weapons and improves combat systems.',
-    ion_technology: 'Advanced ion-based weapons with increased damage.',
-    hyperspace_technology: 'Enables faster-than-light travel and hyperspace drives.',
-    plasma_technology: 'Powerful plasma weapons and increased resource production.',
-    combustion_drive: 'Basic propulsion system, increases ship speed.',
-    impulse_drive: 'Advanced propulsion for faster ships.',
-    hyperspace_drive: 'Fastest drive technology for interstellar travel.',
-    espionage_technology: 'Improves spy probes and counter-espionage.',
-    computer_technology: 'Increases maximum fleet slots.',
-    astrophysics: 'Enables colonization and expeditions.',
-    intergalactic_research_network: 'Link research labs across planets.',
-    graviton_technology: 'Required for Death Star construction.',
-    weapons_technology: 'Increases weapon damage for all units.',
-    shielding_technology: 'Increases shield strength for all units.',
-    armor_technology: 'Increases hull strength for all units.',
-  }
-  return descriptions[key] || 'Advanced research technology.'
-}

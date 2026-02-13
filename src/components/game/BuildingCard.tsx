@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { calculateBuildingCost, calculateBuildingTime, formatNumber, formatDuration } from '@/game/formulas'
@@ -24,6 +25,17 @@ export function BuildingCard({
   const { currentPlanet, buildingQueue, setBuildingQueue, updatePlanetResources } = useGameStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('buildings')
+  const tCommon = useTranslations('common')
+
+  // Convert key like 'metal_mine' to translation key like 'metalMine'
+  const getTranslationKey = (key: string): string => {
+    return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+  }
+
+  const translationKey = getTranslationKey(building.key)
+  const buildingName = t(translationKey as any) || building.name
+  const buildingDesc = t(`${translationKey}Desc` as any) || ''
 
   const nextLevel = currentLevel + 1
   const cost = calculateBuildingCost(building.id, nextLevel)
@@ -117,7 +129,7 @@ export function BuildingCard({
           <div className="w-24 h-24 rounded-sm overflow-hidden flex-shrink-0">
             <img
               src={getBuildingImage(building.key)}
-              alt={building.name}
+              alt={buildingName}
               className="w-full h-full object-cover"
             />
           </div>
@@ -126,28 +138,28 @@ export function BuildingCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-ogame-text-header font-semibold">
-                {building.name}
+                {buildingName}
               </h3>
               <span className="text-ogame-accent font-bold">
-                Level {currentLevel}
+                {tCommon('level')} {currentLevel}
               </span>
             </div>
 
             <p className="text-ogame-text-muted text-sm mb-3 line-clamp-2">
-              {getBuildingDescription(building.key)}
+              {buildingDesc}
             </p>
 
             {/* Cost */}
             <div className="flex flex-wrap gap-3 mb-3 text-sm">
               <span className={cost.metal <= (currentPlanet?.metal || 0) ? 'resource-metal' : 'text-ogame-negative'}>
-                Metal: {formatNumber(cost.metal)}
+                {tCommon('metal')}: {formatNumber(cost.metal)}
               </span>
               <span className={cost.crystal <= (currentPlanet?.crystal || 0) ? 'resource-crystal' : 'text-ogame-negative'}>
-                Crystal: {formatNumber(cost.crystal)}
+                {tCommon('crystal')}: {formatNumber(cost.crystal)}
               </span>
               {cost.deuterium > 0 && (
                 <span className={cost.deuterium <= (currentPlanet?.deuterium || 0) ? 'resource-deuterium' : 'text-ogame-negative'}>
-                  Deuterium: {formatNumber(cost.deuterium)}
+                  {tCommon('deuterium')}: {formatNumber(cost.deuterium)}
                 </span>
               )}
             </div>
@@ -155,7 +167,7 @@ export function BuildingCard({
             {/* Time and button */}
             <div className="flex items-center justify-between">
               <span className="text-ogame-text-muted text-sm">
-                Build time: <span className="countdown">{formatDuration(time)}</span>
+                {tCommon('buildTime')}: <span className="countdown">{formatDuration(time)}</span>
               </span>
 
               <button
@@ -163,7 +175,7 @@ export function BuildingCard({
                 disabled={!canAfford || isInQueue || queueFull || loading}
                 className="ogame-button-primary text-sm px-3 py-1"
               >
-                {loading ? 'Building...' : isInQueue ? 'In Queue' : queueFull ? 'Queue Full' : `Upgrade to ${nextLevel}`}
+                {loading ? t('building') : isInQueue ? t('inQueue') : queueFull ? t('queueFull') : t('upgradeToLevel', { level: nextLevel })}
               </button>
             </div>
           </div>
@@ -199,27 +211,3 @@ function getBuildingImage(key: string): string {
   return `/img/objects/buildings/${imageName}_small.jpg`
 }
 
-function getBuildingDescription(key: string): string {
-  const descriptions: Record<string, string> = {
-    metal_mine: 'Extracts metal ore from the planet surface. Metal is the most basic resource.',
-    crystal_mine: 'Mines crystal deposits. Crystal is essential for electronics and alloys.',
-    deuterium_synthesizer: 'Synthesizes deuterium from heavy hydrogen. Essential for fuel and research.',
-    solar_plant: 'Generates energy from solar radiation to power your mines and facilities.',
-    fusion_plant: 'Advanced power plant using nuclear fusion. Consumes deuterium for energy.',
-    metal_storage: 'Increases maximum metal storage capacity.',
-    crystal_storage: 'Increases maximum crystal storage capacity.',
-    deuterium_tank: 'Increases maximum deuterium storage capacity.',
-    robot_factory: 'Produces robots that speed up construction of buildings.',
-    nanite_factory: 'Produces nanites for extremely fast construction and ship building.',
-    shipyard: 'Constructs ships and defensive structures.',
-    research_lab: 'Enables research of new technologies.',
-    terraformer: 'Increases usable planet surface area.',
-    alliance_depot: 'Allows alliance members to provide defensive support.',
-    missile_silo: 'Stores and launches interplanetary missiles.',
-    space_dock: 'Allows fleet repairs without consuming resources.',
-    lunar_base: 'Provides living space on moons.',
-    sensor_phalanx: 'Scans solar systems for enemy fleet movements.',
-    jump_gate: 'Enables instant fleet transport between moons.',
-  }
-  return descriptions[key] || 'A building that enhances your colony.'
-}
