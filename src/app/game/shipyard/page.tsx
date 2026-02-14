@@ -7,6 +7,11 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 import { calculateUnitCost, calculateUnitTime, formatNumber, formatDuration } from '@/game/formulas'
 import { SHIPS } from '@/game/constants'
 
+// Convert key like 'light_fighter' to translation key like 'lightFighter'
+const getTranslationKey = (key: string): string => {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+}
+
 export default function ShipyardPage() {
   const { currentPlanet, updatePlanetResources } = useGameStore()
   const [amounts, setAmounts] = useState<Record<number, number>>({})
@@ -137,6 +142,9 @@ export default function ShipyardPage() {
 
           const currentCount = getShipCount(ship.key)
 
+          const shipKey = getTranslationKey(ship.key)
+          const shipName = t(shipKey as any) || ship.name
+
           return (
             <div key={ship.id} className="ogame-panel">
               <div className="ogame-panel-content">
@@ -144,14 +152,14 @@ export default function ShipyardPage() {
                   <div className="w-20 h-20 rounded-sm overflow-hidden flex-shrink-0">
                     <img
                       src={getShipImage(ship.key)}
-                      alt={ship.name}
+                      alt={shipName}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-ogame-text-header font-semibold">{ship.name}</h3>
+                      <h3 className="text-ogame-text-header font-semibold">{shipName}</h3>
                       <span className="text-ogame-accent">x{currentCount}</span>
                     </div>
 

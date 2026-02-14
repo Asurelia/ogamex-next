@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 // Generate random stars for background
 function generateStars(count: number) {
@@ -16,6 +17,8 @@ function generateStars(count: number) {
 
 export default function HomePage() {
   const [stars, setStars] = useState<ReturnType<typeof generateStars>>([])
+  const t = useTranslations('home')
+  const tAuth = useTranslations('auth')
 
   useEffect(() => {
     setStars(generateStars(100))
@@ -46,52 +49,51 @@ export default function HomePage() {
             OGameX
           </h1>
           <p className="text-center text-ogame-text-header mt-2">
-            Conquer the Universe
+            {t('tagline')}
           </p>
         </div>
 
         {/* Main panel */}
         <div className="ogame-panel w-full max-w-md">
           <div className="ogame-panel-header text-center">
-            Welcome Commander
+            {t('welcome')}
           </div>
           <div className="ogame-panel-content space-y-6">
             <p className="text-ogame-text-muted text-center">
-              Build your empire, research technologies, command your fleet,
-              and dominate the galaxy in this strategic space game.
+              {t('description')}
             </p>
 
             <div className="space-y-3">
               <Link href="/login" className="ogame-button-primary w-full block text-center">
-                Login
+                {tAuth('login')}
               </Link>
               <Link href="/register" className="ogame-button w-full block text-center">
-                Create Account
+                {t('createAccount')}
               </Link>
             </div>
 
             <div className="border-t border-ogame-border pt-4">
-              <h3 className="text-ogame-text-header text-sm mb-3">Features:</h3>
+              <h3 className="text-ogame-text-header text-sm mb-3">{t('features')}:</h3>
               <ul className="text-ogame-text-muted text-sm space-y-2">
                 <li className="flex items-center gap-2">
                   <span className="text-ogame-accent">▸</span>
-                  Build and upgrade resource mines
+                  {t('feature1')}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-ogame-accent">▸</span>
-                  Research powerful technologies
+                  {t('feature2')}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-ogame-accent">▸</span>
-                  Build massive fleets of starships
+                  {t('feature3')}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-ogame-accent">▸</span>
-                  Explore and colonize new planets
+                  {t('feature4')}
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="text-ogame-accent">▸</span>
-                  Battle other players for resources
+                  {t('feature5')}
                 </li>
               </ul>
             </div>
@@ -100,7 +102,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <div className="mt-8 text-ogame-text-muted text-sm">
-          <p>Inspired by OGame • Built with Next.js & Supabase</p>
+          <p>{t('footer')}</p>
         </div>
       </div>
     </div>

@@ -39,7 +39,22 @@
     "hasAccount": "Already have an account?",
     "loginError": "Invalid email or password",
     "registerError": "Registration failed",
-    "welcomeBack": "Welcome back, Commander!"
+    "welcomeBack": "Welcome back, Commander!",
+    "loginTitle": "Login to OGameX",
+    "loggingIn": "Logging in...",
+    "registerHere": "Register here",
+    "registerTitle": "Create Your Empire",
+    "commanderName": "Commander Name",
+    "commanderNamePlaceholder": "Your empire name",
+    "usernameRequirements": "3-20 characters, letters, numbers, and underscores only",
+    "creatingEmpire": "Creating Empire...",
+    "startJourney": "Start Your Journey",
+    "loginHere": "Login here",
+    "passwordsNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "usernameLengthError": "Username must be between 3 and 20 characters",
+    "usernameInvalidChars": "Username can only contain letters, numbers, and underscores",
+    "usernameTaken": "Username is already taken"
   },
   "nav": {
     "overview": "Overview",
@@ -381,5 +396,18 @@
     "failedToResearch": "Failed to start research",
     "failedToSendFleet": "Failed to send fleet",
     "generic": "An error occurred"
+  },
+  "home": {
+    "tagline": "Conquer the Universe",
+    "welcome": "Welcome Commander",
+    "description": "Build your empire, research technologies, command your fleet, and dominate the galaxy in this strategic space game.",
+    "createAccount": "Create Account",
+    "features": "Features",
+    "feature1": "Build and upgrade resource mines",
+    "feature2": "Research powerful technologies",
+    "feature3": "Build massive fleets of starships",
+    "feature4": "Explore and colonize new planets",
+    "feature5": "Battle other players for resources",
+    "footer": "Inspired by OGame • Built with Next.js & Supabase"
   }
 }

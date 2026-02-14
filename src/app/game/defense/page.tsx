@@ -7,6 +7,11 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 import { calculateUnitCost, calculateUnitTime, formatNumber, formatDuration } from '@/game/formulas'
 import { DEFENSE } from '@/game/constants'
 
+// Convert key like 'rocket_launcher' to translation key like 'rocketLauncher'
+const getTranslationKey = (key: string): string => {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+}
+
 export default function DefensePage() {
   const { currentPlanet, updatePlanetResources } = useGameStore()
   const [amounts, setAmounts] = useState<Record<number, number>>({})
@@ -136,6 +141,9 @@ export default function DefensePage() {
 
           const currentCount = getDefenseCount(defense.key)
 
+          const defenseKey = getTranslationKey(defense.key)
+          const defenseName = t(defenseKey as any) || defense.name
+
           return (
             <div key={defense.id} className="ogame-panel">
               <div className="ogame-panel-content">
@@ -143,14 +151,14 @@ export default function DefensePage() {
                   <div className="w-20 h-20 rounded-sm overflow-hidden flex-shrink-0">
                     <img
                       src={getDefenseImage(defense.key)}
-                      alt={defense.name}
+                      alt={defenseName}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-ogame-text-header font-semibold">{defense.name}</h3>
+                      <h3 className="text-ogame-text-header font-semibold">{defenseName}</h3>
                       <span className="text-ogame-accent">x{currentCount}</span>
                     </div>
 

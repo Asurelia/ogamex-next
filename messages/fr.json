@@ -39,7 +39,22 @@
     "hasAccount": "Déjà un compte ?",
     "loginError": "Email ou mot de passe invalide",
     "registerError": "Échec de l'inscription",
-    "welcomeBack": "Bon retour, Commandant !"
+    "welcomeBack": "Bon retour, Commandant !",
+    "loginTitle": "Connexion à OGameX",
+    "loggingIn": "Connexion en cours...",
+    "registerHere": "Inscrivez-vous ici",
+    "registerTitle": "Créez votre Empire",
+    "commanderName": "Nom du Commandant",
+    "commanderNamePlaceholder": "Nom de votre empire",
+    "usernameRequirements": "3-20 caractères, lettres, chiffres et tirets bas uniquement",
+    "creatingEmpire": "Création de l'empire...",
+    "startJourney": "Commencer l'aventure",
+    "loginHere": "Connectez-vous ici",
+    "passwordsNotMatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "usernameLengthError": "Le nom d'utilisateur doit contenir entre 3 et 20 caractères",
+    "usernameInvalidChars": "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et tirets bas",
+    "usernameTaken": "Ce nom d'utilisateur est déjà pris"
   },
   "nav": {
     "overview": "Vue d'ensemble",
@@ -381,5 +396,18 @@
     "failedToResearch": "Échec du lancement de la recherche",
     "failedToSendFleet": "Échec de l'envoi de la flotte",
     "generic": "Une erreur s'est produite"
+  },
+  "home": {
+    "tagline": "Conquérez l'Univers",
+    "welcome": "Bienvenue Commandant",
+    "description": "Construisez votre empire, développez vos technologies, commandez votre flotte et dominez la galaxie dans ce jeu de stratégie spatiale.",
+    "createAccount": "Créer un compte",
+    "features": "Fonctionnalités",
+    "feature1": "Construisez et améliorez vos mines de ressources",
+    "feature2": "Recherchez des technologies puissantes",
+    "feature3": "Construisez d'immenses flottes de vaisseaux",
+    "feature4": "Explorez et colonisez de nouvelles planètes",
+    "feature5": "Combattez d'autres joueurs pour leurs ressources",
+    "footer": "Inspiré par OGame • Développé avec Next.js & Supabase"
   }
 }

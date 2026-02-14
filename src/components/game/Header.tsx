@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
 export function Header() {
   const router = useRouter()
   const { user, toggleSidebar, reset } = useGameStore()
+  const t = useTranslations('auth')
+  const tNav = useTranslations('nav')
 
   const handleLogout = async () => {
     const supabase = getSupabaseClient()
@@ -52,14 +55,14 @@ export function Header() {
               </span>
               {user.alliance_id && (
                 <span className="ogame-badge ogame-badge-info">
-                  Alliance
+                  {tNav('alliance')}
                 </span>
               )}
               <button
                 onClick={handleLogout}
                 className="text-ogame-text-muted hover:text-ogame-accent text-sm transition-colors"
               >
-                Logout
+                {t('logout')}
               </button>
             </div>
           )}

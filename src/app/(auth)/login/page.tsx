@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -11,6 +12,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const t = useTranslations('auth')
+  const tCommon = useTranslations('common')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,7 +45,7 @@ export default function LoginPage() {
     <div className="min-h-screen space-background flex items-center justify-center px-4">
       <div className="ogame-panel w-full max-w-md">
         <div className="ogame-panel-header">
-          Login to OGameX
+          {t('loginTitle')}
         </div>
         <div className="ogame-panel-content">
           <form onSubmit={handleLogin} className="space-y-4">
@@ -54,7 +57,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="email" className="block text-ogame-text-header text-sm mb-1">
-                Email
+                {t('email')}
               </label>
               <input
                 id="email"
@@ -70,7 +73,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-ogame-text-header text-sm mb-1">
-                Password
+                {t('password')}
               </label>
               <input
                 id="password"
@@ -89,22 +92,22 @@ export default function LoginPage() {
               className="ogame-button-primary w-full"
               disabled={loading}
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? t('loggingIn') : t('login')}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-ogame-text-muted text-sm">
-              Don't have an account?{' '}
+              {t('noAccount')}{' '}
               <Link href="/register" className="ogame-link">
-                Register here
+                {t('registerHere')}
               </Link>
             </p>
           </div>
 
           <div className="mt-4 text-center">
             <Link href="/" className="text-ogame-text-muted text-sm hover:text-ogame-accent">
-              ← Back to home
+              ← {tCommon('back')}
             </Link>
           </div>
         </div>

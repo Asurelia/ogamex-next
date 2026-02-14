@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { getSupabaseClient } from '@/lib/supabase/client'
 
 export default function RegisterPage() {
@@ -13,6 +14,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const t = useTranslations('auth')
+  const tCommon = useTranslations('common')
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,7 +92,7 @@ export default function RegisterPage() {
     <div className="min-h-screen space-background flex items-center justify-center px-4">
       <div className="ogame-panel w-full max-w-md">
         <div className="ogame-panel-header">
-          Create Your Empire
+          {t('registerTitle')}
         </div>
         <div className="ogame-panel-content">
           <form onSubmit={handleRegister} className="space-y-4">
@@ -101,7 +104,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="username" className="block text-ogame-text-header text-sm mb-1">
-                Commander Name
+                {t('commanderName')}
               </label>
               <input
                 id="username"
@@ -109,20 +112,20 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="ogame-input w-full"
-                placeholder="Your empire name"
+                placeholder={t('commanderNamePlaceholder')}
                 required
                 disabled={loading}
                 minLength={3}
                 maxLength={20}
               />
               <p className="text-ogame-text-muted text-xs mt-1">
-                3-20 characters, letters, numbers, and underscores only
+                {t('usernameRequirements')}
               </p>
             </div>
 
             <div>
               <label htmlFor="email" className="block text-ogame-text-header text-sm mb-1">
-                Email
+                {t('email')}
               </label>
               <input
                 id="email"
@@ -138,7 +141,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="password" className="block text-ogame-text-header text-sm mb-1">
-                Password
+                {t('password')}
               </label>
               <input
                 id="password"
@@ -155,7 +158,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-ogame-text-header text-sm mb-1">
-                Confirm Password
+                {t('confirmPassword')}
               </label>
               <input
                 id="confirmPassword"
@@ -174,22 +177,22 @@ export default function RegisterPage() {
               className="ogame-button-primary w-full"
               disabled={loading}
             >
-              {loading ? 'Creating Empire...' : 'Start Your Journey'}
+              {loading ? t('creatingEmpire') : t('startJourney')}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-ogame-text-muted text-sm">
-              Already have an account?{' '}
+              {t('hasAccount')}{' '}
               <Link href="/login" className="ogame-link">
-                Login here
+                {t('loginHere')}
               </Link>
             </p>
           </div>
 
           <div className="mt-4 text-center">
             <Link href="/" className="text-ogame-text-muted text-sm hover:text-ogame-accent">
-              ← Back to home
+              ← {tCommon('back')}
             </Link>
           </div>
         </div>
