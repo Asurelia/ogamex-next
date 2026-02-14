@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, getApiSupabase, type AuthenticatedUser } from '@/lib/api/auth'
+import { updatePlanetResources } from '@/lib/game/resource-calculator'
 
 /**
  * GET /api/v1/planets
@@ -8,7 +9,7 @@ import { withAuth, getApiSupabase, type AuthenticatedUser } from '@/lib/api/auth
 async function getPlanets(request: NextRequest, user: AuthenticatedUser) {
   const supabase = getApiSupabase()
 
-  const { data: planets, error } = await supabase
+  const { data: planetsData, error } = await supabase
     .from('planets')
     .select('*')
     .eq('user_id', user.id)
@@ -18,6 +19,11 @@ async function getPlanets(request: NextRequest, user: AuthenticatedUser) {
   if (error) {
     return NextResponse.json({ error: 'Failed to fetch planets' }, { status: 500 })
   }
+
+  // Update resources in real-time for all planets
+  const planets = await Promise.all(
+    planetsData.map(planet => updatePlanetResources(supabase, planet))
+  )
 
   return NextResponse.json({
     planets: planets.map(planet => ({

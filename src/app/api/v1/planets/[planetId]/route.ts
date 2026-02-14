@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, getApiSupabase, type AuthenticatedUser } from '@/lib/api/auth'
+import { updatePlanetResources } from '@/lib/game/resource-calculator'
 
 /**
  * GET /api/v1/planets/[planetId]
- * Get specific planet details
+ * Get specific planet details with real-time resource calculation
  */
 async function getPlanet(
   request: NextRequest,
@@ -12,16 +13,19 @@ async function getPlanet(
   const planetId = request.nextUrl.pathname.split('/').pop()
   const supabase = getApiSupabase()
 
-  const { data: planet, error } = await supabase
+  const { data: planetData, error } = await supabase
     .from('planets')
     .select('*')
     .eq('id', planetId)
     .eq('user_id', user.id)
     .single()
 
-  if (error || !planet) {
+  if (error || !planetData) {
     return NextResponse.json({ error: 'Planet not found' }, { status: 404 })
   }
+
+  // Update resources in real-time (processes completed buildings too)
+  const planet = await updatePlanetResources(supabase, planetData)
 
   // Get building queue for this planet
   const { data: buildingQueue } = await supabase
