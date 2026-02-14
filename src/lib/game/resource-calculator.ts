@@ -43,6 +43,79 @@ interface BuildingQueueItem {
   ends_at: string
 }
 
+interface UnitQueueItem {
+  id: string
+  planet_id: string
+  unit_id: number
+  unit_type: 'ship' | 'defense'
+  amount: number
+  amount_completed: number
+  ends_at: string
+}
+
+interface ResearchQueueItem {
+  id: string
+  user_id: string
+  research_id: number
+  target_level: number
+  ends_at: string
+}
+
+// Ship ID to column key mapping
+const SHIP_KEYS: Record<number, string> = {
+  1: 'light_fighter',
+  2: 'heavy_fighter',
+  3: 'cruiser',
+  4: 'battleship',
+  5: 'battlecruiser',
+  6: 'bomber',
+  7: 'destroyer',
+  8: 'deathstar',
+  9: 'small_cargo',
+  10: 'large_cargo',
+  11: 'colony_ship',
+  12: 'recycler',
+  13: 'espionage_probe',
+  14: 'solar_satellite',
+  15: 'crawler',
+  16: 'reaper',
+  17: 'pathfinder',
+}
+
+// Defense ID to column key mapping
+const DEFENSE_KEYS: Record<number, string> = {
+  1: 'rocket_launcher',
+  2: 'light_laser',
+  3: 'heavy_laser',
+  4: 'gauss_cannon',
+  5: 'ion_cannon',
+  6: 'plasma_turret',
+  7: 'small_shield_dome',
+  8: 'large_shield_dome',
+  9: 'anti_ballistic_missile',
+  10: 'interplanetary_missile',
+}
+
+// Research ID to column key mapping
+const RESEARCH_KEYS: Record<number, string> = {
+  1: 'energy_technology',
+  2: 'laser_technology',
+  3: 'ion_technology',
+  4: 'hyperspace_technology',
+  5: 'plasma_technology',
+  6: 'combustion_drive',
+  7: 'impulse_drive',
+  8: 'hyperspace_drive',
+  9: 'espionage_technology',
+  10: 'computer_technology',
+  11: 'astrophysics',
+  12: 'intergalactic_research_network',
+  13: 'graviton_technology',
+  14: 'weapons_technology',
+  15: 'shielding_technology',
+  16: 'armor_technology',
+}
+
 // Building ID to column key mapping
 const BUILDING_KEYS: Record<number, string> = {
   1: 'metal_mine',
@@ -138,6 +211,34 @@ export async function updatePlanetResources(
           .from('building_queue')
           .delete()
           .eq('id', building.id)
+      }
+    }
+
+    // Process completed units (ships and defenses)
+    const { data: completedUnits } = await supabase
+      .from('unit_queue')
+      .select('*')
+      .eq('planet_id', planet.id)
+      .lte('ends_at', now.toISOString())
+      .order('ends_at', { ascending: true })
+
+    if (completedUnits && completedUnits.length > 0) {
+      for (const unit of completedUnits as UnitQueueItem[]) {
+        const unitKey = unit.unit_type === 'ship'
+          ? SHIP_KEYS[unit.unit_id]
+          : DEFENSE_KEYS[unit.unit_id]
+
+        if (unitKey) {
+          const currentAmount = updatedPlanet[unitKey] || 0
+          const amountToAdd = unit.amount - (unit.amount_completed || 0)
+          updatedPlanet[unitKey] = currentAmount + amountToAdd
+        }
+
+        // Delete the completed queue entry
+        await supabase
+          .from('unit_queue')
+          .delete()
+          .eq('id', unit.id)
       }
     }
   }
@@ -240,5 +341,65 @@ export function calculateCurrentResources(planet: PlanetData): {
     metal: Math.min(planet.metal_max, Math.floor(planet.metal + metalProduced)),
     crystal: Math.min(planet.crystal_max, Math.floor(planet.crystal + crystalProduced)),
     deuterium: Math.min(planet.deuterium_max, Math.floor(planet.deuterium + deuteriumProduced)),
+  }
+}
+
+/**
+ * Process completed research queue items
+ * Should be called when fetching user research data
+ */
+export async function processResearchQueue(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<void> {
+  const now = new Date()
+
+  // Get completed research
+  const { data: completedResearch } = await supabase
+    .from('research_queue')
+    .select('*')
+    .eq('user_id', userId)
+    .lte('ends_at', now.toISOString())
+    .order('ends_at', { ascending: true })
+
+  if (!completedResearch || completedResearch.length === 0) {
+    return
+  }
+
+  // Get current research levels
+  const { data: userResearch } = await supabase
+    .from('user_research')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+
+  if (!userResearch) {
+    return
+  }
+
+  const updates: Record<string, number> = {}
+
+  for (const research of completedResearch as ResearchQueueItem[]) {
+    const researchKey = RESEARCH_KEYS[research.research_id]
+    if (researchKey) {
+      updates[researchKey] = research.target_level
+    }
+
+    // Delete the completed queue entry
+    await supabase
+      .from('research_queue')
+      .delete()
+      .eq('id', research.id)
+  }
+
+  // Update user research levels
+  if (Object.keys(updates).length > 0) {
+    await supabase
+      .from('user_research')
+      .update({
+        ...updates,
+        updated_at: now.toISOString(),
+      })
+      .eq('user_id', userId)
   }
 }

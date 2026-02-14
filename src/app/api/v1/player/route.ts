@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, getApiSupabase, type AuthenticatedUser } from '@/lib/api/auth'
+import { processResearchQueue } from '@/lib/game/resource-calculator'
 
 /**
  * GET /api/v1/player
@@ -7,6 +8,9 @@ import { withAuth, getApiSupabase, type AuthenticatedUser } from '@/lib/api/auth
  */
 async function getPlayer(request: NextRequest, user: AuthenticatedUser) {
   const supabase = getApiSupabase()
+
+  // Process completed research queue items
+  await processResearchQueue(supabase, user.id)
 
   const { data: player } = await supabase
     .from('users')
