@@ -175,7 +175,14 @@
     "shieldingTechnology": "Technologie Bouclier",
     "shieldingTechnologyDesc": "Renforce les boucliers de toutes vos unités.",
     "armorTechnology": "Technologie Protection",
-    "armorTechnologyDesc": "Renforce la coque de toutes vos unités."
+    "armorTechnologyDesc": "Renforce la coque de toutes vos unités.",
+    "allResearch": "Toutes les recherches",
+    "basicTech": "Technologies de base",
+    "propulsion": "Propulsion",
+    "advanced": "Technologies avancées",
+    "combat": "Combat",
+    "researchSpeed": "Vitesse de recherche",
+    "inQueue": "En file d'attente"
   },
   "ships": {
     "title": "Vaisseaux",
@@ -220,7 +227,13 @@
     "reaper": "Faucheur",
     "reaperDesc": "Vaisseau de combat avancé avec une capacité de recyclage intégrée.",
     "pathfinder": "Éclaireur",
-    "pathfinderDesc": "Vaisseau d'exploration polyvalent pour les expéditions."
+    "pathfinderDesc": "Vaisseau d'exploration polyvalent pour les expéditions.",
+    "naniteLevel": "Niveau nanites",
+    "totalShips": "Total vaisseaux",
+    "ship": "Vaisseau",
+    "owned": "Possédés",
+    "noShips": "Aucun vaisseau",
+    "selectShipToBuild": "Sélectionnez un vaisseau à construire"
   },
   "defense": {
     "title": "Défense",
@@ -602,7 +615,9 @@
     "noFleets": "Aucune mission de flotte active",
     "mission": "Mission",
     "origin": "Origine",
-    "status": "Statut"
+    "status": "Statut",
+    "switchTo3D": "Passer en vue 3D",
+    "switchTo2D": "Passer en vue 2D"
   },
   "planet": {
     "types": {
@@ -612,7 +627,9 @@
       "ice": "Glacé",
       "jungle": "Jungle",
       "normal": "Normal",
-      "water": "Aquatique"
+      "water": "Aquatique",
+      "planet": "Planète",
+      "moon": "Lune"
     }
   },
   "errors": {

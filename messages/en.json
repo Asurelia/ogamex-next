@@ -175,7 +175,14 @@
     "shieldingTechnology": "Shielding Technology",
     "shieldingTechnologyDesc": "Increases shield strength for all units.",
     "armorTechnology": "Armor Technology",
-    "armorTechnologyDesc": "Increases hull strength for all units."
+    "armorTechnologyDesc": "Increases hull strength for all units.",
+    "allResearch": "All Research",
+    "basicTech": "Basic Technologies",
+    "propulsion": "Propulsion",
+    "advanced": "Advanced Technologies",
+    "combat": "Combat",
+    "researchSpeed": "Research Speed",
+    "inQueue": "In Queue"
   },
   "ships": {
     "title": "Ships",
@@ -220,7 +227,13 @@
     "reaper": "Reaper",
     "reaperDesc": "Advanced combat ship with integrated recycling capability.",
     "pathfinder": "Pathfinder",
-    "pathfinderDesc": "Versatile exploration ship for expeditions."
+    "pathfinderDesc": "Versatile exploration ship for expeditions.",
+    "naniteLevel": "Nanite Level",
+    "totalShips": "Total Ships",
+    "ship": "Ship",
+    "owned": "Owned",
+    "noShips": "No ships",
+    "selectShipToBuild": "Select a ship to build"
   },
   "defense": {
     "title": "Defense",
@@ -602,7 +615,9 @@
     "noFleets": "No active fleet missions",
     "mission": "Mission",
     "origin": "Origin",
-    "status": "Status"
+    "status": "Status",
+    "switchTo3D": "Switch to 3D view",
+    "switchTo2D": "Switch to 2D view"
   },
   "planet": {
     "types": {
@@ -612,7 +627,9 @@
       "ice": "Ice",
       "jungle": "Jungle",
       "normal": "Normal",
-      "water": "Water"
+      "water": "Water",
+      "planet": "Planet",
+      "moon": "Moon"
     }
   },
   "errors": {
