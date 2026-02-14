@@ -17,12 +17,8 @@
   ],
   "crons": [
     {
-      "path": "/api/v1/resources/production",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/v1/missions/process",
-      "schedule": "* * * * *"
+      "path": "/api/v1/cron/daily",
+      "schedule": "0 0 * * *"
     }
   ]
 }
