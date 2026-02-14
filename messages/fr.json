@@ -83,7 +83,8 @@
     "production": "Production",
     "storage": "Stockage",
     "capacity": "Capacité",
-    "productionSummary": "Résumé de Production"
+    "productionSummary": "Résumé de Production",
+    "energyBalance": "Bilan Énergétique"
   },
   "buildings": {
     "title": "Bâtiments",
@@ -237,6 +238,12 @@
   },
   "defense": {
     "title": "Défense",
+    "defense": "Défense",
+    "built": "Construites",
+    "totalDefense": "Total Défenses",
+    "shieldDomes": "Dômes de Bouclier",
+    "noDefense": "Aucune défense",
+    "selectDefenseToBuild": "Sélectionnez une défense à construire",
     "shipyardLevel": "Niveau du chantier spatial",
     "attack": "Attaque",
     "shield": "Bouclier",

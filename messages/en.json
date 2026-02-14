@@ -83,7 +83,8 @@
     "production": "Production",
     "storage": "Storage",
     "capacity": "Capacity",
-    "productionSummary": "Production Summary"
+    "productionSummary": "Production Summary",
+    "energyBalance": "Energy Balance"
   },
   "buildings": {
     "title": "Buildings",
@@ -237,6 +238,12 @@
   },
   "defense": {
     "title": "Defense",
+    "defense": "Defense",
+    "built": "Built",
+    "totalDefense": "Total Defense",
+    "shieldDomes": "Shield Domes",
+    "noDefense": "No defense",
+    "selectDefenseToBuild": "Select a defense to build",
     "shipyardLevel": "Shipyard Level",
     "attack": "Attack",
     "shield": "Shield",
