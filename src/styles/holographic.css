@@ -1,0 +1,1297 @@
+/* ============================================================================
+   HOLOGRAPHIC THEME SYSTEM
+   A comprehensive CSS system for futuristic holographic UI elements
+   ============================================================================ */
+
+/* ============================================================================
+   CSS VARIABLES
+   ============================================================================ */
+
+:root {
+  /* Primary holographic colors */
+  --holo-cyan: #00ffff;
+  --holo-magenta: #ff00ff;
+  --holo-gold: #ffd700;
+  --holo-green: #00ff88;
+  --holo-red: #ff4444;
+  --holo-blue: #4488ff;
+  --holo-purple: #aa44ff;
+  --holo-orange: #ff8800;
+  --holo-white: #ffffff;
+
+  /* Muted/dimmed variants */
+  --holo-cyan-dim: rgba(0, 255, 255, 0.6);
+  --holo-magenta-dim: rgba(255, 0, 255, 0.6);
+  --holo-gold-dim: rgba(255, 215, 0, 0.6);
+  --holo-green-dim: rgba(0, 255, 136, 0.6);
+  --holo-red-dim: rgba(255, 68, 68, 0.6);
+  --holo-blue-dim: rgba(68, 136, 255, 0.6);
+  --holo-purple-dim: rgba(170, 68, 255, 0.6);
+
+  /* Background colors */
+  --holo-bg-dark: rgba(0, 0, 0, 0.8);
+  --holo-bg-medium: rgba(20, 30, 50, 0.7);
+  --holo-bg-light: rgba(40, 60, 100, 0.5);
+  --holo-bg-transparent: rgba(0, 20, 40, 0.4);
+  --holo-bg-panel: rgba(10, 20, 35, 0.85);
+
+  /* Border colors */
+  --holo-border-primary: rgba(0, 255, 255, 0.3);
+  --holo-border-accent: rgba(255, 0, 255, 0.3);
+  --holo-border-subtle: rgba(255, 255, 255, 0.1);
+  --holo-border-gold: rgba(255, 215, 0, 0.3);
+  --holo-border-danger: rgba(255, 68, 68, 0.3);
+
+  /* Glow sizes */
+  --holo-glow-xs: 0 0 3px;
+  --holo-glow-sm: 0 0 5px;
+  --holo-glow-md: 0 0 10px;
+  --holo-glow-lg: 0 0 20px;
+  --holo-glow-xl: 0 0 30px;
+
+  /* Blur values */
+  --holo-blur-xs: blur(2px);
+  --holo-blur-sm: blur(4px);
+  --holo-blur-md: blur(8px);
+  --holo-blur-lg: blur(16px);
+  --holo-blur-xl: blur(24px);
+
+  /* Transition timings */
+  --holo-transition-instant: 50ms ease;
+  --holo-transition-fast: 150ms ease;
+  --holo-transition-normal: 300ms ease;
+  --holo-transition-slow: 500ms ease;
+  --holo-transition-slower: 800ms ease;
+
+  /* Border radius */
+  --holo-radius-sm: 2px;
+  --holo-radius-md: 4px;
+  --holo-radius-lg: 8px;
+  --holo-radius-xl: 12px;
+  --holo-radius-round: 9999px;
+
+  /* Spacing */
+  --holo-space-xs: 4px;
+  --holo-space-sm: 8px;
+  --holo-space-md: 16px;
+  --holo-space-lg: 24px;
+  --holo-space-xl: 32px;
+
+  /* Font settings */
+  --holo-font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  --holo-font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ============================================================================
+   KEYFRAME ANIMATIONS
+   All animations use transform/opacity for GPU acceleration
+   ============================================================================ */
+
+/* Scanning line effect - moves from top to bottom */
+@keyframes holo-scan {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400%);
+    opacity: 0;
+  }
+}
+
+/* Gentle pulse for glowing elements */
+@keyframes holo-pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Subtle glow intensity pulse */
+@keyframes holo-glow-pulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 15px currentColor);
+  }
+}
+
+/* Shimmer effect for loading/highlight */
+@keyframes holo-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Text flicker effect */
+@keyframes holo-flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  3% {
+    opacity: 0.4;
+  }
+  6% {
+    opacity: 1;
+  }
+  7% {
+    opacity: 0.6;
+  }
+  9% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 1;
+  }
+  42% {
+    opacity: 0.8;
+  }
+  44% {
+    opacity: 1;
+  }
+}
+
+/* Border flow animation */
+@keyframes holo-border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Floating/hovering effect */
+@keyframes holo-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Rotation for loading indicators */
+@keyframes holo-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Data stream downward flow */
+@keyframes holo-data-flow {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* Glitch effect */
+@keyframes holo-glitch {
+  0%, 100% {
+    transform: translate(0);
+    filter: none;
+  }
+  20% {
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(90deg);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+    filter: hue-rotate(-90deg);
+  }
+  60% {
+    transform: translate(2px, 2px);
+    filter: hue-rotate(180deg);
+  }
+  80% {
+    transform: translate(2px, -2px);
+    filter: none;
+  }
+}
+
+/* Fade in with scale */
+@keyframes holo-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scanlines overlay effect */
+@keyframes holo-scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+/* Chromatic aberration shift */
+@keyframes holo-chromatic {
+  0%, 100% {
+    text-shadow:
+      -1px 0 var(--holo-cyan),
+      1px 0 var(--holo-magenta);
+  }
+  25% {
+    text-shadow:
+      -2px 0 var(--holo-cyan),
+      2px 0 var(--holo-magenta);
+  }
+  50% {
+    text-shadow:
+      -1px 0 var(--holo-magenta),
+      1px 0 var(--holo-cyan);
+  }
+  75% {
+    text-shadow:
+      -2px 0 var(--holo-magenta),
+      2px 0 var(--holo-cyan);
+  }
+}
+
+/* ============================================================================
+   GLASSMORPHISM BACKGROUNDS
+   ============================================================================ */
+
+.holo-glass {
+  background: var(--holo-bg-medium);
+  backdrop-filter: var(--holo-blur-md);
+  -webkit-backdrop-filter: var(--holo-blur-md);
+  border: 1px solid var(--holo-border-primary);
+}
+
+.holo-glass-dark {
+  background: var(--holo-bg-dark);
+  backdrop-filter: var(--holo-blur-lg);
+  -webkit-backdrop-filter: var(--holo-blur-lg);
+  border: 1px solid var(--holo-border-subtle);
+}
+
+.holo-glass-light {
+  background: var(--holo-bg-light);
+  backdrop-filter: var(--holo-blur-sm);
+  -webkit-backdrop-filter: var(--holo-blur-sm);
+  border: 1px solid var(--holo-border-primary);
+}
+
+.holo-glass-panel {
+  background: var(--holo-bg-panel);
+  backdrop-filter: var(--holo-blur-md);
+  -webkit-backdrop-filter: var(--holo-blur-md);
+  border: 1px solid var(--holo-border-primary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+   GLOW EFFECTS
+   ============================================================================ */
+
+.holo-glow-cyan {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-cyan),
+    var(--holo-glow-lg) rgba(0, 255, 255, 0.3);
+}
+
+.holo-glow-magenta {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-magenta),
+    var(--holo-glow-lg) rgba(255, 0, 255, 0.3);
+}
+
+.holo-glow-gold {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-gold),
+    var(--holo-glow-lg) rgba(255, 215, 0, 0.3);
+}
+
+.holo-glow-green {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-green),
+    var(--holo-glow-lg) rgba(0, 255, 136, 0.3);
+}
+
+.holo-glow-red {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-red),
+    var(--holo-glow-lg) rgba(255, 68, 68, 0.3);
+}
+
+.holo-glow-blue {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-blue),
+    var(--holo-glow-lg) rgba(68, 136, 255, 0.3);
+}
+
+.holo-glow-purple {
+  box-shadow:
+    var(--holo-glow-md) var(--holo-purple),
+    var(--holo-glow-lg) rgba(170, 68, 255, 0.3);
+}
+
+/* Subtle glow variants */
+.holo-glow-cyan-subtle {
+  box-shadow: var(--holo-glow-sm) rgba(0, 255, 255, 0.4);
+}
+
+.holo-glow-magenta-subtle {
+  box-shadow: var(--holo-glow-sm) rgba(255, 0, 255, 0.4);
+}
+
+.holo-glow-gold-subtle {
+  box-shadow: var(--holo-glow-sm) rgba(255, 215, 0, 0.4);
+}
+
+/* ============================================================================
+   BORDER STYLES
+   ============================================================================ */
+
+.holo-border {
+  border: 1px solid var(--holo-border-primary);
+}
+
+.holo-border-accent {
+  border: 1px solid var(--holo-border-accent);
+}
+
+.holo-border-gold {
+  border: 1px solid var(--holo-border-gold);
+}
+
+.holo-border-danger {
+  border: 1px solid var(--holo-border-danger);
+}
+
+/* Animated gradient border */
+.holo-border-animated {
+  position: relative;
+  border: none;
+  background: var(--holo-bg-dark);
+}
+
+.holo-border-animated::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    var(--holo-cyan),
+    var(--holo-magenta),
+    var(--holo-cyan)
+  );
+  background-size: 200% 100%;
+  animation: holo-border-flow 3s linear infinite;
+  border-radius: inherit;
+}
+
+/* Tech corner decorations */
+.holo-border-corners {
+  position: relative;
+}
+
+.holo-border-corners::before,
+.holo-border-corners::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--holo-cyan);
+  border-style: solid;
+  border-width: 0;
+}
+
+.holo-border-corners::before {
+  top: 0;
+  left: 0;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.holo-border-corners::after {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* ============================================================================
+   TEXT EFFECTS
+   ============================================================================ */
+
+.holo-text-cyan {
+  color: var(--holo-cyan);
+}
+
+.holo-text-magenta {
+  color: var(--holo-magenta);
+}
+
+.holo-text-gold {
+  color: var(--holo-gold);
+}
+
+.holo-text-green {
+  color: var(--holo-green);
+}
+
+.holo-text-red {
+  color: var(--holo-red);
+}
+
+.holo-text-blue {
+  color: var(--holo-blue);
+}
+
+.holo-text-purple {
+  color: var(--holo-purple);
+}
+
+/* Glowing text */
+.holo-text-glow {
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor;
+}
+
+.holo-text-glow-subtle {
+  text-shadow:
+    0 0 3px currentColor,
+    0 0 6px rgba(var(--holo-cyan), 0.5);
+}
+
+/* Flickering text effect */
+.holo-text-flicker {
+  animation: holo-flicker 4s linear infinite;
+}
+
+/* Chromatic aberration text */
+.holo-text-chromatic {
+  animation: holo-chromatic 2s ease-in-out infinite;
+}
+
+/* Gradient text */
+.holo-text-gradient {
+  background: linear-gradient(90deg, var(--holo-cyan), var(--holo-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.holo-text-gradient-gold {
+  background: linear-gradient(90deg, var(--holo-gold), var(--holo-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Monospace/tech font */
+.holo-text-mono {
+  font-family: var(--holo-font-mono);
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================================
+   ANIMATION UTILITY CLASSES
+   ============================================================================ */
+
+.holo-pulse {
+  animation: holo-pulse 2s ease-in-out infinite;
+}
+
+.holo-glow-pulse {
+  animation: holo-glow-pulse 2s ease-in-out infinite;
+}
+
+.holo-scan {
+  animation: holo-scan 4s linear infinite;
+}
+
+.holo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: holo-shimmer 2s infinite;
+}
+
+.holo-float {
+  animation: holo-float 3s ease-in-out infinite;
+}
+
+.holo-rotate {
+  animation: holo-rotate 2s linear infinite;
+}
+
+.holo-glitch {
+  animation: holo-glitch 0.5s ease-in-out;
+}
+
+.holo-glitch-loop {
+  animation: holo-glitch 0.3s ease-in-out infinite;
+}
+
+.holo-fade-in {
+  animation: holo-fade-in 0.3s ease-out forwards;
+}
+
+/* ============================================================================
+   CARD COMPONENTS
+   ============================================================================ */
+
+.holo-card {
+  background: var(--holo-bg-panel);
+  backdrop-filter: var(--holo-blur-md);
+  -webkit-backdrop-filter: var(--holo-blur-md);
+  border: 1px solid var(--holo-border-primary);
+  border-radius: var(--holo-radius-lg);
+  overflow: hidden;
+  transition:
+    transform var(--holo-transition-normal),
+    box-shadow var(--holo-transition-normal),
+    border-color var(--holo-transition-normal);
+}
+
+.holo-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--holo-cyan-dim);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    var(--holo-glow-sm) rgba(0, 255, 255, 0.2);
+}
+
+.holo-card-header {
+  padding: var(--holo-space-md);
+  border-bottom: 1px solid var(--holo-border-primary);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 255, 0.05) 0%,
+    transparent 100%
+  );
+}
+
+.holo-card-header-title {
+  color: var(--holo-cyan);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.holo-card-body {
+  padding: var(--holo-space-md);
+}
+
+.holo-card-footer {
+  padding: var(--holo-space-md);
+  border-top: 1px solid var(--holo-border-primary);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Card variants */
+.holo-card-danger {
+  border-color: var(--holo-border-danger);
+}
+
+.holo-card-danger:hover {
+  border-color: var(--holo-red-dim);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    var(--holo-glow-sm) rgba(255, 68, 68, 0.2);
+}
+
+.holo-card-gold {
+  border-color: var(--holo-border-gold);
+}
+
+.holo-card-gold:hover {
+  border-color: var(--holo-gold-dim);
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    var(--holo-glow-sm) rgba(255, 215, 0, 0.2);
+}
+
+/* ============================================================================
+   BUTTON COMPONENTS
+   ============================================================================ */
+
+.holo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--holo-space-sm);
+  padding: var(--holo-space-sm) var(--holo-space-md);
+  font-family: var(--holo-font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--holo-white);
+  background: var(--holo-bg-medium);
+  border: 1px solid var(--holo-border-primary);
+  border-radius: var(--holo-radius-md);
+  cursor: pointer;
+  transition:
+    transform var(--holo-transition-fast),
+    box-shadow var(--holo-transition-fast),
+    border-color var(--holo-transition-fast),
+    background var(--holo-transition-fast);
+}
+
+.holo-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--holo-cyan-dim);
+  box-shadow: var(--holo-glow-sm) rgba(0, 255, 255, 0.3);
+}
+
+.holo-btn:active {
+  transform: translateY(0);
+}
+
+.holo-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Primary button */
+.holo-btn-primary {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 255, 0.2) 0%,
+    rgba(0, 255, 255, 0.1) 100%
+  );
+  border-color: var(--holo-cyan-dim);
+  color: var(--holo-cyan);
+}
+
+.holo-btn-primary:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 255, 0.3) 0%,
+    rgba(0, 255, 255, 0.15) 100%
+  );
+  box-shadow: var(--holo-glow-md) rgba(0, 255, 255, 0.4);
+}
+
+/* Secondary button */
+.holo-btn-secondary {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 0, 255, 0.2) 0%,
+    rgba(255, 0, 255, 0.1) 100%
+  );
+  border-color: var(--holo-border-accent);
+  color: var(--holo-magenta);
+}
+
+.holo-btn-secondary:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 0, 255, 0.3) 0%,
+    rgba(255, 0, 255, 0.15) 100%
+  );
+  box-shadow: var(--holo-glow-md) rgba(255, 0, 255, 0.4);
+}
+
+/* Success button */
+.holo-btn-success {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 136, 0.2) 0%,
+    rgba(0, 255, 136, 0.1) 100%
+  );
+  border-color: rgba(0, 255, 136, 0.4);
+  color: var(--holo-green);
+}
+
+.holo-btn-success:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 136, 0.3) 0%,
+    rgba(0, 255, 136, 0.15) 100%
+  );
+  box-shadow: var(--holo-glow-md) rgba(0, 255, 136, 0.4);
+}
+
+/* Danger button */
+.holo-btn-danger {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 68, 68, 0.2) 0%,
+    rgba(255, 68, 68, 0.1) 100%
+  );
+  border-color: var(--holo-border-danger);
+  color: var(--holo-red);
+}
+
+.holo-btn-danger:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 68, 68, 0.3) 0%,
+    rgba(255, 68, 68, 0.15) 100%
+  );
+  box-shadow: var(--holo-glow-md) rgba(255, 68, 68, 0.4);
+}
+
+/* Warning button */
+.holo-btn-warning {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 215, 0, 0.2) 0%,
+    rgba(255, 215, 0, 0.1) 100%
+  );
+  border-color: var(--holo-border-gold);
+  color: var(--holo-gold);
+}
+
+.holo-btn-warning:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 215, 0, 0.3) 0%,
+    rgba(255, 215, 0, 0.15) 100%
+  );
+  box-shadow: var(--holo-glow-md) rgba(255, 215, 0, 0.4);
+}
+
+/* Ghost button */
+.holo-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+
+.holo-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--holo-border-subtle);
+}
+
+/* Icon button */
+.holo-btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--holo-radius-round);
+}
+
+/* ============================================================================
+   INPUT COMPONENTS
+   ============================================================================ */
+
+.holo-input {
+  width: 100%;
+  padding: var(--holo-space-sm) var(--holo-space-md);
+  font-family: var(--holo-font-sans);
+  font-size: 0.875rem;
+  color: var(--holo-white);
+  background: var(--holo-bg-dark);
+  border: 1px solid var(--holo-border-primary);
+  border-radius: var(--holo-radius-md);
+  outline: none;
+  transition:
+    border-color var(--holo-transition-fast),
+    box-shadow var(--holo-transition-fast);
+}
+
+.holo-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.holo-input:focus {
+  border-color: var(--holo-cyan);
+  box-shadow:
+    var(--holo-glow-sm) rgba(0, 255, 255, 0.3),
+    inset 0 0 10px rgba(0, 255, 255, 0.05);
+}
+
+.holo-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.holo-input-error {
+  border-color: var(--holo-red);
+}
+
+.holo-input-error:focus {
+  border-color: var(--holo-red);
+  box-shadow: var(--holo-glow-sm) rgba(255, 68, 68, 0.3);
+}
+
+/* Input group */
+.holo-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--holo-space-xs);
+}
+
+.holo-input-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--holo-cyan-dim);
+}
+
+.holo-input-helper {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.holo-input-error-text {
+  font-size: 0.75rem;
+  color: var(--holo-red);
+}
+
+/* Textarea */
+.holo-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Select */
+.holo-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300ffff' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* ============================================================================
+   TABLE COMPONENTS
+   ============================================================================ */
+
+.holo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.holo-table th {
+  padding: var(--holo-space-sm) var(--holo-space-md);
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--holo-cyan);
+  background: rgba(0, 255, 255, 0.05);
+  border-bottom: 1px solid var(--holo-border-primary);
+}
+
+.holo-table td {
+  padding: var(--holo-space-sm) var(--holo-space-md);
+  border-bottom: 1px solid var(--holo-border-subtle);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.holo-table-row {
+  transition: background var(--holo-transition-fast);
+}
+
+.holo-table-row:hover {
+  background: rgba(0, 255, 255, 0.05);
+}
+
+.holo-table-row-clickable {
+  cursor: pointer;
+}
+
+.holo-table-row-selected {
+  background: rgba(0, 255, 255, 0.1);
+  border-left: 2px solid var(--holo-cyan);
+}
+
+/* Striped table */
+.holo-table-striped tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================================================
+   PROGRESS BAR COMPONENTS
+   ============================================================================ */
+
+.holo-progress {
+  width: 100%;
+  height: 8px;
+  background: var(--holo-bg-dark);
+  border: 1px solid var(--holo-border-subtle);
+  border-radius: var(--holo-radius-round);
+  overflow: hidden;
+}
+
+.holo-progress-bar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--holo-cyan),
+    var(--holo-blue)
+  );
+  border-radius: var(--holo-radius-round);
+  transition: width var(--holo-transition-normal);
+  box-shadow: var(--holo-glow-sm) var(--holo-cyan);
+}
+
+/* Progress variants */
+.holo-progress-bar-success {
+  background: linear-gradient(
+    90deg,
+    var(--holo-green),
+    #00cc66
+  );
+  box-shadow: var(--holo-glow-sm) var(--holo-green);
+}
+
+.holo-progress-bar-warning {
+  background: linear-gradient(
+    90deg,
+    var(--holo-gold),
+    var(--holo-orange)
+  );
+  box-shadow: var(--holo-glow-sm) var(--holo-gold);
+}
+
+.holo-progress-bar-danger {
+  background: linear-gradient(
+    90deg,
+    var(--holo-red),
+    #cc0000
+  );
+  box-shadow: var(--holo-glow-sm) var(--holo-red);
+}
+
+/* Animated progress bar */
+.holo-progress-bar-animated {
+  position: relative;
+  overflow: hidden;
+}
+
+.holo-progress-bar-animated::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: holo-shimmer 1.5s infinite;
+}
+
+/* Thin progress */
+.holo-progress-thin {
+  height: 4px;
+}
+
+/* ============================================================================
+   BADGE / TAG COMPONENTS
+   ============================================================================ */
+
+.holo-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--holo-radius-round);
+  border: 1px solid;
+}
+
+.holo-badge-cyan {
+  color: var(--holo-cyan);
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.3);
+}
+
+.holo-badge-magenta {
+  color: var(--holo-magenta);
+  background: rgba(255, 0, 255, 0.1);
+  border-color: rgba(255, 0, 255, 0.3);
+}
+
+.holo-badge-gold {
+  color: var(--holo-gold);
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.holo-badge-green {
+  color: var(--holo-green);
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.holo-badge-red {
+  color: var(--holo-red);
+  background: rgba(255, 68, 68, 0.1);
+  border-color: rgba(255, 68, 68, 0.3);
+}
+
+.holo-badge-blue {
+  color: var(--holo-blue);
+  background: rgba(68, 136, 255, 0.1);
+  border-color: rgba(68, 136, 255, 0.3);
+}
+
+/* ============================================================================
+   TOOLTIP / POPOVER
+   ============================================================================ */
+
+.holo-tooltip {
+  position: absolute;
+  z-index: 1000;
+  padding: var(--holo-space-sm) var(--holo-space-md);
+  font-size: 0.75rem;
+  color: var(--holo-white);
+  background: var(--holo-bg-panel);
+  backdrop-filter: var(--holo-blur-md);
+  border: 1px solid var(--holo-border-primary);
+  border-radius: var(--holo-radius-md);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    var(--holo-glow-sm) rgba(0, 255, 255, 0.1);
+  animation: holo-fade-in 0.15s ease-out;
+}
+
+/* ============================================================================
+   LOADING / SPINNER
+   ============================================================================ */
+
+.holo-spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--holo-border-subtle);
+  border-top-color: var(--holo-cyan);
+  border-radius: 50%;
+  animation: holo-rotate 0.8s linear infinite;
+}
+
+.holo-spinner-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+.holo-spinner-lg {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+/* Loading overlay */
+.holo-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: var(--holo-blur-sm);
+  z-index: 100;
+}
+
+/* ============================================================================
+   DIVIDERS / SEPARATORS
+   ============================================================================ */
+
+.holo-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--holo-border-primary),
+    transparent
+  );
+}
+
+.holo-divider-solid {
+  background: var(--holo-border-primary);
+}
+
+.holo-divider-vertical {
+  width: 1px;
+  height: auto;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--holo-border-primary),
+    transparent
+  );
+}
+
+/* ============================================================================
+   SCANLINE OVERLAY EFFECT
+   ============================================================================ */
+
+.holo-scanlines {
+  position: relative;
+}
+
+.holo-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  animation: holo-scanlines 0.1s linear infinite;
+  z-index: 10;
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Transitions */
+.holo-transition {
+  transition: all var(--holo-transition-normal);
+}
+
+.holo-transition-fast {
+  transition: all var(--holo-transition-fast);
+}
+
+.holo-transition-slow {
+  transition: all var(--holo-transition-slow);
+}
+
+/* Pointer events */
+.holo-no-pointer {
+  pointer-events: none;
+}
+
+/* Z-index layers */
+.holo-z-base { z-index: 1; }
+.holo-z-dropdown { z-index: 100; }
+.holo-z-sticky { z-index: 200; }
+.holo-z-modal { z-index: 500; }
+.holo-z-popover { z-index: 600; }
+.holo-z-tooltip { z-index: 700; }
+.holo-z-max { z-index: 9999; }
+
+/* Hide scrollbar but keep functionality */
+.holo-scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.holo-scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom holographic scrollbar */
+.holo-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.holo-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.holo-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.holo-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.5);
+}
+
+/* Selection color */
+.holo-selection::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: var(--holo-white);
+}
+
+/* ============================================================================
+   RESPONSIVE UTILITIES
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .holo-pulse,
+  .holo-glow-pulse,
+  .holo-scan,
+  .holo-shimmer::after,
+  .holo-float,
+  .holo-rotate,
+  .holo-glitch,
+  .holo-glitch-loop,
+  .holo-text-flicker,
+  .holo-text-chromatic,
+  .holo-border-animated::before,
+  .holo-progress-bar-animated::after,
+  .holo-scanlines::before {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   DARK MODE ENHANCEMENTS (if system prefers dark)
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --holo-bg-dark: rgba(0, 0, 0, 0.9);
+    --holo-bg-medium: rgba(10, 20, 35, 0.8);
+  }
+}

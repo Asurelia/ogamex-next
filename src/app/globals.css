@@ -1,3 +1,6 @@
+/* Import holographic theme system - Must be before @tailwind directives */
+@import '../styles/holographic.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -210,4 +213,258 @@
   background: white;
   border-radius: 50%;
   animation: twinkle 3s ease-in-out infinite;
+}
+
+/* Holographic tooltip animations */
+@keyframes holo-scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+@keyframes holo-border-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes holo-data-stream {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(400%);
+  }
+}
+
+/* ============================================================================
+   COCKPIT / HUD STYLES
+   ============================================================================ */
+
+/* Cockpit panel base styles */
+.cockpit-panel {
+  @apply bg-black/80 backdrop-blur-lg border border-cyan-500/30;
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(0, 212, 255, 0.1);
+}
+
+/* Cockpit header glow text */
+.cockpit-header {
+  color: #00d4ff;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  @apply font-semibold uppercase tracking-wider text-xs;
+}
+
+/* Cockpit button styles */
+.cockpit-button {
+  @apply px-3 py-2 rounded-lg backdrop-blur-md border transition-all duration-200;
+  @apply bg-black/30 border-white/10;
+  @apply hover:border-cyan-500/30 hover:bg-cyan-900/20;
+}
+
+.cockpit-button-active {
+  @apply bg-cyan-900/40 border-cyan-500/50;
+}
+
+/* Resource gauge track */
+.cockpit-gauge-track {
+  @apply h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/10;
+}
+
+/* Cockpit scan line animation */
+@keyframes cockpit-scan {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.cockpit-scan-line {
+  @apply absolute left-0 right-0 h-px pointer-events-none;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  animation: cockpit-scan 4s linear infinite;
+}
+
+/* Cockpit LED indicator */
+@keyframes led-pulse {
+  0%, 100% {
+    box-shadow: 0 0 4px currentColor;
+    opacity: 0.8;
+  }
+  50% {
+    box-shadow: 0 0 12px currentColor;
+    opacity: 1;
+  }
+}
+
+.cockpit-led {
+  @apply w-2 h-2 rounded-full;
+  animation: led-pulse 1.5s ease-in-out infinite;
+}
+
+.cockpit-led-online {
+  @apply bg-green-500;
+  color: rgba(34, 197, 94, 0.8);
+}
+
+.cockpit-led-warning {
+  @apply bg-yellow-500;
+  color: rgba(234, 179, 8, 0.8);
+}
+
+.cockpit-led-danger {
+  @apply bg-red-500;
+  color: rgba(239, 68, 68, 0.8);
+}
+
+/* Cockpit glow border */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+  }
+}
+
+.cockpit-glow-border {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Cockpit gradient lines */
+.cockpit-gradient-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+}
+
+.cockpit-gradient-line-warning {
+  background: linear-gradient(90deg, transparent, rgba(255, 165, 0, 0.5), transparent);
+}
+
+.cockpit-gradient-line-danger {
+  background: linear-gradient(90deg, transparent, rgba(255, 68, 68, 0.5), transparent);
+}
+
+/* Alert pulse animation */
+@keyframes alert-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.cockpit-alert-pulse {
+  animation: alert-pulse 0.5s ease-in-out infinite;
+}
+
+/* Countdown animation */
+@keyframes countdown-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.cockpit-countdown {
+  @apply font-mono text-orange-400;
+  animation: countdown-blink 1s ease-in-out infinite;
+}
+
+/* Tech corner decorations */
+.cockpit-corner-tl {
+  @apply absolute top-0 left-0 w-4 h-4;
+  border-top: 2px solid rgba(0, 212, 255, 0.5);
+  border-left: 2px solid rgba(0, 212, 255, 0.5);
+}
+
+.cockpit-corner-tr {
+  @apply absolute top-0 right-0 w-4 h-4;
+  border-top: 2px solid rgba(0, 212, 255, 0.5);
+  border-right: 2px solid rgba(0, 212, 255, 0.5);
+}
+
+.cockpit-corner-bl {
+  @apply absolute bottom-0 left-0 w-4 h-4;
+  border-bottom: 2px solid rgba(0, 212, 255, 0.5);
+  border-left: 2px solid rgba(0, 212, 255, 0.5);
+}
+
+.cockpit-corner-br {
+  @apply absolute bottom-0 right-0 w-4 h-4;
+  border-bottom: 2px solid rgba(0, 212, 255, 0.5);
+  border-right: 2px solid rgba(0, 212, 255, 0.5);
+}
+
+/* Cockpit scrollbar */
+.cockpit-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cockpit-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cockpit-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.3);
+  border-radius: 2px;
+}
+
+.cockpit-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.5);
+}
+
+/* Metallic gradient effect */
+.cockpit-metallic {
+  background: linear-gradient(
+    135deg,
+    rgba(100, 150, 200, 0.1) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(50, 100, 150, 0.1) 100%
+  );
+}
+
+/* Holographic shimmer effect */
+@keyframes holo-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.cockpit-holo-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 212, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: holo-shimmer 3s linear infinite;
 }

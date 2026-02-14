@@ -1,9 +1,105 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import dynamic from 'next/dynamic'
 import { useGameStore } from '@/stores/gameStore'
 import { formatNumber, formatDuration } from '@/game/formulas'
 import { BUILDINGS } from '@/game/constants'
+import type { SolarSystemPlanet } from '@/components/game/3d/SolarSystemView'
+import type { Planet } from '@/types/database'
+
+// Import dynamique du composant 3D (desactive le SSR pour Three.js)
+const SolarSystemView = dynamic(
+  () => import('@/components/game/3d/SolarSystemView'),
+  { ssr: false, loading: () => <SolarSystemViewLoader /> }
+)
+
+// Composant de chargement pour la vue 3D
+function SolarSystemViewLoader() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black">
+      <div className="text-ogame-text-muted animate-pulse">
+        Loading 3D View...
+      </div>
+    </div>
+  )
+}
+
+// Icone Cube pour le mode 3D
+function CubeIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  )
+}
+
+// Icone Grid pour le mode 2D
+function GridIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+    </svg>
+  )
+}
+
+// Types valides pour les planetes 3D
+type PlanetVisualType = 'desert' | 'dry' | 'gas' | 'ice' | 'jungle' | 'normal' | 'water'
+
+const VALID_PLANET_TYPES: PlanetVisualType[] = ['desert', 'dry', 'gas', 'ice', 'jungle', 'normal', 'water']
+
+/**
+ * Transforme un tableau de Planet (database) en SolarSystemPlanet (3D view)
+ */
+function transformPlanetsFor3D(planets: Planet[]): SolarSystemPlanet[] {
+  return planets.map((planet) => {
+    // Derive le type visuel a partir du planet_type de la base
+    const visualType = VALID_PLANET_TYPES.includes(planet.planet_type as PlanetVisualType)
+      ? (planet.planet_type as PlanetVisualType)
+      : 'normal'
+
+    return {
+      id: planet.id,
+      name: planet.name,
+      coordinates: {
+        galaxy: planet.galaxy,
+        system: planet.system,
+        position: planet.position,
+      },
+      type: visualType,
+      variant: ((planet.position - 1) % 10) + 1,
+      isMoon: planet.planet_type === 'moon',
+    }
+  })
+}
 
 function getPlanetImage(planetType: string = 'normal', position: number = 1): string {
   const types = ['desert', 'dry', 'gas', 'ice', 'jungle', 'normal', 'water']
@@ -13,28 +109,109 @@ function getPlanetImage(planetType: string = 'normal', position: number = 1): st
 }
 
 export default function OverviewPage() {
-  const { currentPlanet, buildingQueue, researchQueue, fleetMissions } = useGameStore()
+  const {
+    currentPlanet,
+    buildingQueue,
+    researchQueue,
+    fleetMissions,
+    planets,
+    visualizationMode,
+    setVisualizationMode,
+    selectPlanet
+  } = useGameStore()
   const t = useTranslations('overview')
   const tRes = useTranslations('resources')
   const tFleet = useTranslations('fleet')
   const tCommon = useTranslations('common')
   const tPlanet = useTranslations('planet')
 
+  // Toggle entre les modes de visualisation
+  const toggleVisualizationMode = () => {
+    setVisualizationMode(visualizationMode === '3d' ? '2d' : '3d')
+  }
+
+  // Gestion de la selection de planete dans la vue 3D
+  const handlePlanetSelect = (planetId: string) => {
+    selectPlanet(planetId)
+  }
+
+  // Transforme les planetes pour la vue 3D (memoize pour eviter les re-calculs)
+  const solarSystemPlanets = useMemo(
+    () => transformPlanetsFor3D(planets),
+    [planets]
+  )
+
   if (!currentPlanet) {
     return <div className="text-ogame-text-muted">{tCommon('loading')}</div>
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
-        <div className="text-ogame-text-muted">
-          {currentPlanet.name} [{currentPlanet.galaxy}:{currentPlanet.system}:{currentPlanet.position}]
+  // Mode 3D : Vue systeme solaire en plein ecran
+  if (visualizationMode === '3d') {
+    return (
+      <div className="relative w-full h-[calc(100vh-120px)] min-h-[600px]">
+        {/* Vue 3D du systeme solaire */}
+        <SolarSystemView
+          planets={solarSystemPlanets}
+          selectedPlanetId={currentPlanet.id}
+          onPlanetSelect={handlePlanetSelect}
+        />
+
+        {/* Bouton flottant pour revenir en mode 2D */}
+        <button
+          onClick={toggleVisualizationMode}
+          className="absolute bottom-6 right-6 z-10 flex items-center gap-2 px-4 py-3
+                     bg-ogame-dark/90 border border-ogame-border rounded-lg
+                     text-ogame-text-header hover:bg-ogame-accent/20
+                     hover:border-ogame-accent transition-all duration-200
+                     shadow-lg backdrop-blur-sm"
+          title={t('switchTo2D') || 'Switch to 2D view'}
+        >
+          <GridIcon className="w-5 h-5" />
+          <span className="text-sm font-medium">2D</span>
+        </button>
+
+        {/* Info planete selectionnee (overlay) */}
+        <div className="absolute top-4 left-4 z-10 bg-ogame-dark/90 border border-ogame-border
+                        rounded-lg p-4 backdrop-blur-sm max-w-xs">
+          <h2 className="text-lg font-bold text-ogame-text-header mb-2">
+            {currentPlanet.name}
+          </h2>
+          <div className="text-sm text-ogame-text-muted space-y-1">
+            <p>[{currentPlanet.galaxy}:{currentPlanet.system}:{currentPlanet.position}]</p>
+            <p>{t('fields')}: {currentPlanet.fields_used}/{currentPlanet.fields_max}</p>
+          </div>
         </div>
       </div>
+    )
+  }
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  // Mode 2D : Vue classique
+  return (
+    <div className="relative">
+      {/* Bouton flottant pour passer en mode 3D */}
+      <button
+        onClick={toggleVisualizationMode}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3
+                   bg-ogame-dark/90 border border-ogame-border rounded-lg
+                   text-ogame-text-header hover:bg-ogame-accent/20
+                   hover:border-ogame-accent transition-all duration-200
+                   shadow-lg backdrop-blur-sm"
+        title={t('switchTo3D') || 'Switch to 3D view'}
+      >
+        <CubeIcon className="w-5 h-5" />
+        <span className="text-sm font-medium">3D</span>
+      </button>
+
+      <div className="space-y-6">
+        {/* Page header */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-ogame-text-header">{t('title')}</h1>
+          <div className="text-ogame-text-muted">
+            {currentPlanet.name} [{currentPlanet.galaxy}:{currentPlanet.system}:{currentPlanet.position}]
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Planet Info */}
         <div className="ogame-panel">
           <div className="ogame-panel-header">{t('planetInfo')}</div>
@@ -237,5 +414,6 @@ export default function OverviewPage() {
         </div>
       </div>
     </div>
+  </div>
   )
 }

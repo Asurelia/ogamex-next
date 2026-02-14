@@ -1,34 +1,28 @@
 /**
  * Battle Engine Module
  *
- * OGame-style combat simulation system.
+ * OGame-style combat simulation system with database-driven configuration.
  *
  * @example
  * ```typescript
- * import { BattleEngine, simulateBattle } from '@/lib/battle'
+ * import { simulateBattleAsync, BattleEngine } from '@/lib/battle'
  *
- * // Using the BattleEngine class
- * const engine = new BattleEngine(
- *   { weaponsTech: 10, shieldTech: 10, armorTech: 10 },
- *   { weaponsTech: 8, shieldTech: 8, armorTech: 8 }
- * )
- *
- * const result = engine.simulate(
+ * // Recommended: Use async simulation (automatically loads config)
+ * const result = await simulateBattleAsync(
  *   { light_fighter: 100, cruiser: 20 },
+ *   { weaponsTech: 10, shieldTech: 10, armorTech: 10 },
  *   { light_fighter: 50 },
  *   { rocket_launcher: 100, light_laser: 50 },
+ *   { weaponsTech: 8, shieldTech: 8, armorTech: 8 },
  *   { metal: 1000000, crystal: 500000, deuterium: 200000 }
  * )
  *
- * // Or using the convenience function
- * const result = simulateBattle(
- *   { light_fighter: 100 },
+ * // Or use BattleEngine.create() for multiple simulations
+ * const engine = await BattleEngine.create(
  *   { weaponsTech: 10, shieldTech: 10, armorTech: 10 },
- *   { light_fighter: 50 },
- *   { rocket_launcher: 100 },
- *   { weaponsTech: 8, shieldTech: 8, armorTech: 8 },
- *   { metal: 500000, crystal: 250000, deuterium: 100000 }
+ *   { weaponsTech: 8, shieldTech: 8, armorTech: 8 }
  * )
+ * const result = engine.simulate(attackerFleet, defenderFleet, defenderDefense, defenderResources)
  *
  * console.log(`Winner: ${result.winner}`)
  * console.log(`Debris: ${result.debris.metal} metal, ${result.debris.crystal} crystal`)
@@ -37,7 +31,37 @@
  */
 
 // Main engine
-export { BattleEngine, simulateBattle } from './BattleEngine'
+export {
+  BattleEngine,
+  simulateBattleAsync,
+  simulateBattle,
+  initBattleConfig,
+  clearBattleConfigCache,
+} from './BattleEngine'
+export { ACSBattleEngine, createACSBattleEngine } from './ACSBattleEngine'
+export type {
+  ACSParticipantFleet,
+  ACSDefender,
+  ACSParticipantResult,
+  ACSBattleEngineResult,
+} from './ACSBattleEngine'
+
+// Battle configuration (database-driven)
+export {
+  getBattleConfig,
+  getBattleConfigSync,
+  getShipStats,
+  getDefenseStats,
+  getShipCost,
+  getDefenseCost,
+  getShipId,
+  getDefenseId,
+  getRapidFire,
+  getShipCargoCapacity,
+  getCombatShipKeys,
+  getCombatDefenseKeys,
+} from './battle-config'
+export type { BattleConfig } from './battle-config'
 
 // Types
 export type {
@@ -60,7 +84,10 @@ export type {
 
 export { DEFAULT_BATTLE_OPTIONS, DEFENSE_KEYS } from './types'
 
-// Constants
+// Constants (combat mechanics only - data is in battle-config)
+export { COMBAT_CONSTANTS } from './constants'
+
+// Deprecated constants (empty, for backward compatibility)
 export {
   SHIP_STATS,
   SHIP_IDS,
@@ -69,7 +96,6 @@ export {
   DEFENSE_IDS,
   DEFENSE_COSTS,
   RAPID_FIRE,
-  COMBAT_CONSTANTS,
   COMBAT_SHIP_KEYS,
   COMBAT_DEFENSE_KEYS,
 } from './constants'

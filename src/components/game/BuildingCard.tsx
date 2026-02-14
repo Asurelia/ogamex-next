@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { useToast } from '@/hooks/useToast'
 import { calculateBuildingCost, calculateBuildingTime, formatNumber, formatDuration } from '@/game/formulas'
 import type { BuildingDefinition } from '@/game/constants'
 
@@ -24,7 +25,7 @@ export function BuildingCard({
 }: BuildingCardProps) {
   const { currentPlanet, buildingQueue, setBuildingQueue, updatePlanetResources } = useGameStore()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { success: toastSuccess, error: toastError } = useToast()
   const t = useTranslations('buildings')
   const tCommon = useTranslations('common')
 
@@ -57,10 +58,16 @@ export function BuildingCard({
   const queueFull = buildingQueue.length >= 5
 
   const handleBuild = async () => {
-    if (!currentPlanet || !canAfford || isInQueue || queueFull) return
+    if (!currentPlanet || !canAfford || isInQueue || queueFull) {
+      if (!canAfford) {
+        toastError(t('insufficientResources') || 'Insufficient Resources', t('notEnoughResources') || 'You do not have enough resources to build this.')
+      } else if (queueFull) {
+        toastError(t('queueFull') || 'Queue Full', t('buildingQueueFull') || 'Building queue is at maximum capacity.')
+      }
+      return
+    }
 
     setLoading(true)
-    setError(null)
 
     try {
       const supabase = getSupabaseClient()
@@ -105,12 +112,15 @@ export function BuildingCard({
 
       if (newQueueItem) {
         setBuildingQueue([...buildingQueue, newQueueItem])
+        // Show success toast
+        toastSuccess(
+          t('constructionStarted') || 'Construction Started',
+          `${buildingName} ${t('upgradeToLevel', { level: nextLevel }) || `Level ${nextLevel}`} - ${formatDuration(time)}`
+        )
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to start building'
-      setError(message)
-      // Clear error after 5 seconds
-      setTimeout(() => setError(null), 5000)
+      toastError(t('constructionFailed') || 'Construction Failed', message)
     } finally {
       setLoading(false)
     }
@@ -119,11 +129,6 @@ export function BuildingCard({
   return (
     <div className="ogame-panel">
       <div className="ogame-panel-content">
-        {error && (
-          <div className="mb-3 p-2 bg-red-900/50 border border-red-500 rounded-sm text-red-200 text-sm">
-            {error}
-          </div>
-        )}
         <div className="flex gap-4">
           {/* Building image */}
           <div className="w-24 h-24 rounded-sm overflow-hidden flex-shrink-0">

@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { ToastProvider } from '@/components/ui/toast'
 import type { Planet, User, UserResearch } from '@/types/database'
 
 interface GameProviderProps {
@@ -153,5 +154,9 @@ export function GameProvider({
     }
   }, [initialUser.id, updatePlanetResources])
 
-  return <>{children}</>
+  return (
+    <ToastProvider position="top-right" maxToasts={5}>
+      {children}
+    </ToastProvider>
+  )
 }

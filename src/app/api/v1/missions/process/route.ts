@@ -18,56 +18,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { createMissionProcessor } from '@/lib/missions'
+import { isServiceAuthorized, getServiceSupabase } from '@/lib/api/auth'
 
-// Service client with admin privileges
-const getServiceClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error('Missing Supabase configuration')
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey)
-}
-
-/**
- * Validate the request is authorized to process missions
- */
-function isAuthorized(request: NextRequest): boolean {
-  // Method 1: Cron secret header (for scheduled jobs)
-  const cronSecret = request.headers.get('x-cron-secret')
-  if (cronSecret && cronSecret === process.env.CRON_SECRET) {
-    return true
-  }
-
-  // Method 2: Service API key (for internal services)
-  const authHeader = request.headers.get('Authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7)
-    if (token === process.env.MISSION_PROCESSOR_API_KEY) {
-      return true
-    }
-  }
-
-  // Method 3: Supabase webhook signature (for database triggers)
-  const webhookSecret = request.headers.get('x-supabase-webhook-secret')
-  if (webhookSecret && webhookSecret === process.env.SUPABASE_WEBHOOK_SECRET) {
-    return true
-  }
-
-  // In development, allow without auth for testing
-  if (process.env.NODE_ENV === 'development') {
-    const allowDevProcessing = request.headers.get('x-dev-mode') === 'true'
-    if (allowDevProcessing) {
-      return true
-    }
-  }
-
-  return false
-}
+// isServiceAuthorized and getServiceSupabase imported from @/lib/api/auth
 
 /**
  * POST /api/v1/missions/process
@@ -81,7 +35,7 @@ function isAuthorized(request: NextRequest): boolean {
 export async function POST(request: NextRequest) {
   try {
     // Authorization check
-    if (!isAuthorized(request)) {
+    if (!isServiceAuthorized(request)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -96,7 +50,7 @@ export async function POST(request: NextRequest) {
     )
     const dryRun = searchParams.get('dry_run') === 'true'
 
-    const supabase = getServiceClient()
+    const supabase = getServiceSupabase()
     const processor = createMissionProcessor(supabase, {
       batchSize,
       continueOnError: true,
@@ -158,14 +112,14 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Authorization check
-    if (!isAuthorized(request)) {
+    if (!isServiceAuthorized(request)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const supabase = getServiceClient()
+    const supabase = getServiceSupabase()
     const processor = createMissionProcessor(supabase)
 
     // Get pending mission stats
