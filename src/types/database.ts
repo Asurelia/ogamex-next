@@ -126,6 +126,7 @@ export interface Database {
           lunar_base: number
           sensor_phalanx: number
           jump_gate: number
+          jump_gate_cooldown: string | null
           // Ships
           light_fighter: number
           heavy_fighter: number
