@@ -98,3 +98,86 @@ export function withAuth(
 export function getApiSupabase() {
   return supabase
 }
+
+// ============================================================================
+// SERVICE/CRON AUTHORIZATION
+// ============================================================================
+
+/**
+ * Get Supabase client with service role key (admin privileges)
+ * Used for cron jobs and internal services
+ */
+export function getServiceSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('Missing Supabase configuration for service client')
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey)
+}
+
+/**
+ * Validate that a request is authorized to run service/cron operations
+ * Supports multiple authorization methods:
+ * - Cron secret header (x-cron-secret)
+ * - Vercel Cron header (x-vercel-cron)
+ * - Bearer token matching CRON_SECRET
+ * - Development mode with x-dev-mode header
+ */
+export function isServiceAuthorized(request: NextRequest): boolean {
+  // Method 1: Cron secret header (for scheduled jobs)
+  const cronSecret = request.headers.get('x-cron-secret')
+  if (cronSecret && cronSecret === process.env.CRON_SECRET) {
+    return true
+  }
+
+  // Method 2: Vercel Cron header (automatic for Vercel cron jobs)
+  const vercelCron = request.headers.get('x-vercel-cron')
+  if (vercelCron) {
+    return true
+  }
+
+  // Method 3: Service API key (for internal services)
+  const authHeader = request.headers.get('Authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    if (token === process.env.CRON_SECRET) {
+      return true
+    }
+  }
+
+  // Method 4: Webhook secret (for external webhooks)
+  const webhookSecret = request.headers.get('x-webhook-secret')
+  if (webhookSecret && webhookSecret === process.env.WEBHOOK_SECRET) {
+    return true
+  }
+
+  // In development, allow without auth for testing
+  if (process.env.NODE_ENV === 'development') {
+    const allowDevProcessing = request.headers.get('x-dev-mode') === 'true'
+    if (allowDevProcessing) {
+      return true
+    }
+  }
+
+  return false
+}
+
+/**
+ * Middleware wrapper for service/cron routes
+ */
+export function withServiceAuth(
+  handler: (request: NextRequest) => Promise<NextResponse>
+) {
+  return async (request: NextRequest) => {
+    if (!isServiceAuthorized(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Service authentication required.' },
+        { status: 401 }
+      )
+    }
+    return handler(request)
+  }
+}

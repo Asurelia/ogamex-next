@@ -4,6 +4,9 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // NOTE: cacheComponents is disabled because it conflicts with dynamic pages
+  // that use cookies() for locale detection. The 'use cache' directive still
+  // works for individual functions in config-cache.ts
   images: {
     // Allow images from our own domain and external sources
     remotePatterns: [

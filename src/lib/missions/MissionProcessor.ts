@@ -23,6 +23,8 @@ import {
 import { TransportMission } from './handlers/TransportMission'
 import { DeploymentMission } from './handlers/DeploymentMission'
 import { AttackMission } from './handlers/AttackMission'
+import { ACSAttackMission } from './handlers/ACSAttackMission'
+import { ACSDefendMission } from './handlers/ACSDefendMission'
 import { ColonizationMission } from './handlers/ColonizationMission'
 import { EspionageMission } from './handlers/EspionageMission'
 import { RecycleMission } from './handlers/RecycleMission'
@@ -46,14 +48,13 @@ export class MissionProcessor {
     this.registerHandler(new TransportMission(supabase))
     this.registerHandler(new DeploymentMission(supabase))
     this.registerHandler(new AttackMission(supabase))
+    this.registerHandler(new ACSAttackMission(supabase))
+    this.registerHandler(new ACSDefendMission(supabase))
     this.registerHandler(new ColonizationMission(supabase))
     this.registerHandler(new EspionageMission(supabase))
     this.registerHandler(new RecycleMission(supabase))
     this.registerHandler(new ExpeditionMission(supabase))
     this.registerHandler(new MoonDestructionMission(supabase))
-
-    // TODO: Register additional handlers as they are implemented
-    // this.registerHandler(new AcsDefendMission(supabase))
   }
 
   /**

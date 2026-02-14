@@ -96,7 +96,7 @@ export class AttackMission extends BaseMission {
     const defenderTech = this.extractTechLevels(defenderResearch)
 
     // Run battle simulation
-    const battleEngine = new BattleEngine(attackerTech, defenderTech)
+    const battleEngine = await BattleEngine.create(attackerTech, defenderTech)
     const battleResult = battleEngine.simulate(
       attackerShips as FleetComposition,
       defenderFleet,

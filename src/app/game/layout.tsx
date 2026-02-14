@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Header } from '@/components/game/Header'
-import { Sidebar } from '@/components/game/Sidebar'
-import { ResourceBar } from '@/components/game/ResourceBar'
 import { GameProvider } from '@/components/game/GameProvider'
+import { GameLayoutClient } from '@/components/game/GameLayoutClient'
 
 // Helper to wait and retry fetching user data
 async function waitForUserData(supabase: any, userId: string, maxRetries = 5) {
@@ -71,16 +69,9 @@ export default async function GameLayout({
       initialPlanets={planets}
       initialResearch={research}
     >
-      <div className="min-h-screen flex flex-col bg-ogame-bg">
-        <Header />
-        <ResourceBar />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto p-4">
-            {children}
-          </main>
-        </div>
-      </div>
+      <GameLayoutClient>
+        {children}
+      </GameLayoutClient>
     </GameProvider>
   )
 }

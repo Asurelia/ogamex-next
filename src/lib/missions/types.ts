@@ -4,6 +4,7 @@
  */
 
 import type { MissionType, PlanetType, FleetMission, Planet, UserResearch } from '@/types/database'
+import { formatCoordinatesObj } from '@/lib/utils/format'
 
 // ============================================================================
 // MISSION ENUMS & CONSTANTS
@@ -130,8 +131,8 @@ export interface Coordinates {
   position: number
 }
 
-export const formatCoordinates = (coords: Coordinates): string =>
-  `[${coords.galaxy}:${coords.system}:${coords.position}]`
+// Re-export from centralized format utilities
+export const formatCoordinates = formatCoordinatesObj
 
 // ============================================================================
 // MISSION CONTEXT

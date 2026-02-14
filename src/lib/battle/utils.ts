@@ -6,6 +6,9 @@
  * - Damage calculation with shield absorption
  * - Explosion probability
  * - Debris generation
+ *
+ * Note: This module uses pre-loaded battle config.
+ * Call initBattleConfig() before using these functions.
  */
 
 import type {
@@ -20,16 +23,17 @@ import type {
   ShipLosses,
   DefenseLosses,
 } from './types'
+import { COMBAT_CONSTANTS } from './constants'
 import {
-  SHIP_STATS,
-  DEFENSE_STATS,
-  SHIP_COSTS,
-  DEFENSE_COSTS,
-  SHIP_IDS,
-  DEFENSE_IDS,
-  RAPID_FIRE,
-  COMBAT_CONSTANTS,
-} from './constants'
+  getShipStats,
+  getDefenseStats,
+  getShipCost,
+  getDefenseCost,
+  getShipId,
+  getDefenseId,
+  getRapidFire,
+  getShipCargoCapacity,
+} from './battle-config'
 import type { ShipCounts } from '../missions/types'
 
 // ============================================================================
@@ -169,7 +173,7 @@ export function generateDebris(
 
   for (const [shipKey, count] of Object.entries(destroyedShips)) {
     if (count && count > 0) {
-      const cost = SHIP_COSTS[shipKey]
+      const cost = getShipCost(shipKey)
       if (cost) {
         totalMetal += cost.metal * count
         totalCrystal += cost.crystal * count
@@ -231,28 +235,6 @@ export function calculateLoot(
 // ============================================================================
 
 /**
- * Cargo capacity per ship type
- */
-const CARGO_CAPACITY: Record<string, number> = {
-  light_fighter: 50,
-  heavy_fighter: 100,
-  cruiser: 800,
-  battleship: 1500,
-  battlecruiser: 750,
-  bomber: 500,
-  destroyer: 2000,
-  deathstar: 1000000,
-  small_cargo: 5000,
-  large_cargo: 25000,
-  colony_ship: 7500,
-  recycler: 20000,
-  espionage_probe: 0,
-  solar_satellite: 0,
-  reaper: 10000,
-  pathfinder: 10000,
-}
-
-/**
  * Calculate total cargo capacity of a fleet
  *
  * @param ships - Ship counts
@@ -262,7 +244,7 @@ export function calculateCargoCapacity(ships: Partial<ShipCounts>): number {
   let total = 0
   for (const [shipKey, count] of Object.entries(ships)) {
     if (count && count > 0) {
-      total += (CARGO_CAPACITY[shipKey] || 0) * count
+      total += getShipCargoCapacity(shipKey) * count
     }
   }
   return total
@@ -285,7 +267,7 @@ export function rollRapidFire(
   defenderKey: string,
   randomFn: () => number = Math.random
 ): number {
-  const rapidFireValue = RAPID_FIRE[attackerKey]?.[defenderKey]
+  const rapidFireValue = getRapidFire(attackerKey, defenderKey)
 
   if (!rapidFireValue || rapidFireValue <= 1) {
     return 0
@@ -313,6 +295,8 @@ let unitIdCounter = 0
 /**
  * Create combat units from a fleet composition
  *
+ * Note: Requires initBattleConfig() to be called first
+ *
  * @param fleet - Fleet composition
  * @param tech - Technology levels
  * @param userId - Owner user ID
@@ -328,12 +312,12 @@ export function createCombatUnitsFromFleet(
   for (const [shipKey, count] of Object.entries(fleet)) {
     if (!count || count <= 0) continue
 
-    const baseStats = SHIP_STATS[shipKey]
+    const baseStats = getShipStats(shipKey)
     if (!baseStats) continue
 
     const effectiveStats = calculateEffectiveStats(baseStats, tech)
-    const cost = SHIP_COSTS[shipKey] || { metal: 0, crystal: 0, deuterium: 0 }
-    const unitId = SHIP_IDS[shipKey] || 0
+    const cost = getShipCost(shipKey)
+    const unitId = getShipId(shipKey)
 
     for (let i = 0; i < count; i++) {
       units.push({
@@ -358,6 +342,8 @@ export function createCombatUnitsFromFleet(
 /**
  * Create combat units from defense composition
  *
+ * Note: Requires initBattleConfig() to be called first
+ *
  * @param defense - Defense composition
  * @param tech - Technology levels
  * @param userId - Owner user ID
@@ -373,12 +359,12 @@ export function createCombatUnitsFromDefense(
   for (const [defenseKey, count] of Object.entries(defense)) {
     if (!count || count <= 0) continue
 
-    const baseStats = DEFENSE_STATS[defenseKey]
+    const baseStats = getDefenseStats(defenseKey)
     if (!baseStats) continue
 
     const effectiveStats = calculateEffectiveStats(baseStats, tech)
-    const cost = DEFENSE_COSTS[defenseKey] || { metal: 0, crystal: 0, deuterium: 0 }
-    const unitId = DEFENSE_IDS[defenseKey] || 0
+    const cost = getDefenseCost(defenseKey)
+    const unitId = getDefenseId(defenseKey)
 
     for (let i = 0; i < count; i++) {
       units.push({
@@ -483,7 +469,7 @@ export function calculateShipLosses(
     const lost = initialCount - remaining
     if (lost > 0) {
       losses[key as keyof ShipCounts] = lost
-      const cost = SHIP_COSTS[key]
+      const cost = getShipCost(key)
       if (cost) {
         metalValue += cost.metal * lost
         crystalValue += cost.crystal * lost
@@ -534,7 +520,7 @@ export function calculateDefenseLosses(
     const lost = initialCount - remaining
     if (lost > 0) {
       losses[key as keyof DefenseComposition] = lost
-      const cost = DEFENSE_COSTS[key]
+      const cost = getDefenseCost(key)
       if (cost) {
         metalValue += cost.metal * lost
         crystalValue += cost.crystal * lost

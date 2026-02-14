@@ -4,15 +4,33 @@
  * Main combat simulation engine implementing classic OGame battle mechanics.
  *
  * Combat Flow:
- * 1. Initialize both fleets with effective stats
- * 2. Execute combat rounds (max 6)
+ * 1. Initialize battle config (load from database)
+ * 2. Initialize both fleets with effective stats
+ * 3. Execute combat rounds (max 6)
  *    a. Each unit selects a random target
  *    b. Calculate damage with shield absorption
  *    c. Apply rapid fire for additional shots
  *    d. Check for unit explosion (hull < 70%)
  *    e. Regenerate shields
- * 3. Determine winner
- * 4. Calculate debris, loot, and moon chance
+ * 4. Determine winner
+ * 5. Calculate debris, loot, and moon chance
+ *
+ * @example
+ * ```typescript
+ * // Async simulation (recommended)
+ * const result = await simulateBattleAsync(
+ *   attackerFleet,
+ *   attackerTech,
+ *   defenderFleet,
+ *   defenderDefense,
+ *   defenderTech,
+ *   defenderResources
+ * )
+ *
+ * // Or use the engine directly
+ * const engine = await BattleEngine.create(attackerTech, defenderTech)
+ * const result = engine.simulate(attackerFleet, defenderFleet, defenderDefense, defenderResources)
+ * ```
  */
 
 import type {
@@ -43,12 +61,14 @@ import {
   calculateMoonChance,
   rollMoonCreation,
 } from './utils'
+import { initBattleConfig, clearBattleConfigCache } from './battle-config'
 import type { ShipCounts } from '../missions/types'
 
 /**
  * OGame Battle Engine
  *
  * Simulates space battles between fleets using classic OGame mechanics.
+ * Use the static `create` method for proper async initialization.
  */
 export class BattleEngine {
   private attackerTech: TechLevels
@@ -56,13 +76,13 @@ export class BattleEngine {
   private options: Required<BattleOptions>
 
   /**
-   * Create a new BattleEngine instance
+   * Create a new BattleEngine instance (private - use static create method)
    *
    * @param attackerTech - Attacker's combat technology levels
    * @param defenderTech - Defender's combat technology levels
    * @param options - Battle options
    */
-  constructor(
+  private constructor(
     attackerTech: TechLevels,
     defenderTech: TechLevels,
     options: BattleOptions = {}
@@ -70,6 +90,27 @@ export class BattleEngine {
     this.attackerTech = attackerTech
     this.defenderTech = defenderTech
     this.options = { ...DEFAULT_BATTLE_OPTIONS, ...options }
+  }
+
+  /**
+   * Create and initialize a BattleEngine instance
+   *
+   * This async factory method ensures battle config is loaded
+   * before the engine is used.
+   *
+   * @param attackerTech - Attacker's combat technology levels
+   * @param defenderTech - Defender's combat technology levels
+   * @param options - Battle options
+   * @returns Initialized BattleEngine
+   */
+  static async create(
+    attackerTech: TechLevels,
+    defenderTech: TechLevels,
+    options: BattleOptions = {}
+  ): Promise<BattleEngine> {
+    // Load battle config from database (uses Next.js cache)
+    await initBattleConfig()
+    return new BattleEngine(attackerTech, defenderTech, options)
   }
 
   /**
@@ -375,9 +416,10 @@ export class BattleEngine {
 }
 
 /**
- * Quick battle simulation function
+ * Async battle simulation function (recommended)
  *
- * Convenience function for simulating a battle without creating an engine instance.
+ * Convenience function for simulating a battle with automatic config loading.
+ * Uses the database for ship/defense stats with Next.js caching.
  *
  * @param attackerFleet - Attacker's fleet composition
  * @param attackerTech - Attacker's technology levels
@@ -388,6 +430,23 @@ export class BattleEngine {
  * @param options - Battle options
  * @returns Battle result
  */
+export async function simulateBattleAsync(
+  attackerFleet: FleetComposition,
+  attackerTech: TechLevels,
+  defenderFleet: FleetComposition,
+  defenderDefense: DefenseComposition,
+  defenderTech: TechLevels,
+  defenderResources: Resources = { metal: 0, crystal: 0, deuterium: 0 },
+  options: BattleOptions = {}
+): Promise<BattleResult> {
+  const engine = await BattleEngine.create(attackerTech, defenderTech, options)
+  return engine.simulate(attackerFleet, defenderFleet, defenderDefense, defenderResources)
+}
+
+/**
+ * @deprecated Use simulateBattleAsync instead for proper database config loading.
+ * This synchronous version requires initBattleConfig() to be called first.
+ */
 export function simulateBattle(
   attackerFleet: FleetComposition,
   attackerTech: TechLevels,
@@ -397,6 +456,13 @@ export function simulateBattle(
   defenderResources: Resources = { metal: 0, crystal: 0, deuterium: 0 },
   options: BattleOptions = {}
 ): BattleResult {
-  const engine = new BattleEngine(attackerTech, defenderTech, options)
+  console.warn(
+    '[DEPRECATED] simulateBattle is deprecated. Use simulateBattleAsync for proper database config loading.'
+  )
+  // This will throw if initBattleConfig() wasn't called
+  const engine = new (BattleEngine as any)(attackerTech, defenderTech, options)
   return engine.simulate(attackerFleet, defenderFleet, defenderDefense, defenderResources)
 }
+
+// Re-export for convenience
+export { initBattleConfig, clearBattleConfigCache } from './battle-config'

@@ -360,13 +360,92 @@ export interface Database {
           name: string
           tag: string
           founder_id: string
+          leader_id: string
           description: string | null
+          internal_text: string | null
+          external_text: string | null
           logo_url: string | null
+          member_count: number
+          total_points: number
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['alliances']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Insert: Omit<Database['public']['Tables']['alliances']['Row'], 'id' | 'created_at' | 'updated_at' | 'member_count' | 'total_points'>
         Update: Partial<Database['public']['Tables']['alliances']['Insert']>
+      }
+
+      alliance_members: {
+        Row: {
+          id: string
+          alliance_id: string
+          user_id: string
+          rank: 'founder' | 'leader' | 'officer' | 'veteran' | 'member' | 'newbie'
+          joined_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['alliance_members']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['alliance_members']['Insert']>
+      }
+
+      alliance_applications: {
+        Row: {
+          id: string
+          alliance_id: string
+          user_id: string
+          message: string | null
+          status: 'pending' | 'accepted' | 'rejected'
+          processed_at: string | null
+          processed_by: string | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['alliance_applications']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['alliance_applications']['Insert']>
+      }
+
+      alliance_invitations: {
+        Row: {
+          id: string
+          alliance_id: string
+          invited_user_id: string
+          invited_by: string
+          message: string | null
+          status: 'pending' | 'accepted' | 'rejected' | 'expired'
+          expires_at: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['alliance_invitations']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['alliance_invitations']['Insert']>
+      }
+
+      alliance_diplomacy: {
+        Row: {
+          id: string
+          alliance_id: string
+          target_alliance_id: string
+          relation_type: 'war' | 'nap' | 'ally' | 'neutral'
+          proposed_by: string
+          accepted_by: string | null
+          status: 'proposed' | 'active' | 'rejected' | 'expired'
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['alliance_diplomacy']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['alliance_diplomacy']['Insert']>
+      }
+
+      alliance_circular: {
+        Row: {
+          id: string
+          alliance_id: string
+          sender_id: string
+          subject: string
+          body: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['alliance_circular']['Row'], 'id' | 'created_at'>
+        Update: never
       }
 
       debris_fields: {
@@ -384,7 +463,7 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['debris_fields']['Insert']>
       }
 
-      highscores: {
+      player_scores: {
         Row: {
           id: string
           user_id: string
@@ -392,11 +471,56 @@ export interface Database {
           economy_points: number
           research_points: number
           military_points: number
-          rank: number
+          defense_points: number
+          planets_count: number
+          ships_count: number
+          total_rank: number
+          economy_rank: number
+          research_rank: number
+          military_rank: number
+          defense_rank: number
+          previous_total_rank: number
+          rank_change: number
+          created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['highscores']['Row'], 'id'>
-        Update: Partial<Database['public']['Tables']['highscores']['Insert']>
+        Insert: Omit<Database['public']['Tables']['player_scores']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['player_scores']['Insert']>
+      }
+
+      alliance_scores: {
+        Row: {
+          id: string
+          alliance_id: string
+          total_points: number
+          average_points: number
+          member_count: number
+          total_rank: number
+          previous_total_rank: number
+          rank_change: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['alliance_scores']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['alliance_scores']['Insert']>
+      }
+
+      score_history: {
+        Row: {
+          id: string
+          entity_type: 'player' | 'alliance'
+          entity_id: string
+          total_points: number
+          economy_points: number
+          research_points: number
+          military_points: number
+          defense_points: number
+          total_rank: number
+          recorded_date: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['score_history']['Row'], 'id' | 'created_at'>
+        Update: never
       }
 
       api_tokens: {
@@ -463,6 +587,22 @@ export interface Database {
         Args: Record<string, never>
         Returns: void
       }
+      calculate_player_scores: {
+        Args: Record<string, never>
+        Returns: void
+      }
+      update_all_rankings: {
+        Args: Record<string, never>
+        Returns: void
+      }
+      save_daily_score_history: {
+        Args: Record<string, never>
+        Returns: void
+      }
+      update_highscores: {
+        Args: Record<string, never>
+        Returns: void
+      }
     }
   }
 }
@@ -488,4 +628,6 @@ export type EspionageReport = Tables<'espionage_reports'>
 export type BattleReport = Tables<'battle_reports'>
 export type Alliance = Tables<'alliances'>
 export type DebrisField = Tables<'debris_fields'>
-export type Highscore = Tables<'highscores'>
+export type PlayerScoreRow = Tables<'player_scores'>
+export type AllianceScoreRow = Tables<'alliance_scores'>
+export type ScoreHistoryRow = Tables<'score_history'>

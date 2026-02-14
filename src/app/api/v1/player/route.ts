@@ -27,7 +27,7 @@ async function getPlayer(request: NextRequest, user: AuthenticatedUser) {
     .eq('destroyed', false)
 
   const { data: highscore } = await supabase
-    .from('highscores')
+    .from('player_scores')
     .select('*')
     .eq('user_id', user.id)
     .single()
@@ -67,7 +67,15 @@ async function getPlayer(request: NextRequest, user: AuthenticatedUser) {
       economy_points: highscore.economy_points,
       research_points: highscore.research_points,
       military_points: highscore.military_points,
-      rank: highscore.rank,
+      defense_points: highscore.defense_points,
+      total_rank: highscore.total_rank,
+      economy_rank: highscore.economy_rank,
+      research_rank: highscore.research_rank,
+      military_rank: highscore.military_rank,
+      defense_rank: highscore.defense_rank,
+      rank_change: highscore.rank_change,
+      planets_count: highscore.planets_count,
+      ships_count: highscore.ships_count,
     } : null,
   })
 }
