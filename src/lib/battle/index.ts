@@ -267,3 +267,28 @@ export type {
   SabotageEffect,
   SabotageTarget,
 } from './boarding-system'
+
+// ============================================================================
+// FLEET FORMATIONS
+// ============================================================================
+
+export {
+  FORMATIONS,
+  DEFAULT_FORMATION_BONUSES,
+  applyFormation,
+  suggestFormation,
+  applyFormationBonusesToUnit,
+} from './fleet-formations'
+export type {
+  FormationType,
+  FormationPosition,
+  FormationRole,
+  FleetFormation,
+  FormationPositionConfig,
+  FormationBonuses,
+  FormationRequirements,
+  CompositionModifier,
+  CompositionCondition,
+  FormationUnit,
+  AppliedFormation,
+} from './fleet-formations'
