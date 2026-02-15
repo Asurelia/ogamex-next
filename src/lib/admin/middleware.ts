@@ -13,16 +13,17 @@ export interface AdminContext {
   supabase: Awaited<ReturnType<typeof createClient>>
 }
 
-export type AdminHandler<T = unknown> = (
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AdminHandler = (
   request: NextRequest,
   context: AdminContext
-) => Promise<NextResponse<T>>
+) => Promise<NextResponse<any>>
 
 /**
  * Wrap an API route handler with admin authentication
  */
-export function withAdminAuth<T = unknown>(
-  handler: AdminHandler<T>,
+export function withAdminAuth(
+  handler: AdminHandler,
   requiredPermission?: string
 ) {
   return async (request: NextRequest): Promise<NextResponse> => {
@@ -139,8 +140,8 @@ export async function logAdminAction(
     oldValue?: Record<string, unknown>
     newValue?: Record<string, unknown>
     metadata?: Record<string, unknown>
-    ipAddress?: string
-    userAgent?: string
+    ipAddress?: string | null
+    userAgent?: string | null
   } = {}
 ): Promise<string | null> {
   try {

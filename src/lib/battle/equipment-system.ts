@@ -370,6 +370,26 @@ export const DEFAULT_SLOT_CONFIG: Record<UnitClass, Record<EquipmentSlot, number
     special: 0,
     consumable: 0,
   },
+  defense: {
+    weapon: 2,
+    secondary: 1,
+    shield: 2,
+    armor: 3,
+    engine: 0,
+    computer: 1,
+    special: 1,
+    consumable: 0,
+  },
+  missile: {
+    weapon: 3,
+    secondary: 0,
+    shield: 1,
+    armor: 1,
+    engine: 0,
+    computer: 2,
+    special: 1,
+    consumable: 0,
+  },
 }
 
 // ============================================================================

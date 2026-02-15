@@ -110,6 +110,10 @@ export type StatusEffectType =
   | 'crew_panic'             // Reduced effectiveness
   | 'boarded'                // Under boarding attack
   | 'emp_stunned'            // All systems temporarily offline
+  | 'sensors_jammed'         // Sensors jammed, reduced accuracy
+  | 'nanite_repair'          // Nanite self-repair active
+  | 'shield_overcharge'      // Shield overcharged
+  | 'phased'                 // Phased out of reality
 
 /**
  * Status effect applied to a unit

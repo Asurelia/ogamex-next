@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useGameStore } from '@/stores/gameStore'
 
 export function ResourcePanel() {
-  const { currentPlanet, user, refreshPlanet } = useGameStore()
+  const { currentPlanet, user } = useGameStore()
   const [amounts, setAmounts] = useState({
     metal: 10000,
     crystal: 10000,
@@ -50,10 +50,7 @@ export function ResourcePanel() {
 
       const data = await response.json()
       if (data.success) {
-        // Refresh planet data
-        if (refreshPlanet) {
-          await refreshPlanet()
-        }
+        // Refresh page to show new resources
         window.location.reload()
       } else {
         console.error('Failed to inject:', data.error)

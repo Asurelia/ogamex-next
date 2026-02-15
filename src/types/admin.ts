@@ -195,6 +195,7 @@ export interface GameConfigUpdate {
 export type BoostScope = 'global' | 'planet' | 'fleet'
 
 export interface GameBoostType {
+  [key: string]: unknown
   id: string
   key: string
   name: string

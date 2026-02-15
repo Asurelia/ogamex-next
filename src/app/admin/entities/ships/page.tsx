@@ -7,6 +7,7 @@ import { useAdminPermission } from '@/stores/adminStore'
 import { ADMIN_PERMISSIONS } from '@/types/admin'
 
 interface Ship {
+  [key: string]: unknown
   id: number
   key: string
   name: string

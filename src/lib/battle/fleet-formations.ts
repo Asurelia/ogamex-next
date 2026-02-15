@@ -1100,7 +1100,7 @@ function checkCompositionCondition(
   condition: CompositionCondition,
   composition: Map<string, { count: number; percent: number }>
 ): boolean {
-  let key = condition.shipClass
+  let key: string | undefined = condition.shipClass
   if (condition.shipKey) {
     key = `key:${condition.shipKey}`
   }

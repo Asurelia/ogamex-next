@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { DataTable } from '@/components/admin/common'
 
 interface Player {
+  [key: string]: unknown
   id: string
   username: string
   email: string

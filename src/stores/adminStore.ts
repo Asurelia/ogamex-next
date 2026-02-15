@@ -57,14 +57,16 @@ export const useAdminStore = create<AdminState>((set) => ({
   setGameConfig: (config) => set({ gameConfig: config }),
 
   updateConfigValue: (key, value) =>
-    set((state) => ({
-      gameConfig: {
-        ...state.gameConfig,
-        [key]: state.gameConfig[key]
-          ? { ...state.gameConfig[key], value }
-          : undefined,
-      },
-    })),
+    set((state) => {
+      const existingEntry = state.gameConfig[key]
+      if (!existingEntry) return state
+      return {
+        gameConfig: {
+          ...state.gameConfig,
+          [key]: { ...existingEntry, value },
+        },
+      }
+    }),
 
   setBoostTypes: (types) => set({ boostTypes: types }),
 

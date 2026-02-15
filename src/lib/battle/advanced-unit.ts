@@ -33,6 +33,7 @@ export type UnitClass =
   | 'corvette'       // Light combat ships
   | 'frigate'        // Medium combat ships
   | 'cruiser'        // Heavy combat ships
+  | 'battlecruiser'  // Battle cruisers
   | 'battleship'     // Capital ships
   | 'carrier'        // Fighter carriers
   | 'dreadnought'    // Super-heavy capital ships
@@ -40,6 +41,8 @@ export type UnitClass =
   | 'utility'        // Support/utility ships
   | 'defense'        // Planetary defenses
   | 'missile'        // Missile platforms
+  | 'platform'       // Defense platforms
+  | 'turret'         // Defense turrets
 
 // ============================================================================
 // DEFENSE LAYERS

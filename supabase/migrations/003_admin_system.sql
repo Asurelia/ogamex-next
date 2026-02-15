@@ -7,7 +7,7 @@
 -- ADMIN ROLES TABLE
 -- ============================================================================
 CREATE TABLE admin_roles (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role TEXT NOT NULL CHECK (role IN ('super_admin', 'game_master', 'support', 'readonly')),
     permissions JSONB DEFAULT '[]'::jsonb,
@@ -29,7 +29,7 @@ CREATE TABLE admin_roles (
 -- ADMIN AUDIT LOG TABLE
 -- ============================================================================
 CREATE TABLE admin_audit_log (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     admin_id UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
     admin_username TEXT,
     action TEXT NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE admin_audit_log (
 -- Stores dynamic game configuration that can be changed without redeployment
 -- ============================================================================
 CREATE TABLE game_config (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     key TEXT UNIQUE NOT NULL,
     value JSONB NOT NULL,
     category TEXT NOT NULL CHECK (category IN (
@@ -70,7 +70,7 @@ CREATE TABLE game_config (
 -- Defines available boost types that players can activate
 -- ============================================================================
 CREATE TABLE game_boost_types (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     key TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -95,7 +95,7 @@ CREATE TABLE game_boost_types (
 -- Defines available currencies in the game
 -- ============================================================================
 CREATE TABLE game_currencies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     key TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -268,44 +268,44 @@ INSERT INTO game_currencies (key, name, description, icon, color, is_premium, re
 -- ============================================================================
 INSERT INTO game_config (key, value, category, value_type, default_value, min_value, max_value, description) VALUES
 -- Production
-('production_speed', '1', 'production', 'number', '1', '0.1', '10', 'Global production speed multiplier'),
-('metal_base_production', '30', 'production', 'number', '30', '1', '1000', 'Base metal production per hour'),
-('crystal_base_production', '15', 'production', 'number', '15', '1', '1000', 'Base crystal production per hour'),
-('deuterium_base_production', '0', 'production', 'number', '0', '0', '1000', 'Base deuterium production per hour'),
+('production_speed', '1'::JSONB, 'production', 'number', '1'::JSONB, '0.1'::JSONB, '10'::JSONB, 'Global production speed multiplier'),
+('metal_base_production', '30'::JSONB, 'production', 'number', '30'::JSONB, '1'::JSONB, '1000'::JSONB, 'Base metal production per hour'),
+('crystal_base_production', '15'::JSONB, 'production', 'number', '15'::JSONB, '1'::JSONB, '1000'::JSONB, 'Base crystal production per hour'),
+('deuterium_base_production', '0'::JSONB, 'production', 'number', '0'::JSONB, '0'::JSONB, '1000'::JSONB, 'Base deuterium production per hour'),
 
 -- Construction
-('construction_speed', '1', 'construction', 'number', '1', '0.1', '10', 'Global construction speed multiplier'),
-('building_queue_size', '5', 'construction', 'number', '5', '1', '20', 'Maximum buildings in queue'),
+('construction_speed', '1'::JSONB, 'construction', 'number', '1'::JSONB, '0.1'::JSONB, '10'::JSONB, 'Global construction speed multiplier'),
+('building_queue_size', '5'::JSONB, 'construction', 'number', '5'::JSONB, '1'::JSONB, '20'::JSONB, 'Maximum buildings in queue'),
 
 -- Research
-('research_speed', '1', 'research', 'number', '1', '0.1', '10', 'Global research speed multiplier'),
-('research_queue_size', '1', 'research', 'number', '1', '1', '10', 'Maximum research in queue'),
+('research_speed', '1'::JSONB, 'research', 'number', '1'::JSONB, '0.1'::JSONB, '10'::JSONB, 'Global research speed multiplier'),
+('research_queue_size', '1'::JSONB, 'research', 'number', '1'::JSONB, '1'::JSONB, '10'::JSONB, 'Maximum research in queue'),
 
 -- Combat
-('fleet_speed', '1', 'fleet', 'number', '1', '0.1', '10', 'Global fleet speed multiplier'),
-('debris_ratio', '0.3', 'combat', 'number', '0.3', '0', '1', 'Ratio of destroyed ships converted to debris'),
-('debris_defense_ratio', '0', 'combat', 'number', '0', '0', '1', 'Ratio of destroyed defense converted to debris'),
-('defense_repair_ratio', '0.7', 'combat', 'number', '0.7', '0', '1', 'Ratio of destroyed defense that gets repaired'),
+('fleet_speed', '1'::JSONB, 'fleet', 'number', '1'::JSONB, '0.1'::JSONB, '10'::JSONB, 'Global fleet speed multiplier'),
+('debris_ratio', '0.3'::JSONB, 'combat', 'number', '0.3'::JSONB, '0'::JSONB, '1'::JSONB, 'Ratio of destroyed ships converted to debris'),
+('debris_defense_ratio', '0'::JSONB, 'combat', 'number', '0'::JSONB, '0'::JSONB, '1'::JSONB, 'Ratio of destroyed defense converted to debris'),
+('defense_repair_ratio', '0.7'::JSONB, 'combat', 'number', '0.7'::JSONB, '0'::JSONB, '1'::JSONB, 'Ratio of destroyed defense that gets repaired'),
 
 -- Universe
-('galaxy_count', '9', 'universe', 'number', '9', '1', '20', 'Number of galaxies'),
-('system_count', '499', 'universe', 'number', '499', '100', '999', 'Number of systems per galaxy'),
-('planet_slots', '15', 'universe', 'number', '15', '10', '20', 'Number of planet slots per system'),
+('galaxy_count', '9'::JSONB, 'universe', 'number', '9'::JSONB, '1'::JSONB, '20'::JSONB, 'Number of galaxies'),
+('system_count', '499'::JSONB, 'universe', 'number', '499'::JSONB, '100'::JSONB, '999'::JSONB, 'Number of systems per galaxy'),
+('planet_slots', '15'::JSONB, 'universe', 'number', '15'::JSONB, '10'::JSONB, '20'::JSONB, 'Number of planet slots per system'),
 
 -- Features
-('acs_enabled', 'true', 'features', 'boolean', 'true', NULL, NULL, 'Allied Combat System enabled'),
-('expeditions_enabled', 'true', 'features', 'boolean', 'true', NULL, NULL, 'Expeditions enabled'),
-('vacation_mode_enabled', 'true', 'features', 'boolean', 'true', NULL, NULL, 'Vacation mode enabled'),
+('acs_enabled', 'true'::JSONB, 'features', 'boolean', 'true'::JSONB, NULL, NULL, 'Allied Combat System enabled'),
+('expeditions_enabled', 'true'::JSONB, 'features', 'boolean', 'true'::JSONB, NULL, NULL, 'Expeditions enabled'),
+('vacation_mode_enabled', 'true'::JSONB, 'features', 'boolean', 'true'::JSONB, NULL, NULL, 'Vacation mode enabled'),
 
 -- Limits
-('max_planets_per_user', '9', 'limits', 'number', '9', '1', '20', 'Maximum planets per user'),
-('max_fleet_slots', '15', 'limits', 'number', '15', '1', '30', 'Maximum fleet slots per user'),
-('max_expeditions', '3', 'limits', 'number', '3', '1', '10', 'Maximum concurrent expeditions'),
+('max_planets_per_user', '9'::JSONB, 'limits', 'number', '9'::JSONB, '1'::JSONB, '20'::JSONB, 'Maximum planets per user'),
+('max_fleet_slots', '15'::JSONB, 'limits', 'number', '15'::JSONB, '1'::JSONB, '30'::JSONB, 'Maximum fleet slots per user'),
+('max_expeditions', '3'::JSONB, 'limits', 'number', '3'::JSONB, '1'::JSONB, '10'::JSONB, 'Maximum concurrent expeditions'),
 
 -- Formulas
-('metal_mine_formula', 'Math.floor(30 * level * Math.pow(1.1, level))', 'formulas', 'formula', 'Math.floor(30 * level * Math.pow(1.1, level))', NULL, NULL, 'Metal mine production formula'),
-('crystal_mine_formula', 'Math.floor(20 * level * Math.pow(1.1, level))', 'formulas', 'formula', 'Math.floor(20 * level * Math.pow(1.1, level))', NULL, NULL, 'Crystal mine production formula'),
-('deuterium_synth_formula', 'Math.floor(10 * level * Math.pow(1.1, level) * (1.44 - 0.004 * planetTemp))', 'formulas', 'formula', 'Math.floor(10 * level * Math.pow(1.1, level) * (1.44 - 0.004 * planetTemp))', NULL, NULL, 'Deuterium synthesizer production formula');
+('metal_mine_formula', '"Math.floor(30 * level * Math.pow(1.1, level))"'::JSONB, 'formulas', 'formula', '"Math.floor(30 * level * Math.pow(1.1, level))"'::JSONB, NULL, NULL, 'Metal mine production formula'),
+('crystal_mine_formula', '"Math.floor(20 * level * Math.pow(1.1, level))"'::JSONB, 'formulas', 'formula', '"Math.floor(20 * level * Math.pow(1.1, level))"'::JSONB, NULL, NULL, 'Crystal mine production formula'),
+('deuterium_synth_formula', '"Math.floor(10 * level * Math.pow(1.1, level) * (1.44 - 0.004 * planetTemp))"'::JSONB, 'formulas', 'formula', '"Math.floor(10 * level * Math.pow(1.1, level) * (1.44 - 0.004 * planetTemp))"'::JSONB, NULL, NULL, 'Deuterium synthesizer production formula');
 
 -- ============================================================================
 -- ADD BOOST ENERGY FIELDS TO USERS TABLE IF NOT EXISTS
@@ -327,11 +327,11 @@ END$$;
 -- USER ACTIVE BOOSTS TABLE (if not exists)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS user_active_boosts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     boost_type TEXT NOT NULL,
     multiplier DECIMAL(5,2) NOT NULL,
-    planet_id UUID REFERENCES planets(id) ON DELETE CASCADE,
+    colony_id UUID REFERENCES player_colonies(id) ON DELETE CASCADE,
     started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ends_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
