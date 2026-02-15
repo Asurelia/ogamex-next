@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { formatNumber } from '@/game/formulas'
 import { HolographicTooltip } from '@/components/ui/HolographicTooltip'
+import { BoostMenu } from '@/components/game/BoostMenu'
 import { useEffect, useState } from 'react'
 
 function getResourceIcon(key: string): string {
@@ -48,17 +49,13 @@ function EnergyDisplay({ energyUsed, energyMax, t }: EnergyDisplayProps) {
 
   // Determine status and colors
   let statusColor = '#00ff00' // Green - surplus
-  let statusText = t('energySurplus')
 
   if (!hasProduction) {
     statusColor = '#ff4444' // Red
-    statusText = t('energyNoProduction')
   } else if (hasDeficit) {
     statusColor = '#ff4444' // Red
-    statusText = t('energyDeficitWarning', { percent: efficiency })
   } else if (balance === 0) {
     statusColor = '#ffcc00' // Yellow - balanced
-    statusText = t('energyBalance')
   }
 
   // Tooltip stats
@@ -149,9 +146,10 @@ function EnergyDisplay({ energyUsed, energyMax, t }: EnergyDisplayProps) {
 
 interface BoostEnergyDisplayProps {
   t: (key: string, values?: Record<string, string | number>) => string
+  onOpenBoostMenu: () => void
 }
 
-function BoostEnergyDisplay({ t }: BoostEnergyDisplayProps) {
+function BoostEnergyDisplay({ t, onOpenBoostMenu }: BoostEnergyDisplayProps) {
   const { user, getBoostEnergy, getBoostEnergyPercent, getTimeToFullEnergy } = useGameStore()
   const [currentEnergy, setCurrentEnergy] = useState(0)
   const [percent, setPercent] = useState(0)
@@ -226,7 +224,10 @@ function BoostEnergyDisplay({ t }: BoostEnergyDisplayProps) {
       stats={tooltipStats}
       position="bottom"
     >
-      <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+      <div
+        className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={onOpenBoostMenu}
+      >
         {/* Boost energy icon - lightning bolt */}
         <div
           className="w-5 h-5 rounded-sm flex items-center justify-center text-sm"
@@ -290,6 +291,7 @@ function BoostEnergyDisplay({ t }: BoostEnergyDisplayProps) {
 export function ResourceBar() {
   const { currentPlanet, user } = useGameStore()
   const t = useTranslations('resources')
+  const [isBoostMenuOpen, setIsBoostMenuOpen] = useState(false)
 
   if (!currentPlanet) return null
 
@@ -318,68 +320,79 @@ export function ResourceBar() {
   ]
 
   return (
-    <div className="bg-ogame-panel border-b border-ogame-border">
-      <div className="flex items-center justify-between px-4 py-2">
-        {/* Resources */}
-        <div className="flex items-center gap-6">
-          {resources.map((resource) => (
-            <div key={resource.key} className="flex items-center gap-2" title={t(resource.key)}>
-              <img
-                src={getResourceIcon(resource.key)}
-                alt={t(resource.key)}
-                className="w-5 h-5 rounded-sm object-cover"
-              />
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1">
-                  <span className={`font-mono ${resource.colorClass}`}>
-                    {formatNumber(Math.floor(resource.value))}
-                  </span>
-                  {resource.max && (
-                    <span className="text-ogame-text-muted text-xs">
-                      / {formatNumber(resource.max)}
+    <>
+      <div className="bg-ogame-panel border-b border-ogame-border">
+        <div className="flex items-center justify-between px-4 py-2">
+          {/* Resources */}
+          <div className="flex items-center gap-6">
+            {resources.map((resource) => (
+              <div key={resource.key} className="flex items-center gap-2" title={t(resource.key)}>
+                <img
+                  src={getResourceIcon(resource.key)}
+                  alt={t(resource.key)}
+                  className="w-5 h-5 rounded-sm object-cover"
+                />
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1">
+                    <span className={`font-mono ${resource.colorClass}`}>
+                      {formatNumber(Math.floor(resource.value))}
+                    </span>
+                    {resource.max && (
+                      <span className="text-ogame-text-muted text-xs">
+                        / {formatNumber(resource.max)}
+                      </span>
+                    )}
+                  </div>
+                  {resource.perHour !== null && (
+                    <span className="text-xs text-ogame-text-muted">
+                      +{formatNumber(resource.perHour)}/h
                     </span>
                   )}
                 </div>
-                {resource.perHour !== null && (
-                  <span className="text-xs text-ogame-text-muted">
-                    +{formatNumber(resource.perHour)}/h
-                  </span>
-                )}
               </div>
-            </div>
-          ))}
+            ))}
 
-          {/* Separator */}
-          <div className="h-8 w-px bg-ogame-border" />
+            {/* Separator */}
+            <div className="h-8 w-px bg-ogame-border" />
 
-          {/* Energy (OGame style - production/consumption) */}
-          <EnergyDisplay
-            energyUsed={currentPlanet.energy_used}
-            energyMax={currentPlanet.energy_max}
-            t={t}
-          />
-
-          {/* Separator */}
-          <div className="h-8 w-px bg-ogame-border" />
-
-          {/* Boost Energy (new regenerating resource) */}
-          <BoostEnergyDisplay t={t} />
-        </div>
-
-        {/* Dark Matter */}
-        {user && (
-          <div className="flex items-center gap-2" title={t('darkMatter')}>
-            <img
-              src={getResourceIcon('darkMatter')}
-              alt={t('darkMatter')}
-              className="w-5 h-5 rounded-sm object-cover"
+            {/* Energy (OGame style - production/consumption) */}
+            <EnergyDisplay
+              energyUsed={currentPlanet.energy_used}
+              energyMax={currentPlanet.energy_max}
+              t={t}
             />
-            <span className="font-mono resource-dark-matter">
-              {formatNumber(user.dark_matter)}
-            </span>
+
+            {/* Separator */}
+            <div className="h-8 w-px bg-ogame-border" />
+
+            {/* Boost Energy (new regenerating resource) */}
+            <BoostEnergyDisplay
+              t={t}
+              onOpenBoostMenu={() => setIsBoostMenuOpen(true)}
+            />
           </div>
-        )}
+
+          {/* Dark Matter */}
+          {user && (
+            <div className="flex items-center gap-2" title={t('darkMatter')}>
+              <img
+                src={getResourceIcon('darkMatter')}
+                alt={t('darkMatter')}
+                className="w-5 h-5 rounded-sm object-cover"
+              />
+              <span className="font-mono resource-dark-matter">
+                {formatNumber(user.dark_matter)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Boost Menu Modal */}
+      <BoostMenu
+        isOpen={isBoostMenuOpen}
+        onClose={() => setIsBoostMenuOpen(false)}
+      />
+    </>
   )
 }

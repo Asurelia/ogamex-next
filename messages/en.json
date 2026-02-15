@@ -690,5 +690,37 @@
   "sidebar": {
     "planets": "Planets",
     "scenes": "Scenes"
+  },
+  "boost": {
+    "title": "Boost Center",
+    "currentEnergy": "Available Energy",
+    "types": {
+      "production": "Production Boost",
+      "construction": "Construction Boost",
+      "research": "Research Boost",
+      "expedition": "Expedition Boost",
+      "attack": "Combat Boost"
+    },
+    "descriptions": {
+      "production": "Increases metal, crystal and deuterium production",
+      "construction": "Reduces building construction time",
+      "research": "Speeds up research at the laboratory",
+      "expedition": "Improves expedition rewards",
+      "attack": "Increases damage dealt in combat"
+    },
+    "bonus": "Bonus",
+    "duration": "Duration",
+    "cost": "Cost",
+    "activate": "Activate",
+    "active": "ACTIVE",
+    "notEnoughEnergy": "Not enough energy",
+    "notEnoughEnergyDesc": "You need {cost} energy but only have {current}",
+    "alreadyActive": "Boost already active",
+    "alreadyActiveDesc": "{type} boost is already active",
+    "boostActivated": "Boost activated!",
+    "boostActivatedDesc": "{type} activated: +{multiplier}% for {duration} minutes",
+    "activationFailed": "Activation failed",
+    "activationFailedDesc": "Failed to activate boost. Please try again.",
+    "infoText": "Boost energy regenerates automatically over time. Boosts apply immediately."
   }
 }
