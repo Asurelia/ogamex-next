@@ -22,7 +22,7 @@
  */
 
 // ============================================================================
-// UNIVERSE CONSTANTS
+// UNIVERSE CONSTANTS (Legacy - compatible with old planet system)
 // ============================================================================
 
 export const UNIVERSE = {
@@ -33,6 +33,58 @@ export const UNIVERSE = {
   MIN_POSITION: 1,
   MAX_POSITION: 15,
   EXPEDITION_POSITION: 16,
+} as const
+
+// ============================================================================
+// PROCEDURAL UNIVERSE CONSTANTS
+// New expanded universe with procedural generation
+// ============================================================================
+
+export const PROCEDURAL_UNIVERSE = {
+  /** Minimum number of galaxies */
+  MIN_GALAXIES: 80,
+  /** Maximum number of galaxies */
+  MAX_GALAXIES: 100,
+  /** Minimum solar systems per galaxy */
+  MIN_SYSTEMS_PER_GALAXY: 100,
+  /** Maximum solar systems per galaxy */
+  MAX_SYSTEMS_PER_GALAXY: 200,
+  /** Minimum planets per system */
+  MIN_PLANETS_PER_SYSTEM: 1,
+  /** Maximum planets per system */
+  MAX_PLANETS_PER_SYSTEM: 9,
+  /** Maximum moons per planet */
+  MAX_MOONS_PER_PLANET: 8,
+  /** Minimum fields for a planet */
+  MIN_PLANET_FIELDS: 8,
+  /** Maximum fields for a planet */
+  MAX_PLANET_FIELDS: 20,
+  /** Minimum fields for a moon */
+  MIN_MOON_FIELDS: 3,
+  /** Maximum fields for a moon */
+  MAX_MOON_FIELDS: 10,
+  /** Expedition position (outside normal planet range) */
+  EXPEDITION_POSITION: 16,
+} as const
+
+// ============================================================================
+// STAR TYPE GAMEPLAY EFFECTS
+// Quick reference for gameplay effects by star type
+// ============================================================================
+
+export const STAR_GAMEPLAY_EFFECTS = {
+  yellow_dwarf: { description: 'Standard - No bonuses or penalties' },
+  red_dwarf: { description: '-10% solar energy, +10% deuterium' },
+  orange_dwarf: { description: '-5% solar energy' },
+  white_dwarf: { description: '+20% crystal, +10% energy, minor fleet damage risk' },
+  red_giant: { description: '+30% metal, -20% deuterium, minor fleet damage risk' },
+  blue_giant: { description: '+50% energy, +30% deuterium, moderate fleet damage risk' },
+  binary_yellow: { description: '+15% energy, minor fleet damage risk' },
+  binary_red: { description: '-5% energy, +5% deuterium' },
+  binary_mixed: { description: '+10% crystal, +10% deuterium, minor fleet damage risk' },
+  neutron_star: { description: '+100% deuterium, -50% energy, high fleet damage risk' },
+  black_hole: { description: 'Non-colonizable, +200% expedition bonus, extreme fleet loss risk' },
+  white_giant: { description: '+40% crystal, +20% energy, minor fleet damage risk' },
 } as const
 
 // ============================================================================

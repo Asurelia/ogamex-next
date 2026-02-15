@@ -4,10 +4,21 @@ export { Starfield } from './Starfield'
 export { Sun3D } from './Sun3D'
 export { OrbitRing } from './OrbitRing'
 
+// Procedural Star Types
+export { Star3D } from './Star3D'
+export { BinaryStarSystem } from './BinaryStarSystem'
+export { BlackHole3D } from './BlackHole3D'
+export { NeutronStar3D } from './NeutronStar3D'
+export { AsteroidBelt3D } from './AsteroidBelt3D'
+
 // Ship Models (from battle/)
 export { ShipModel, getShipModel, getAllShipTypes, getShipConfig } from './battle/ShipModels'
 export { SolarSystemView } from './SolarSystemView'
 export type { SolarSystemPlanet, SolarSystemViewProps, DatabasePlanet } from './SolarSystemView'
+
+// Procedural Solar System View
+export { ProceduralSolarSystemView } from './ProceduralSolarSystemView'
+export type { ProceduralSolarSystemViewProps } from './ProceduralSolarSystemView'
 
 // Scenes
 export { OrbitalViewScene } from './scenes/OrbitalViewScene'

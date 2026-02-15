@@ -138,12 +138,29 @@ const BUILDING_KEYS: Record<number, string> = {
 
 const UNIVERSE_SPEED = parseInt(process.env.UNIVERSE_SPEED || '1', 10)
 
+// Star effect multipliers interface
+export interface StarEffectMultipliers {
+  metalMultiplier: number
+  crystalMultiplier: number
+  deuteriumMultiplier: number
+  energyMultiplier: number
+}
+
 /**
  * Calculate production rate based on mine level and energy
+ * @param starMultiplier - Optional multiplier from star effects (default 1.0)
  */
-function calculateMineProduction(level: number, baseRate: number, energyRatio: number): number {
-  if (level === 0) return baseRate // Base production only
-  return Math.floor(baseRate + baseRate * level * Math.pow(1.1, level) * energyRatio * UNIVERSE_SPEED)
+function calculateMineProduction(
+  level: number,
+  baseRate: number,
+  energyRatio: number,
+  starMultiplier: number = 1.0
+): number {
+  if (level === 0) return Math.floor(baseRate * starMultiplier) // Base production with star effect
+  return Math.floor(
+    (baseRate + baseRate * level * Math.pow(1.1, level) * energyRatio * UNIVERSE_SPEED) *
+      starMultiplier
+  )
 }
 
 /**
@@ -156,10 +173,11 @@ function calculateMineEnergyConsumption(level: number): number {
 
 /**
  * Calculate solar plant energy production
+ * @param energyMultiplier - Optional multiplier from star effects (default 1.0)
  */
-function calculateSolarEnergy(level: number): number {
+function calculateSolarEnergy(level: number, energyMultiplier: number = 1.0): number {
   if (level === 0) return 0
-  return Math.floor(20 * level * Math.pow(1.1, level))
+  return Math.floor(20 * level * Math.pow(1.1, level) * energyMultiplier)
 }
 
 /**

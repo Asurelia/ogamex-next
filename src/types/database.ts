@@ -631,3 +631,25 @@ export type DebrisField = Tables<'debris_fields'>
 export type PlayerScoreRow = Tables<'player_scores'>
 export type AllianceScoreRow = Tables<'alliance_scores'>
 export type ScoreHistoryRow = Tables<'score_history'>
+
+// ============================================================================
+// PROCEDURAL GALAXY SYSTEM TYPES
+// ============================================================================
+
+// Re-export galaxy types for convenience
+export type {
+  UniverseConfig,
+  Galaxy,
+  GalaxySummary,
+  SolarSystem,
+  SolarSystemWithStar,
+  CelestialBody,
+  CelestialBodyWithMoons,
+  PlayerColony,
+  StarEffects,
+  GalaxyViewEntry,
+  GalacticCoordinates,
+  StarTypeId,
+  CelestialBodyType,
+  GalaxyType,
+} from '@/lib/galaxy/types'

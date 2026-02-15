@@ -119,7 +119,7 @@ export const ATMOSPHERE_COLORS: Record<PlanetType, string> = {
   water: '#4488ff',
 }
 
-// Star/Sun configurations
+// Star/Sun configurations (legacy - use @/lib/galaxy/constants for new star types)
 export const STAR_TYPES = {
   yellow: { color: '#ffff44', intensity: 1.5, scale: 8 },
   red_giant: { color: '#ff4422', intensity: 1.2, scale: 12 },
@@ -129,6 +129,24 @@ export const STAR_TYPES = {
 } as const
 
 export type StarType = keyof typeof STAR_TYPES
+
+// Extended star types for procedural generation
+export const PROCEDURAL_STAR_VISUALS = {
+  yellow_dwarf: { color: '#ffdd44', intensity: 1.5, scale: 3.5, glowColor: '#ffee88' },
+  red_dwarf: { color: '#ff6644', intensity: 0.8, scale: 2.5, glowColor: '#ff8866' },
+  orange_dwarf: { color: '#ffaa44', intensity: 1.0, scale: 3.0, glowColor: '#ffcc66' },
+  white_dwarf: { color: '#ffffff', intensity: 1.8, scale: 1.5, glowColor: '#ccccff' },
+  red_giant: { color: '#ff4422', intensity: 1.2, scale: 8.0, glowColor: '#ff6644' },
+  blue_giant: { color: '#4488ff', intensity: 2.5, scale: 6.0, glowColor: '#66aaff' },
+  binary_yellow: { color: '#ffee44', intensity: 2.0, scale: 3.0, glowColor: '#ffff88' },
+  binary_red: { color: '#ff5533', intensity: 1.2, scale: 2.5, glowColor: '#ff7755' },
+  binary_mixed: { color: '#ffaa77', intensity: 1.5, scale: 3.0, glowColor: '#ffcc99' },
+  neutron_star: { color: '#88aaff', intensity: 3.0, scale: 1.0, glowColor: '#aaccff' },
+  black_hole: { color: '#220033', intensity: 0.0, scale: 3.0, glowColor: '#440066' },
+  white_giant: { color: '#eeeeff', intensity: 2.0, scale: 5.0, glowColor: '#ffffff' },
+} as const
+
+export type ProceduralStarType = keyof typeof PROCEDURAL_STAR_VISUALS
 
 // Animation speeds
 export const ANIMATION_SPEEDS = {
