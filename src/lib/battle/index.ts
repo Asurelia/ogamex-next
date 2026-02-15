@@ -370,3 +370,41 @@ export type {
   UnitExperience,
   CombatStatistics,
 } from './veterancy-system'
+
+// ============================================================================
+// CINEMATIC RENDERER
+// ============================================================================
+
+export {
+  CinematicRenderer,
+  DEFAULT_RENDERER_CONFIG,
+  createBattleTimeline,
+} from './cinematic-renderer'
+export type {
+  VisualEffectType,
+  CameraShotType,
+  SoundCategory,
+  CinematicEvent,
+  CinematicEventType,
+  BattleStartEvent,
+  RoundEvent,
+  AttackEvent,
+  DamageEvent as CinematicDamageEvent,
+  DestructionEvent,
+  BoardingEvent as CinematicBoardingEvent,
+  AbilityEvent,
+  FormationChangeEvent,
+  CameraMoveEvent,
+  EffectEvent,
+  SoundEvent,
+  TextDisplayEvent,
+  BattleEndEvent,
+  TimelineEvent,
+  Position3D,
+  WeaponVisualType,
+  EasingType,
+  BattleTimeline,
+  TimelineMetadata,
+  PlaybackState,
+  RendererConfig,
+} from './cinematic-renderer'
