@@ -21,6 +21,11 @@ export const MissionTypeId = {
   RECYCLE: 8,
   MOON_DESTRUCTION: 9,
   EXPEDITION: 15,
+  // Exploration missions (Sprint 2)
+  EXPLORATION_SCAN: 20,
+  EXPLORATION_DEEP: 21,
+  EXPLORATION_MAP: 22,
+  DEPLOY_SATELLITE: 23,
 } as const
 
 export type MissionTypeIdValue = typeof MissionTypeId[keyof typeof MissionTypeId]
