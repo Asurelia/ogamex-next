@@ -3,6 +3,10 @@
  *
  * OGame-style combat simulation system with database-driven configuration.
  *
+ * Supports two battle engines:
+ * - **BattleEngine**: Classic OGame mechanics (single damage type)
+ * - **AdvancedBattleEngine**: Multi-damage types (ballistic, ionic, explosive, hacking, boarding)
+ *
  * @example
  * ```typescript
  * import { simulateBattleAsync, BattleEngine } from '@/lib/battle'
@@ -27,6 +31,23 @@
  * console.log(`Winner: ${result.winner}`)
  * console.log(`Debris: ${result.debris.metal} metal, ${result.debris.crystal} crystal`)
  * console.log(`Moon chance: ${result.moonChance}%`)
+ *
+ * // ADVANCED BATTLE ENGINE (multi-damage types)
+ * import { simulateAdvancedBattle, AdvancedBattleEngine } from '@/lib/battle'
+ *
+ * const advResult = await simulateAdvancedBattle(
+ *   { cruiser: 50, battleship: 20 },
+ *   { weaponsTech: 12, shieldTech: 10, armorTech: 11, ionicTech: 5, hackingTech: 3 },
+ *   { heavy_fighter: 100 },
+ *   { plasma_turret: 10, ion_cannon: 20 },
+ *   { weaponsTech: 10, shieldTech: 10, armorTech: 10 },
+ *   { metal: 2000000, crystal: 1000000, deuterium: 500000 }
+ * )
+ *
+ * console.log(`Ballistic damage dealt: ${advResult.statistics.totalDamageDealt.ballistic}`)
+ * console.log(`Ionic damage dealt: ${advResult.statistics.totalDamageDealt.ionic}`)
+ * console.log(`Critical hits: ${advResult.statistics.criticalHits}`)
+ * console.log(`Timeline events: ${advResult.timeline.length}`)
  * ```
  */
 
@@ -121,3 +142,99 @@ export {
 } from './utils'
 
 export type { DamageResult } from './utils'
+
+// ============================================================================
+// ADVANCED BATTLE ENGINE (Multi-Damage Types)
+// ============================================================================
+
+// Advanced engine
+export {
+  AdvancedBattleEngine,
+  simulateAdvancedBattle,
+} from './AdvancedBattleEngine'
+export type {
+  AdvancedBattleOptions,
+  AdvancedBattleResult,
+  AdvancedRoundStats,
+  BattleTimelineEvent,
+} from './AdvancedBattleEngine'
+
+// Damage types system
+export {
+  EMPTY_DAMAGE,
+  EMPTY_RESISTANCES,
+  DEFAULT_COMBAT_STATS,
+  DAMAGE_TYPE_KEYS,
+  RESISTANCE_TYPE_KEYS,
+  DAMAGE_EFFECTIVENESS,
+  createDamageTypes,
+  createResistanceTypes,
+  getTotalDamage,
+  scaleDamage,
+  applyResistances,
+  hasStatusEffect,
+  getStatusEffectStrength,
+  tickStatusEffects,
+  mergeDamage,
+} from './damage-types'
+export type {
+  DamageTypes,
+  ResistanceTypes,
+  StatusEffect,
+  StatusEffectType,
+  HackableSystem,
+  AdvancedCombatStats,
+  AdvancedDamageResult,
+  DamageEvent,
+  DamageEventType,
+} from './damage-types'
+
+// Advanced unit system
+export {
+  createDefenseLayers,
+  createAdvancedCombatUnit,
+  canAttack,
+  canBeTargeted,
+  getTotalHP,
+  getMaxHP,
+  getHPPercent,
+  shouldExplode,
+  regenerateUnitShields,
+  applyDamageToUnit,
+  tickUnitStatusEffects,
+  UNIT_CLASS_MAP,
+  getUnitClass,
+} from './advanced-unit'
+export type {
+  UnitCategory,
+  UnitClass,
+  DefenseLayers,
+  AdvancedCombatUnit,
+  AdvancedUnitBaseStats,
+  AdvancedTechLevels,
+} from './advanced-unit'
+
+// Advanced damage calculator
+export {
+  calculateAdvancedDamage,
+  simplifyDamageResult,
+  convertLegacyDamage,
+} from './damage-calculator'
+
+// Advanced configuration
+export {
+  getAdvancedBattleConfig,
+  initAdvancedBattleConfig,
+  getAdvancedBattleConfigSync,
+  clearAdvancedBattleConfigCache,
+  getAdvancedShipStats,
+  getAdvancedDefenseStats,
+  getAdvancedShipKeys,
+  getAdvancedDefenseKeys,
+  getAdvancedRapidFire,
+} from './advanced-config'
+export type {
+  AdvancedShipStats,
+  AdvancedDefenseStats,
+  AdvancedBattleConfig,
+} from './advanced-config'
