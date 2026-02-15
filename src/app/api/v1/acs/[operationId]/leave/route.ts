@@ -73,10 +73,9 @@ async function leaveOperation(request: NextRequest, user: AuthenticatedUser) {
       )
     }
 
-    // Return ships and resources to the planet if we have an origin
     if (originPlanetId && participant.ships) {
       const { data: planet } = await supabase
-        .from('planets')
+        .from('planets_compat')
         .select('*')
         .eq('id', originPlanetId)
         .eq('user_id', user.id)
@@ -85,19 +84,17 @@ async function leaveOperation(request: NextRequest, user: AuthenticatedUser) {
       if (planet) {
         const updateData: Record<string, number> = {}
 
-        // Return ships
         const ships = participant.ships as Record<string, number>
         for (const [key, amount] of Object.entries(ships)) {
           updateData[key] = ((planet as unknown as Record<string, number>)[key] || 0) + amount
         }
 
-        // Return resources
         updateData.metal = (planet.metal || 0) + (participant.metal || 0)
         updateData.crystal = (planet.crystal || 0) + (participant.crystal || 0)
         updateData.deuterium = (planet.deuterium || 0) + (participant.deuterium || 0)
 
         await supabase
-          .from('planets')
+          .from('player_colonies')
           .update(updateData)
           .eq('id', originPlanetId)
       }

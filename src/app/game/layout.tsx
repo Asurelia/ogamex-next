@@ -14,7 +14,7 @@ async function waitForUserData(supabase: any, userId: string, maxRetries = 5) {
 
     if (user) {
       const { data: planets } = await supabase
-        .from('planets')
+        .from('planets_compat')
         .select('*')
         .eq('user_id', user.id)
         .eq('destroyed', false)

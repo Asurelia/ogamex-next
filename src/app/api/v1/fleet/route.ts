@@ -101,9 +101,8 @@ async function sendFleet(request: NextRequest, user: AuthenticatedUser) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get origin planet
     const { data: planet, error: planetError } = await supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('id', origin_planet_id)
       .eq('user_id', user.id)
@@ -212,7 +211,7 @@ async function sendFleet(request: NextRequest, user: AuthenticatedUser) {
     }
 
     const { error: updateError } = await supabase
-      .from('planets')
+      .from('player_colonies')
       .update(updateData)
       .eq('id', origin_planet_id)
 

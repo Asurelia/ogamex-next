@@ -51,9 +51,8 @@ async function joinOperation(request: NextRequest, user: AuthenticatedUser) {
       )
     }
 
-    // Verify planet belongs to user
     const { data: planet } = await supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('id', body.origin_planet_id)
       .eq('user_id', user.id)
@@ -138,7 +137,7 @@ async function joinOperation(request: NextRequest, user: AuthenticatedUser) {
     updateData.deuterium = planet.deuterium - resources.deuterium
 
     await supabase
-      .from('planets')
+      .from('player_colonies')
       .update(updateData)
       .eq('id', body.origin_planet_id)
 

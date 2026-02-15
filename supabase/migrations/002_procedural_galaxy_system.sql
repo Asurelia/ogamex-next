@@ -918,6 +918,95 @@ CREATE TRIGGER on_user_created
     EXECUTE FUNCTION create_initial_colony();
 
 -- ============================================================================
+-- DROP OLD PLANETS TABLE (replaced by player_colonies + celestial_bodies)
+-- ============================================================================
+DROP TABLE IF EXISTS planets CASCADE;
+
+-- ============================================================================
+-- CREATE COMPATIBILITY VIEW (maps new schema to old planets interface)
+-- ============================================================================
+CREATE OR REPLACE VIEW planets_compat AS
+SELECT
+    pc.id,
+    pc.user_id,
+    pc.name,
+    g.galaxy_index AS galaxy,
+    ss.system_index AS system,
+    cb.orbital_position AS position,
+    cb.body_type::TEXT AS planet_type,
+    cb.diameter,
+    pc.fields_used,
+    cb.fields_max,
+    cb.temperature_min AS temp_min,
+    cb.temperature_max AS temp_max,
+    pc.metal,
+    pc.metal_per_hour,
+    pc.metal_max,
+    pc.crystal,
+    pc.crystal_per_hour,
+    pc.crystal_max,
+    pc.deuterium,
+    pc.deuterium_per_hour,
+    pc.deuterium_max,
+    pc.energy_used,
+    pc.energy_max,
+    pc.metal_mine,
+    pc.crystal_mine,
+    pc.deuterium_synthesizer,
+    pc.solar_plant,
+    pc.fusion_plant,
+    pc.metal_storage,
+    pc.crystal_storage,
+    pc.deuterium_tank,
+    pc.robot_factory,
+    pc.nanite_factory,
+    pc.shipyard,
+    pc.research_lab,
+    pc.terraformer,
+    pc.alliance_depot,
+    pc.missile_silo,
+    pc.space_dock,
+    pc.lunar_base,
+    pc.sensor_phalanx,
+    pc.jump_gate,
+    pc.jump_gate_cooldown,
+    pc.light_fighter,
+    pc.heavy_fighter,
+    pc.cruiser,
+    pc.battleship,
+    pc.battlecruiser,
+    pc.bomber,
+    pc.destroyer,
+    pc.deathstar,
+    pc.small_cargo,
+    pc.large_cargo,
+    pc.colony_ship,
+    pc.recycler,
+    pc.espionage_probe,
+    pc.solar_satellite,
+    pc.crawler,
+    pc.reaper,
+    pc.pathfinder,
+    pc.rocket_launcher,
+    pc.light_laser,
+    pc.heavy_laser,
+    pc.gauss_cannon,
+    pc.ion_cannon,
+    pc.plasma_turret,
+    pc.small_shield_dome,
+    pc.large_shield_dome,
+    pc.anti_ballistic_missile,
+    pc.interplanetary_missile,
+    pc.last_resource_update,
+    pc.destroyed,
+    pc.created_at,
+    pc.updated_at
+FROM player_colonies pc
+JOIN celestial_bodies cb ON pc.celestial_body_id = cb.id
+JOIN solar_systems ss ON cb.solar_system_id = ss.id
+JOIN galaxies g ON ss.galaxy_id = g.id;
+
+-- ============================================================================
 -- INITIALIZE UNIVERSE WITH DEFAULT SEED
 -- ============================================================================
 -- SELECT initialize_universe(42424242424242);

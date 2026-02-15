@@ -266,7 +266,7 @@ export default function HighscorePage() {
 
         // Get planets count
         const { count: planetsCount } = await supabase
-          .from('planets')
+          .from('planets_compat')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', userId)
 

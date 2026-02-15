@@ -293,9 +293,8 @@ export class AttackMission extends BaseMission {
       return { success: true }
     }
 
-    // Get current defense
     const { data: planet } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .select(DEFENSE_KEYS.join(', '))
       .eq('id', planetId)
       .single()
@@ -315,7 +314,7 @@ export class AttackMission extends BaseMission {
     }
 
     const { error } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update(updateData)
       .eq('id', planetId)
 

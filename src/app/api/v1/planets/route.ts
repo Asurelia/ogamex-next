@@ -10,7 +10,7 @@ async function getPlanets(request: NextRequest, user: AuthenticatedUser) {
   const supabase = getApiSupabase()
 
   const { data: planetsData, error } = await supabase
-    .from('planets')
+    .from('planets_compat')
     .select('*')
     .eq('user_id', user.id)
     .eq('destroyed', false)

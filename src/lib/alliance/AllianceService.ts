@@ -336,7 +336,7 @@ export class AllianceService {
     // Get planet counts separately
     const userIds = data.map((m) => m.user_id)
     const { data: planetCounts } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('user_id')
       .in('user_id', userIds)
       .eq('destroyed', false)

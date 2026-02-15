@@ -214,9 +214,7 @@ export class MoonDestructionMission extends BaseMission {
    * Destroy a moon
    */
   private async destroyMoon(moonId: string): Promise<void> {
-    // First, move any ships on the moon to debris (they're lost)
-    // Then delete the moon
-    await this.supabase.from('planets').delete().eq('id', moonId)
+    await this.supabase.from('player_colonies').delete().eq('id', moonId)
   }
 
   /**

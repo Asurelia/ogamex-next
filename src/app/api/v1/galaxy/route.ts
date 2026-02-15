@@ -18,7 +18,7 @@ async function getGalaxyView(request: NextRequest, user: AuthenticatedUser) {
 
   // Get planets in this system
   const { data: planets } = await supabase
-    .from('planets')
+    .from('planets_compat')
     .select(`
       id,
       name,

@@ -76,7 +76,7 @@ export default function ResearchPage() {
       const supabase = getSupabaseClient()
 
       const { error: updateError } = await supabase
-        .from('planets')
+        .from('player_colonies')
         .update({
           metal: currentPlanet.metal - cost.metal,
           crystal: currentPlanet.crystal - cost.crystal,

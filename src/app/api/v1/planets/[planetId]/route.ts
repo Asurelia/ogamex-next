@@ -14,7 +14,7 @@ async function getPlanet(
   const supabase = getApiSupabase()
 
   const { data: planetData, error } = await supabase
-    .from('planets')
+    .from('planets_compat')
     .select('*')
     .eq('id', planetId)
     .eq('user_id', user.id)

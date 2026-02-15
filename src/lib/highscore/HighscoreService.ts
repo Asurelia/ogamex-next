@@ -62,7 +62,7 @@ export class HighscoreService {
   async calculateEconomyPoints(userId: string): Promise<number> {
     const [{ data: planets }, config] = await Promise.all([
       this.supabase
-        .from('planets')
+        .from('planets_compat')
         .select('*')
         .eq('user_id', userId)
         .eq('destroyed', false),
@@ -127,7 +127,7 @@ export class HighscoreService {
   async calculateMilitaryPoints(userId: string): Promise<{ points: number; shipCount: number }> {
     const [{ data: planets }, shipPoints] = await Promise.all([
       this.supabase
-        .from('planets')
+        .from('planets_compat')
         .select('*')
         .eq('user_id', userId)
         .eq('destroyed', false),
@@ -158,7 +158,7 @@ export class HighscoreService {
   async calculateDefensePoints(userId: string): Promise<number> {
     const [{ data: planets }, defensePoints] = await Promise.all([
       this.supabase
-        .from('planets')
+        .from('planets_compat')
         .select('*')
         .eq('user_id', userId)
         .eq('destroyed', false),

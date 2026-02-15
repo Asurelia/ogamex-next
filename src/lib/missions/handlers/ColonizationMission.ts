@@ -292,9 +292,8 @@ export class ColonizationMission extends BaseMission {
       }
     }
 
-    // Double-check with direct query (in case context didn't find it)
     const { data: planetAtPosition } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('id')
       .eq('galaxy', coords.galaxy)
       .eq('system', coords.system)
@@ -352,7 +351,7 @@ export class ColonizationMission extends BaseMission {
    */
   private async getCurrentColonyCount(userId: string): Promise<number> {
     const { count } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('planet_type', 'planet')
@@ -484,7 +483,7 @@ export class ColonizationMission extends BaseMission {
     }
 
     const { data, error } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .insert(newPlanet)
       .select('id')
       .single()

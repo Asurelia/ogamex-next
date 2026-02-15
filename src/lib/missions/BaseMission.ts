@@ -188,31 +188,7 @@ export abstract class BaseMission implements IMissionHandler {
       p_deuterium: resources.deuterium,
     })
 
-    // Fallback if RPC doesn't exist - use direct update
-    if (error?.code === 'PGRST202') {
-      const { data: planet } = await this.supabase
-        .from('planets')
-        .select('metal, crystal, deuterium')
-        .eq('id', planetId)
-        .single()
-
-      if (!planet) {
-        return { success: false, error: 'Planet not found' }
-      }
-
-      const { error: updateError } = await this.supabase
-        .from('planets')
-        .update({
-          metal: planet.metal + resources.metal,
-          crystal: planet.crystal + resources.crystal,
-          deuterium: planet.deuterium + resources.deuterium,
-        })
-        .eq('id', planetId)
-
-      if (updateError) {
-        return { success: false, error: updateError.message }
-      }
-    } else if (error) {
+    if (error) {
       return { success: false, error: error.message }
     }
 
@@ -231,7 +207,7 @@ export abstract class BaseMission implements IMissionHandler {
     }
 
     const { data: planet } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .select('metal, crystal, deuterium')
       .eq('id', planetId)
       .single()
@@ -241,7 +217,7 @@ export abstract class BaseMission implements IMissionHandler {
     }
 
     const { error } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update({
         metal: Math.max(0, planet.metal - resources.metal),
         crystal: Math.max(0, planet.crystal - resources.crystal),
@@ -268,7 +244,7 @@ export abstract class BaseMission implements IMissionHandler {
     }
 
     const { data: planet } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .select(SHIP_KEYS.join(', '))
       .eq('id', planetId)
       .single()
@@ -286,7 +262,7 @@ export abstract class BaseMission implements IMissionHandler {
     }
 
     const { error } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update(updateData)
       .eq('id', planetId)
 
@@ -309,7 +285,7 @@ export abstract class BaseMission implements IMissionHandler {
     }
 
     const { data: planet } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .select(SHIP_KEYS.join(', '))
       .eq('id', planetId)
       .single()
@@ -327,7 +303,7 @@ export abstract class BaseMission implements IMissionHandler {
     }
 
     const { error } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update(updateData)
       .eq('id', planetId)
 

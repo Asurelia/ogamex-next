@@ -138,9 +138,8 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceSupabase()
     const now = new Date()
 
-    // Fetch all active planets
     const { data: planets, error: planetsError } = await supabase
-      .from('planets')
+      .from('planets_compat')
       .select(`
         id,
         user_id,
@@ -345,7 +344,7 @@ export async function POST(request: NextRequest) {
       // For better performance, this could be optimized with a stored procedure
       const updatePromises = updates.map(update =>
         supabase
-          .from('planets')
+          .from('player_colonies')
           .update({
             metal: update.metal,
             crystal: update.crystal,
@@ -418,9 +417,8 @@ export async function GET(request: NextRequest) {
 
     const supabase = getServiceSupabase()
 
-    // Get planet stats
     const { data: planets, error } = await supabase
-      .from('planets')
+      .from('planets_compat')
       .select('id, last_resource_update, metal, crystal, deuterium')
       .eq('destroyed', false)
       .order('last_resource_update', { ascending: true })
@@ -445,9 +443,8 @@ export async function GET(request: NextRequest) {
       },
     }))
 
-    // Get total planet count
     const { count } = await supabase
-      .from('planets')
+      .from('planets_compat')
       .select('id', { count: 'exact', head: true })
       .eq('destroyed', false)
 

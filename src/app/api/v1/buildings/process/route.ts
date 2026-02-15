@@ -184,9 +184,8 @@ export async function POST(request: NextRequest) {
     // Get unique planet IDs
     const planetIds = [...new Set(queueEntries.map(q => q.planet_id))]
 
-    // Fetch all relevant planets
     const { data: planets, error: planetsError } = await supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .in('id', planetIds)
 
@@ -239,9 +238,8 @@ export async function POST(request: NextRequest) {
         // Recalculate production
         const production = calculatePlanetProduction(updatedPlanet, plasmaLevel, energyTechLevel)
 
-        // Update planet
         const { error: updateError } = await supabase
-          .from('planets')
+          .from('player_colonies')
           .update({
             [buildingKey]: entry.target_level,
             fields_used: updatedPlanet.fields_used,

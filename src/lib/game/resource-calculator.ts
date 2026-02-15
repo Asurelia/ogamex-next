@@ -298,7 +298,7 @@ export async function updatePlanetResources(
 
   // Update planet in database
   const { error } = await supabase
-    .from('planets')
+    .from('player_colonies')
     .update({
       metal: newMetal,
       crystal: newCrystal,

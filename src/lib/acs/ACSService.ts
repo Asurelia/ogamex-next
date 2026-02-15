@@ -174,11 +174,10 @@ export class ACSService {
         }
       }
 
-      // Find target planet if it exists
       let targetPlanetId = params.target_planet_id
       if (!targetPlanetId) {
         const { data: planet } = await this.supabase
-          .from('planets')
+          .from('planets_compat')
           .select('id')
           .eq('galaxy', params.target_galaxy)
           .eq('system', params.target_system)
@@ -737,15 +736,13 @@ export class ACSService {
         return { success: false, error: 'No participants have arrived' }
       }
 
-      // Get target planet
       const { data: targetPlanet } = await this.supabase
-        .from('planets')
+        .from('planets_compat')
         .select('*')
         .eq('id', operation.target_planet_id)
         .single()
 
       if (!targetPlanet) {
-        // Planet doesn't exist - all attackers return
         await this.handleEmptyTarget(operationId, participants)
         return {
           success: true,
@@ -901,10 +898,9 @@ export class ACSService {
         .eq('user_id', participant.userId)
     }
 
-    // Update target planet (deduct resources and defense)
     if (battleResult.winner === 'attacker') {
       await this.supabase
-        .from('planets')
+        .from('player_colonies')
         .update({
           metal: Math.max(0, (await this.getPlanetResources(targetPlanetId)).metal - battleResult.loot.metal),
           crystal: Math.max(0, (await this.getPlanetResources(targetPlanetId)).crystal - battleResult.loot.crystal),
@@ -1040,7 +1036,7 @@ export class ACSService {
 
   private async getPlanetResources(planetId: string): Promise<Resources> {
     const { data } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('metal, crystal, deuterium')
       .eq('id', planetId)
       .single()

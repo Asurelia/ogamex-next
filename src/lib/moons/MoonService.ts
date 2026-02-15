@@ -76,9 +76,8 @@ export class MoonService {
       }
     }
 
-    // Get planet details
     const { data: planet, error: planetError } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('id, user_id, galaxy, system, position')
       .eq('id', planetId)
       .eq('planet_type', 'planet')
@@ -113,9 +112,8 @@ export class MoonService {
     const diameter = calculateMoonDiameter()
     const fields = calculateMoonFields(diameter)
 
-    // Create the moon
     const { data: moon, error: createError } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .insert({
         user_id: planet.user_id,
         name: MOON_CREATION.DEFAULT_NAME,
@@ -128,7 +126,6 @@ export class MoonService {
         fields_max: fields,
         temp_min: MOON_CREATION.TEMP_MIN,
         temp_max: MOON_CREATION.TEMP_MAX,
-        // No production on moons
         metal: 0,
         metal_per_hour: 0,
         metal_max: 1000000,
@@ -140,7 +137,6 @@ export class MoonService {
         deuterium_max: 1000000,
         energy_used: 0,
         energy_max: 0,
-        // All buildings start at 0
         ...this.getEmptyBuildingsAndUnits(),
       })
       .select('id')
@@ -190,9 +186,8 @@ export class MoonService {
    * Get the moon associated with a planet
    */
   async getMoonByPlanet(planetId: string): Promise<Moon | null> {
-    // First get the planet's coordinates
     const { data: planet } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('galaxy, system, position')
       .eq('id', planetId)
       .eq('planet_type', 'planet')
@@ -214,7 +209,7 @@ export class MoonService {
     position: number
   ): Promise<Moon | null> {
     const { data: moon } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('galaxy', galaxy)
       .eq('system', system)
@@ -234,7 +229,7 @@ export class MoonService {
    */
   async getMoonById(moonId: string): Promise<Moon | null> {
     const { data: moon } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('id', moonId)
       .eq('planet_type', 'moon')
@@ -252,7 +247,7 @@ export class MoonService {
    */
   async getUserMoons(userId: string): Promise<Moon[]> {
     const { data: moons } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('user_id', userId)
       .eq('planet_type', 'moon')
@@ -307,9 +302,8 @@ export class MoonService {
       }
     }
 
-    // Get the target planet
     const { data: targetPlanet } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('id, user_id, galaxy, system, position, planet_type')
       .eq('id', targetPlanetId)
       .single()
@@ -382,9 +376,8 @@ export class MoonService {
       }
     }
 
-    // Deduct deuterium
     const { error: updateError } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update({ deuterium: moon.deuterium - PHALANX.SCAN_COST })
       .eq('id', moonId)
 
@@ -558,9 +551,8 @@ export class MoonService {
     const sourceShipUpdates = this.calculateShipRemoval(sourceMoon.ships, ships)
     const targetShipUpdates = this.calculateShipAddition(targetMoon.ships, ships)
 
-    // Update source moon (remove ships, set cooldown)
     const { error: sourceError } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update({
         ...sourceShipUpdates,
         jump_gate_cooldown: cooldownUntil,
@@ -579,9 +571,8 @@ export class MoonService {
       }
     }
 
-    // Update target moon (add ships, set cooldown)
     const { error: targetError } = await this.supabase
-      .from('planets')
+      .from('player_colonies')
       .update({
         ...targetShipUpdates,
         jump_gate_cooldown: cooldownUntil,
@@ -590,9 +581,8 @@ export class MoonService {
       .eq('id', targetMoonId)
 
     if (targetError) {
-      // Rollback source moon changes
       await this.supabase
-        .from('planets')
+        .from('player_colonies')
         .update(this.calculateShipAddition({}, ships))
         .eq('id', sourceMoonId)
 
@@ -694,10 +684,9 @@ export class MoonService {
     const ripsDestroyed = ripRoll <= chances.ripDestroyChance ? ripsCount : 0
     const fleetSurvived = ripsDestroyed === 0
 
-    // If moon is destroyed, delete it
     if (moonDestroyed) {
       const { error } = await this.supabase
-        .from('planets')
+        .from('player_colonies')
         .delete()
         .eq('id', moonId)
 

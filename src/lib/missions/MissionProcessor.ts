@@ -266,7 +266,7 @@ export class MissionProcessor {
 
   private async fetchPlanet(planetId: string): Promise<Planet | null> {
     const { data } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('id', planetId)
       .single()
@@ -281,7 +281,7 @@ export class MissionProcessor {
     planetType: string
   ): Promise<Planet | null> {
     const { data } = await this.supabase
-      .from('planets')
+      .from('planets_compat')
       .select('*')
       .eq('galaxy', galaxy)
       .eq('system', system)

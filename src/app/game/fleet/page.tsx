@@ -278,7 +278,7 @@ export default function FleetPage() {
       }
 
       const { error: updateError } = await supabase
-        .from('planets')
+        .from('player_colonies')
         .update(planetUpdates)
         .eq('id', currentPlanet.id)
 

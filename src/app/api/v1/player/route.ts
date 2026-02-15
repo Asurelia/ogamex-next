@@ -25,7 +25,7 @@ async function getPlayer(request: NextRequest, user: AuthenticatedUser) {
     .single()
 
   const { data: planets } = await supabase
-    .from('planets')
+    .from('planets_compat')
     .select('id, name, galaxy, system, position, planet_type')
     .eq('user_id', user.id)
     .eq('destroyed', false)
