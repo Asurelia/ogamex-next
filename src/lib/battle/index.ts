@@ -292,3 +292,41 @@ export type {
   FormationUnit,
   AppliedFormation,
 } from './fleet-formations'
+
+// ============================================================================
+// EQUIPMENT SYSTEM
+// ============================================================================
+
+export {
+  EQUIPMENT_TEMPLATES,
+  DEFAULT_SLOT_CONFIG,
+  createEquipment,
+  canInstallEquipment,
+  installEquipment,
+  uninstallEquipment,
+  calculateEquipmentModifiers,
+  applyEquipmentToUnit,
+  processEquipmentTriggers,
+  useAbility,
+  tickAbilityCooldowns,
+  createEquippedUnit,
+  getAvailableAbilities,
+} from './equipment-system'
+export type {
+  EquipmentSlot,
+  EquipmentRarity,
+  ActivationType,
+  EquipmentStatModifiers,
+  EquipmentAbility,
+  AbilityEffect,
+  DamageAbilityEffect,
+  BuffAbilityEffect,
+  DebuffAbilityEffect,
+  RepairAbilityEffect,
+  SpecialAbilityEffect,
+  TriggerCondition,
+  Equipment,
+  EquipmentRequirements,
+  InstalledEquipment,
+  EquippedUnit,
+} from './equipment-system'
