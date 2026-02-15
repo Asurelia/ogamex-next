@@ -330,3 +330,43 @@ export type {
   InstalledEquipment,
   EquippedUnit,
 } from './equipment-system'
+
+// ============================================================================
+// VETERANCY SYSTEM
+// ============================================================================
+
+export {
+  RANK_THRESHOLDS,
+  RANK_ORDER,
+  RANK_BONUSES,
+  EXPERIENCE_GAINS,
+  VETERANCY_ABILITIES,
+  DEFAULT_UNIT_EXPERIENCE,
+  getRankFromXP,
+  getXPForNextRank,
+  calculateProgress,
+  awardExperience,
+  resetKillStreak,
+  getAvailableAbilities as getAvailableVeterancyAbilities,
+  updateUnlockedAbilities,
+  setActiveAbility,
+  getRankBonuses,
+  applyVeterancyToUnit,
+  checkAbilityTrigger,
+  getAbility,
+  createUnitExperience,
+  compareRanks,
+  isAtLeastRank,
+  formatXP,
+  getRankDisplayInfo,
+  calculateFleetExperience,
+} from './veterancy-system'
+export type {
+  VeterancyRank,
+  ExperienceAction,
+  RankBonuses,
+  VeterancyAbilityType,
+  VeterancyAbility,
+  UnitExperience,
+  CombatStatistics,
+} from './veterancy-system'
