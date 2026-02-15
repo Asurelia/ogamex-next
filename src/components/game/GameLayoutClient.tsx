@@ -44,6 +44,11 @@ const CockpitFrame = dynamic(
   { ssr: false }
 )
 
+const DevOverlay = dynamic(
+  () => import('@/components/dev/DevOverlay').then(mod => mod.DevOverlay),
+  { ssr: false }
+)
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -667,6 +672,9 @@ export const GameLayoutClient = memo(function GameLayoutClient({
           </main>
         </div>
       )}
+
+      {/* Developer Overlay (only visible for admins) */}
+      <DevOverlay />
 
       {/* CSS for animations */}
       <style jsx global>{`
