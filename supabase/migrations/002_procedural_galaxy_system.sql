@@ -4,11 +4,14 @@
 -- Replaces the static planets table with a procedural generation system
 -- ============================================================================
 
+-- Enable UUID extension if not exists
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- ============================================================================
 -- UNIVERSE CONFIGURATION TABLE
 -- ============================================================================
-CREATE TABLE universe_config (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS universe_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     master_seed BIGINT NOT NULL,
     name TEXT NOT NULL DEFAULT 'Universe Alpha',
     galaxy_count INTEGER NOT NULL DEFAULT 90 CHECK (galaxy_count >= 80 AND galaxy_count <= 100),
@@ -25,7 +28,7 @@ CREATE TABLE universe_config (
 -- GALAXIES TABLE (Pre-generated metadata)
 -- ============================================================================
 CREATE TABLE galaxies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     galaxy_index INTEGER NOT NULL UNIQUE CHECK (galaxy_index >= 1 AND galaxy_index <= 100),
     name TEXT NOT NULL,
     seed BIGINT NOT NULL,
@@ -80,7 +83,7 @@ INSERT INTO star_types (id, name, probability, color, temperature_kelvin, lumino
 -- SOLAR SYSTEMS TABLE (Lazy-loaded)
 -- ============================================================================
 CREATE TABLE solar_systems (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     galaxy_id UUID NOT NULL REFERENCES galaxies(id) ON DELETE CASCADE,
     system_index INTEGER NOT NULL CHECK (system_index >= 1 AND system_index <= 200),
     seed BIGINT NOT NULL,
@@ -114,7 +117,7 @@ CREATE TYPE celestial_body_type AS ENUM (
 -- CELESTIAL BODIES TABLE
 -- ============================================================================
 CREATE TABLE celestial_bodies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     solar_system_id UUID NOT NULL REFERENCES solar_systems(id) ON DELETE CASCADE,
     parent_body_id UUID REFERENCES celestial_bodies(id) ON DELETE CASCADE,
     body_type celestial_body_type NOT NULL,
@@ -154,7 +157,7 @@ CREATE TABLE celestial_bodies (
 -- PLAYER COLONIES TABLE (Replaces old planets table foreign keys)
 -- ============================================================================
 CREATE TABLE player_colonies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     celestial_body_id UUID NOT NULL REFERENCES celestial_bodies(id) ON DELETE CASCADE,
     name TEXT NOT NULL DEFAULT 'Colony',
@@ -242,7 +245,7 @@ CREATE TABLE player_colonies (
 -- STAR EFFECTS TABLE (Cached gameplay effects per system)
 -- ============================================================================
 CREATE TABLE star_effects (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     solar_system_id UUID NOT NULL UNIQUE REFERENCES solar_systems(id) ON DELETE CASCADE,
 
     -- Combined multipliers (from primary + secondary star)
