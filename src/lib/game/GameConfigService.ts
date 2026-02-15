@@ -337,7 +337,18 @@ export class GameConfigService {
    */
   async forceRefresh(): Promise<void> {
     this.lastLoad = 0
+    this.initialized = false
     await this.loadAll()
+  }
+
+  /**
+   * Invalidate cache without reloading
+   * Next access will trigger a fresh load
+   */
+  invalidateCache(): void {
+    this.lastLoad = 0
+    this.initialized = false
+    console.log('[GameConfigService] Cache invalidated')
   }
 
   // ==========================================================================

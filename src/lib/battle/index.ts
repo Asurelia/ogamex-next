@@ -292,3 +292,119 @@ export type {
   FormationUnit,
   AppliedFormation,
 } from './fleet-formations'
+
+// ============================================================================
+// EQUIPMENT SYSTEM
+// ============================================================================
+
+export {
+  EQUIPMENT_TEMPLATES,
+  DEFAULT_SLOT_CONFIG,
+  createEquipment,
+  canInstallEquipment,
+  installEquipment,
+  uninstallEquipment,
+  calculateEquipmentModifiers,
+  applyEquipmentToUnit,
+  processEquipmentTriggers,
+  useAbility,
+  tickAbilityCooldowns,
+  createEquippedUnit,
+  getAvailableAbilities,
+} from './equipment-system'
+export type {
+  EquipmentSlot,
+  EquipmentRarity,
+  ActivationType,
+  EquipmentStatModifiers,
+  EquipmentAbility,
+  AbilityEffect,
+  DamageAbilityEffect,
+  BuffAbilityEffect,
+  DebuffAbilityEffect,
+  RepairAbilityEffect,
+  SpecialAbilityEffect,
+  TriggerCondition,
+  Equipment,
+  EquipmentRequirements,
+  InstalledEquipment,
+  EquippedUnit,
+} from './equipment-system'
+
+// ============================================================================
+// VETERANCY SYSTEM
+// ============================================================================
+
+export {
+  RANK_THRESHOLDS,
+  RANK_ORDER,
+  RANK_BONUSES,
+  EXPERIENCE_GAINS,
+  VETERANCY_ABILITIES,
+  DEFAULT_UNIT_EXPERIENCE,
+  getRankFromXP,
+  getXPForNextRank,
+  calculateProgress,
+  awardExperience,
+  resetKillStreak,
+  getAvailableAbilities as getAvailableVeterancyAbilities,
+  updateUnlockedAbilities,
+  setActiveAbility,
+  getRankBonuses,
+  applyVeterancyToUnit,
+  checkAbilityTrigger,
+  getAbility,
+  createUnitExperience,
+  compareRanks,
+  isAtLeastRank,
+  formatXP,
+  getRankDisplayInfo,
+  calculateFleetExperience,
+} from './veterancy-system'
+export type {
+  VeterancyRank,
+  ExperienceAction,
+  RankBonuses,
+  VeterancyAbilityType,
+  VeterancyAbility,
+  UnitExperience,
+  CombatStatistics,
+} from './veterancy-system'
+
+// ============================================================================
+// CINEMATIC RENDERER
+// ============================================================================
+
+export {
+  CinematicRenderer,
+  DEFAULT_RENDERER_CONFIG,
+  createBattleTimeline,
+} from './cinematic-renderer'
+export type {
+  VisualEffectType,
+  CameraShotType,
+  SoundCategory,
+  CinematicEvent,
+  CinematicEventType,
+  BattleStartEvent,
+  RoundEvent,
+  AttackEvent,
+  DamageEvent as CinematicDamageEvent,
+  DestructionEvent,
+  BoardingEvent as CinematicBoardingEvent,
+  AbilityEvent,
+  FormationChangeEvent,
+  CameraMoveEvent,
+  EffectEvent,
+  SoundEvent,
+  TextDisplayEvent,
+  BattleEndEvent,
+  TimelineEvent,
+  Position3D,
+  WeaponVisualType,
+  EasingType,
+  BattleTimeline,
+  TimelineMetadata,
+  PlaybackState,
+  RendererConfig,
+} from './cinematic-renderer'
