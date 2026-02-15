@@ -84,7 +84,16 @@
     "storage": "Storage",
     "capacity": "Capacity",
     "productionSummary": "Production Summary",
-    "energyBalance": "Energy Balance"
+    "energyBalance": "Energy Balance",
+    "energyProduction": "Production",
+    "energyConsumption": "Consumption",
+    "energyAvailable": "Available",
+    "energyDeficit": "Deficit",
+    "energyEfficiency": "Efficiency",
+    "energyDeficitWarning": "Production reduced to {percent}%",
+    "energyNoProduction": "No energy production",
+    "energyBuildSolarPlant": "Build a solar plant",
+    "energySurplus": "Energy surplus"
   },
   "buildings": {
     "title": "Buildings",
