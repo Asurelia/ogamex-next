@@ -93,7 +93,16 @@
     "energyDeficitWarning": "Production réduite à {percent}%",
     "energyNoProduction": "Aucune production d'énergie",
     "energyBuildSolarPlant": "Construisez une centrale solaire",
-    "energySurplus": "Surplus d'énergie"
+    "energySurplus": "Surplus d'énergie",
+    "boostEnergy": "Énergie de Boost",
+    "boostEnergyDesc": "Se régénère automatiquement. Utilisez-la pour booster vos actions.",
+    "boostCurrent": "Actuelle",
+    "boostMax": "Maximum",
+    "boostRegenRate": "Régénération",
+    "boostPerHour": "/heure",
+    "boostTimeToFull": "Pleine dans",
+    "boostFull": "Énergie pleine !",
+    "boostUseHint": "Cliquez pour utiliser un boost"
   },
   "buildings": {
     "title": "Bâtiments",

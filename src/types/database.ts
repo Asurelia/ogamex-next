@@ -37,6 +37,24 @@ export type MessageType =
   | 'player'
   | 'system'
 
+export type BoostType = 'production' | 'construction' | 'research' | 'expedition' | 'attack'
+
+// ============================================================================
+// BOOST ENERGY TYPES
+// ============================================================================
+
+export interface ActiveBoost {
+  id: string
+  user_id: string
+  boost_type: BoostType
+  multiplier: number
+  energy_cost: number
+  started_at: string
+  ends_at: string
+  planet_id: string | null
+  created_at: string
+}
+
 // ============================================================================
 // DATABASE TABLES
 // ============================================================================
@@ -55,6 +73,11 @@ export interface Database {
           vacation_mode: boolean
           vacation_mode_until: string | null
           alliance_id: string | null
+          // Boost energy system
+          boost_energy: number
+          boost_energy_max: number
+          boost_energy_regen_rate: number
+          last_boost_energy_update: string
           created_at: string
           updated_at: string
         }
@@ -68,6 +91,10 @@ export interface Database {
           vacation_mode?: boolean
           vacation_mode_until?: string | null
           alliance_id?: string | null
+          boost_energy?: number
+          boost_energy_max?: number
+          boost_energy_regen_rate?: number
+          last_boost_energy_update?: string
         }
         Update: {
           username?: string
@@ -77,6 +104,10 @@ export interface Database {
           vacation_mode?: boolean
           vacation_mode_until?: string | null
           alliance_id?: string | null
+          boost_energy?: number
+          boost_energy_max?: number
+          boost_energy_regen_rate?: number
+          last_boost_energy_update?: string
         }
       }
 

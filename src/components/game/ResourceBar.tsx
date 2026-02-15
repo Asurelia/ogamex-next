@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { formatNumber } from '@/game/formulas'
 import { HolographicTooltip } from '@/components/ui/HolographicTooltip'
+import { useEffect, useState } from 'react'
 
 function getResourceIcon(key: string): string {
   const icons: Record<string, string> = {
@@ -14,6 +15,19 @@ function getResourceIcon(key: string): string {
     darkMatter: '/img/objects/buildings/alliance_depot_micro.jpg',
   }
   return icons[key] || icons.metal
+}
+
+// Format time in HH:MM:SS or "Xh Ym"
+function formatTime(seconds: number): string {
+  if (seconds <= 0) return '0:00'
+
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  }
+  return `${minutes}m`
 }
 
 interface EnergyDisplayProps {
@@ -74,11 +88,11 @@ function EnergyDisplay({ energyUsed, energyMax, t }: EnergyDisplayProps) {
   // Tooltip content
   const tooltipContent = hasDeficit ? (
     <div className="text-xs text-orange-300">
-      ⚠️ {t('energyDeficitWarning', { percent: efficiency })}
+      {t('energyDeficitWarning', { percent: efficiency })}
     </div>
   ) : !hasProduction ? (
     <div className="text-xs text-cyan-300">
-      💡 {t('energyBuildSolarPlant')}
+      {t('energyBuildSolarPlant')}
     </div>
   ) : undefined
 
@@ -99,10 +113,9 @@ function EnergyDisplay({ energyUsed, energyMax, t }: EnergyDisplayProps) {
           <div className="flex items-center gap-1.5">
             {/* Balance indicator with icon */}
             <span
-              className="font-mono font-semibold"
+              className="font-mono font-semibold text-sm"
               style={{ color: statusColor }}
             >
-              {hasDeficit ? '⚡' : '⚡'}
               {balance >= 0 ? '+' : ''}{formatNumber(balance)}
             </span>
 
@@ -114,7 +127,7 @@ function EnergyDisplay({ energyUsed, energyMax, t }: EnergyDisplayProps) {
 
           {/* Efficiency bar */}
           <div className="flex items-center gap-1">
-            <div className="h-1 w-16 bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-1 w-12 bg-gray-700 rounded-full overflow-hidden">
               <div
                 className="h-full transition-all duration-300"
                 style={{
@@ -126,6 +139,146 @@ function EnergyDisplay({ energyUsed, energyMax, t }: EnergyDisplayProps) {
             </div>
             <span className="text-[10px] text-ogame-text-muted">
               {efficiency}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </HolographicTooltip>
+  )
+}
+
+interface BoostEnergyDisplayProps {
+  t: (key: string, values?: Record<string, string | number>) => string
+}
+
+function BoostEnergyDisplay({ t }: BoostEnergyDisplayProps) {
+  const { user, getBoostEnergy, getBoostEnergyPercent, getTimeToFullEnergy } = useGameStore()
+  const [currentEnergy, setCurrentEnergy] = useState(0)
+  const [percent, setPercent] = useState(0)
+  const [timeToFull, setTimeToFull] = useState(0)
+
+  // Update energy display every second for smooth animation
+  useEffect(() => {
+    const updateEnergy = () => {
+      setCurrentEnergy(getBoostEnergy())
+      setPercent(getBoostEnergyPercent())
+      setTimeToFull(getTimeToFullEnergy())
+    }
+
+    updateEnergy()
+    const interval = setInterval(updateEnergy, 1000)
+    return () => clearInterval(interval)
+  }, [getBoostEnergy, getBoostEnergyPercent, getTimeToFullEnergy])
+
+  if (!user) return null
+
+  const maxEnergy = user.boost_energy_max || 100
+  const regenRate = user.boost_energy_regen_rate || 8.33
+  const isFull = currentEnergy >= maxEnergy
+
+  // Determine color based on percentage
+  let barColor = '#00ffcc' // Cyan - full/high
+  if (percent < 25) {
+    barColor = '#ff4444' // Red - low
+  } else if (percent < 50) {
+    barColor = '#ff8800' // Orange - medium-low
+  } else if (percent < 75) {
+    barColor = '#ffcc00' // Yellow - medium
+  }
+
+  // Tooltip stats
+  const tooltipStats = [
+    {
+      label: t('boostCurrent'),
+      value: `${currentEnergy}`,
+      color: barColor
+    },
+    {
+      label: t('boostMax'),
+      value: `${maxEnergy}`,
+      color: '#00ffcc'
+    },
+    {
+      label: t('boostRegenRate'),
+      value: `+${regenRate.toFixed(1)}${t('boostPerHour')}`,
+      color: '#88ff88'
+    },
+  ]
+
+  if (!isFull) {
+    tooltipStats.push({
+      label: t('boostTimeToFull'),
+      value: formatTime(timeToFull),
+      color: '#ffcc00'
+    })
+  }
+
+  const tooltipContent = (
+    <div className="text-xs text-cyan-300">
+      {isFull ? t('boostFull') : t('boostUseHint')}
+    </div>
+  )
+
+  return (
+    <HolographicTooltip
+      title={t('boostEnergy')}
+      content={tooltipContent}
+      stats={tooltipStats}
+      position="bottom"
+    >
+      <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+        {/* Boost energy icon - lightning bolt */}
+        <div
+          className="w-5 h-5 rounded-sm flex items-center justify-center text-sm"
+          style={{
+            background: `linear-gradient(135deg, ${barColor}33, ${barColor}11)`,
+            border: `1px solid ${barColor}66`
+          }}
+        >
+          ⚡
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            {/* Current / Max */}
+            <span
+              className="font-mono font-semibold text-sm"
+              style={{ color: barColor }}
+            >
+              {currentEnergy}
+            </span>
+            <span className="text-ogame-text-muted text-xs">
+              / {maxEnergy}
+            </span>
+          </div>
+
+          {/* Progress bar with glow */}
+          <div className="flex items-center gap-1">
+            <div className="h-1.5 w-14 bg-gray-700 rounded-full overflow-hidden relative">
+              <div
+                className="h-full transition-all duration-1000 ease-linear"
+                style={{
+                  width: `${percent}%`,
+                  background: `linear-gradient(90deg, ${barColor}, ${barColor}cc)`,
+                  boxShadow: `0 0 6px ${barColor}, 0 0 2px ${barColor}`
+                }}
+              />
+              {/* Animated glow effect when not full */}
+              {!isFull && (
+                <div
+                  className="absolute top-0 right-0 h-full w-2 animate-pulse"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${barColor}66)`,
+                  }}
+                />
+              )}
+            </div>
+            {/* Time to full or "FULL" indicator */}
+            <span className="text-[10px] text-ogame-text-muted min-w-[32px]">
+              {isFull ? (
+                <span style={{ color: '#00ff00' }}>MAX</span>
+              ) : (
+                formatTime(timeToFull)
+              )}
             </span>
           </div>
         </div>
@@ -196,12 +349,21 @@ export function ResourceBar() {
             </div>
           ))}
 
-          {/* Energy - Special display with tooltip */}
+          {/* Separator */}
+          <div className="h-8 w-px bg-ogame-border" />
+
+          {/* Energy (OGame style - production/consumption) */}
           <EnergyDisplay
             energyUsed={currentPlanet.energy_used}
             energyMax={currentPlanet.energy_max}
             t={t}
           />
+
+          {/* Separator */}
+          <div className="h-8 w-px bg-ogame-border" />
+
+          {/* Boost Energy (new regenerating resource) */}
+          <BoostEnergyDisplay t={t} />
         </div>
 
         {/* Dark Matter */}

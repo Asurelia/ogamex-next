@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Planet, User, UserResearch, BuildingQueue, ResearchQueue, FleetMission } from '@/types/database'
+import type { Planet, User, UserResearch, BuildingQueue, ResearchQueue, FleetMission, ActiveBoost } from '@/types/database'
 
 // Types pour la visualisation 3D
 export type VisualizationMode = '2d' | '3d' | 'tactical'
@@ -45,6 +45,15 @@ interface GameState {
   fleetMissions: FleetMission[]
   setFleetMissions: (missions: FleetMission[]) => void
 
+  // Active boosts
+  activeBoosts: ActiveBoost[]
+  setActiveBoosts: (boosts: ActiveBoost[]) => void
+
+  // Computed boost energy (real-time)
+  getBoostEnergy: () => number
+  getBoostEnergyPercent: () => number
+  getTimeToFullEnergy: () => number // seconds
+
   // UI State
   isSidebarOpen: boolean
   toggleSidebar: () => void
@@ -89,6 +98,7 @@ const initialState = {
   buildingQueue: [],
   researchQueue: [],
   fleetMissions: [],
+  activeBoosts: [] as ActiveBoost[],
   isSidebarOpen: true,
   // 3D Visualization defaults
   visualizationMode: '2d' as VisualizationMode,
@@ -116,6 +126,46 @@ export const useGameStore = create<GameState>((set, get) => ({
   setBuildingQueue: (queue) => set({ buildingQueue: queue }),
   setResearchQueue: (queue) => set({ researchQueue: queue }),
   setFleetMissions: (missions) => set({ fleetMissions: missions }),
+  setActiveBoosts: (boosts) => set({ activeBoosts: boosts }),
+
+  // Calculate current boost energy in real-time (regenerates over time)
+  getBoostEnergy: () => {
+    const user = get().user
+    if (!user) return 0
+
+    const now = Date.now()
+    const lastUpdate = new Date(user.last_boost_energy_update).getTime()
+    const hoursElapsed = (now - lastUpdate) / (1000 * 60 * 60)
+
+    // Calculate regenerated energy
+    const regenRate = user.boost_energy_regen_rate || 8.33 // ~100 in 12h
+    const regenerated = hoursElapsed * regenRate
+    const currentEnergy = Math.min(
+      user.boost_energy_max,
+      user.boost_energy + regenerated
+    )
+
+    return Math.floor(currentEnergy)
+  },
+
+  getBoostEnergyPercent: () => {
+    const user = get().user
+    if (!user || user.boost_energy_max === 0) return 0
+    return Math.min(100, (get().getBoostEnergy() / user.boost_energy_max) * 100)
+  },
+
+  getTimeToFullEnergy: () => {
+    const user = get().user
+    if (!user) return 0
+
+    const currentEnergy = get().getBoostEnergy()
+    const missing = user.boost_energy_max - currentEnergy
+    if (missing <= 0) return 0
+
+    const regenRate = user.boost_energy_regen_rate || 8.33
+    const hoursToFull = missing / regenRate
+    return Math.ceil(hoursToFull * 3600) // Convert to seconds
+  },
 
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
 

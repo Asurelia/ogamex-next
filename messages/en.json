@@ -93,7 +93,16 @@
     "energyDeficitWarning": "Production reduced to {percent}%",
     "energyNoProduction": "No energy production",
     "energyBuildSolarPlant": "Build a solar plant",
-    "energySurplus": "Energy surplus"
+    "energySurplus": "Energy surplus",
+    "boostEnergy": "Boost Energy",
+    "boostEnergyDesc": "Regenerates automatically. Use it to boost your actions.",
+    "boostCurrent": "Current",
+    "boostMax": "Maximum",
+    "boostRegenRate": "Regeneration",
+    "boostPerHour": "/hour",
+    "boostTimeToFull": "Full in",
+    "boostFull": "Energy full!",
+    "boostUseHint": "Click to use a boost"
   },
   "buildings": {
     "title": "Buildings",
