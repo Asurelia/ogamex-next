@@ -238,3 +238,32 @@ export type {
   AdvancedDefenseStats,
   AdvancedBattleConfig,
 } from './advanced-config'
+
+// ============================================================================
+// BOARDING SYSTEM
+// ============================================================================
+
+export {
+  BoardingEngine,
+  createCrewUnit,
+  createBoardingParty,
+  createShipDefenses,
+  CREW_BASE_STATS,
+  BOARDING_CONSTANTS,
+} from './boarding-system'
+export type {
+  BoardingPhase,
+  BoardingOutcome,
+  CrewUnit,
+  CrewType,
+  CrewAbility,
+  BoardingParty,
+  BreachEquipment,
+  ShipDefenses,
+  Countermeasure,
+  BoardingEvent,
+  BoardingEventType,
+  BoardingResult,
+  SabotageEffect,
+  SabotageTarget,
+} from './boarding-system'
