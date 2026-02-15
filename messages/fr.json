@@ -721,6 +721,14 @@
     "boostActivatedDesc": "{type} activé : +{multiplier}% pendant {duration} minutes",
     "activationFailed": "Échec de l'activation",
     "activationFailedDesc": "Impossible d'activer le boost. Réessayez.",
-    "infoText": "L'énergie de boost se régénère automatiquement au fil du temps. Les boosts s'appliquent immédiatement."
+    "infoText": "L'énergie de boost se régénère automatiquement au fil du temps. Les boosts s'appliquent immédiatement.",
+    "activeBoosts": "Boosts actifs",
+    "noActiveBoosts": "Aucun boost actif",
+    "expiresIn": "Expire dans",
+    "extend": "Prolonger",
+    "extendBoost": "Prolonger le boost",
+    "extendCost": "Coût de prolongation",
+    "boostExpired": "Boost expiré",
+    "boostExpiredDesc": "Le boost {type} a expiré"
   }
 }

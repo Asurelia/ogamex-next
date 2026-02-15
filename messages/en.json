@@ -721,6 +721,14 @@
     "boostActivatedDesc": "{type} activated: +{multiplier}% for {duration} minutes",
     "activationFailed": "Activation failed",
     "activationFailedDesc": "Failed to activate boost. Please try again.",
-    "infoText": "Boost energy regenerates automatically over time. Boosts apply immediately."
+    "infoText": "Boost energy regenerates automatically over time. Boosts apply immediately.",
+    "activeBoosts": "Active boosts",
+    "noActiveBoosts": "No active boosts",
+    "expiresIn": "Expires in",
+    "extend": "Extend",
+    "extendBoost": "Extend boost",
+    "extendCost": "Extension cost",
+    "boostExpired": "Boost expired",
+    "boostExpiredDesc": "{type} boost has expired"
   }
 }

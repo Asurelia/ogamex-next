@@ -27,6 +27,7 @@ export function GameProvider({
     setBuildingQueue,
     setResearchQueue,
     setFleetMissions,
+    setActiveBoosts,
     updatePlanetResources,
     currentPlanet,
   } = useGameStore()
@@ -83,10 +84,23 @@ export function GameProvider({
       if (fleetMissions) {
         setFleetMissions(fleetMissions)
       }
+
+      // Load active boosts (not expired)
+      const now = new Date().toISOString()
+      const { data: activeBoosts } = await supabase
+        .from('active_boosts')
+        .select('*')
+        .eq('user_id', initialUser.id)
+        .gt('ends_at', now)
+        .order('ends_at', { ascending: true })
+
+      if (activeBoosts) {
+        setActiveBoosts(activeBoosts)
+      }
     }
 
     loadQueues()
-  }, [currentPlanet, initialUser.id, setBuildingQueue, setResearchQueue, setFleetMissions])
+  }, [currentPlanet, initialUser.id, setBuildingQueue, setResearchQueue, setFleetMissions, setActiveBoosts])
 
   // Real-time resource updates (tick every second)
   const updateResources = useCallback(() => {
@@ -130,15 +144,14 @@ export function GameProvider({
   useEffect(() => {
     const supabase = getSupabaseClient()
 
-    // Subscribe to planet changes
-    const planetsChannel = supabase
-      .channel('planets-changes')
+    const coloniesChannel = supabase
+      .channel('colonies-changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'planets',
+          table: 'player_colonies',
           filter: `user_id=eq.${initialUser.id}`,
         },
         (payload: any) => {
@@ -150,7 +163,7 @@ export function GameProvider({
       .subscribe()
 
     return () => {
-      supabase.removeChannel(planetsChannel)
+      supabase.removeChannel(coloniesChannel)
     }
   }, [initialUser.id, updatePlanetResources])
 

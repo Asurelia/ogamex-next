@@ -5,6 +5,7 @@ import { useGameStore } from '@/stores/gameStore'
 import { formatNumber } from '@/game/formulas'
 import { HolographicTooltip } from '@/components/ui/HolographicTooltip'
 import { BoostMenu } from '@/components/game/BoostMenu'
+import { ActiveBoostsBar } from '@/components/game/ActiveBoostIndicator'
 import { useEffect, useState } from 'react'
 
 function getResourceIcon(key: string): string {
@@ -371,6 +372,9 @@ export function ResourceBar() {
               onOpenBoostMenu={() => setIsBoostMenuOpen(true)}
             />
           </div>
+
+          {/* Active Boosts Indicator */}
+          <ActiveBoostsBar />
 
           {/* Dark Matter */}
           {user && (

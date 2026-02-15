@@ -54,6 +54,12 @@ interface GameState {
   getBoostEnergyPercent: () => number
   getTimeToFullEnergy: () => number // seconds
 
+  // Active boost helpers
+  getActiveBoost: (type: string) => ActiveBoost | undefined
+  getBoostMultiplier: (type: string) => number // Returns 1.0 if no boost, else multiplier
+  isBoostActive: (type: string) => boolean
+  getBoostRemainingSeconds: (type: string) => number
+
   // UI State
   isSidebarOpen: boolean
   toggleSidebar: () => void
@@ -165,6 +171,33 @@ export const useGameStore = create<GameState>((set, get) => ({
     const regenRate = user.boost_energy_regen_rate || 8.33
     const hoursToFull = missing / regenRate
     return Math.ceil(hoursToFull * 3600) // Convert to seconds
+  },
+
+  // Get active boost by type (only if not expired)
+  getActiveBoost: (type: string) => {
+    const now = new Date()
+    return get().activeBoosts.find(
+      (b) => b.boost_type === type && new Date(b.ends_at) > now
+    )
+  },
+
+  // Get multiplier for a boost type (1.0 if no active boost)
+  getBoostMultiplier: (type: string) => {
+    const boost = get().getActiveBoost(type)
+    return boost ? boost.multiplier : 1.0
+  },
+
+  // Check if boost is currently active
+  isBoostActive: (type: string) => {
+    return get().getActiveBoost(type) !== undefined
+  },
+
+  // Get remaining seconds for a boost
+  getBoostRemainingSeconds: (type: string) => {
+    const boost = get().getActiveBoost(type)
+    if (!boost) return 0
+    const remaining = new Date(boost.ends_at).getTime() - Date.now()
+    return Math.max(0, Math.floor(remaining / 1000))
   },
 
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
