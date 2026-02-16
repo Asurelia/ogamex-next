@@ -113,6 +113,7 @@ export function formatDistanceToNow(date: Date | string): string {
 /**
  * Format time ago (relative time)
  * @example formatTimeAgo(pastDate) => "5 minutes ago"
+ * @alias formatRelativeTime
  */
 export function formatTimeAgo(date: Date): string {
   const now = Date.now()
@@ -203,3 +204,8 @@ export function formatResource(
     color: colors[type],
   }
 }
+
+/**
+ * Alias for formatTimeAgo for backward compatibility
+ */
+export const formatRelativeTime = formatTimeAgo

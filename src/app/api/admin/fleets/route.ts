@@ -1,12 +1,11 @@
 /**
  * Admin Fleet Management API
  * GET /api/admin/fleets - List fleets with filters
- * POST /api/admin/fleets - Create fleet (admin spawning)
  * DELETE /api/admin/fleets - Bulk delete fleets
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAdminAuth, logAdminAction, getRequestMetadata } from '@/lib/admin/middleware'
 import { z } from 'zod'
 
 // Validation schemas
@@ -24,69 +23,13 @@ const fleetDeleteSchema = z.object({
   reason: z.string().min(3).max(500),
 })
 
-// Check admin permission helper
-async function checkAdminPermission(supabase: ReturnType<typeof createClient>) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized', status: 401 }
-
-  const { data: adminRole } = await supabase
-    .from('admin_roles')
-    .select('role, permissions')
-    .eq('user_id', user.id)
-    .eq('active', true)
-    .single()
-
-  if (!adminRole) return { error: 'Admin access required', status: 403 }
-
-  // Check specific permission
-  const hasPermission =
-    adminRole.role === 'super_admin' ||
-    adminRole.role === 'game_master' ||
-    adminRole.permissions?.includes('players:modify')
-
-  if (!hasPermission) return { error: 'Insufficient permissions', status: 403 }
-
-  return { user, adminRole }
-}
-
-// Log audit entry helper
-async function logAudit(
-  supabase: ReturnType<typeof createClient>,
-  adminId: string,
-  action: string,
-  entityType: string,
-  entityId: string | null,
-  oldValue: Record<string, unknown> | null,
-  newValue: Record<string, unknown> | null,
-  req: NextRequest
-) {
-  await supabase.from('audit_log').insert({
-    admin_id: adminId,
-    action,
-    entity_type: entityType,
-    entity_id: entityId,
-    old_value: oldValue,
-    new_value: newValue,
-    ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip'),
-    user_agent: req.headers.get('user-agent'),
-  })
-}
-
 // GET - List fleets
-export async function GET(req: NextRequest) {
+export const GET = withAdminAuth(async (request: NextRequest, { supabase }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    // Parse query params
-    const searchParams = Object.fromEntries(req.nextUrl.searchParams)
+    const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const filters = fleetFilterSchema.parse(searchParams)
     const offset = (filters.page - 1) * filters.limit
 
-    // Build query
     let query = supabase
       .from('fleet_missions')
       .select(`
@@ -112,7 +55,6 @@ export async function GET(req: NextRequest) {
       .order('arrival_time', { ascending: true })
       .range(offset, offset + filters.limit - 1)
 
-    // Apply filters
     if (filters.user_id) {
       query = query.eq('user_id', filters.user_id)
     }
@@ -146,7 +88,7 @@ export async function GET(req: NextRequest) {
     console.error('Admin fleets GET error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -155,18 +97,12 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE - Bulk delete/cancel fleets
-export async function DELETE(req: NextRequest) {
+export const DELETE = withAdminAuth(async (request: NextRequest, { supabase, user }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { ids, reason } = fleetDeleteSchema.parse(body)
 
     // Get current fleet data for audit
@@ -184,17 +120,16 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error
 
     // Log each deletion
+    const metadata = getRequestMetadata(request)
     for (const fleet of existingFleets || []) {
-      await logAudit(
-        supabase,
-        auth.user.id,
-        'delete',
-        'fleet_mission',
-        fleet.id,
-        fleet,
-        { cancelled: true, admin_reason: reason },
-        req
-      )
+      await logAdminAction(supabase, user.id, 'delete', {
+        entityType: 'fleet_mission',
+        entityId: fleet.id,
+        oldValue: fleet,
+        newValue: { cancelled: true, admin_reason: reason },
+        ipAddress: metadata.ipAddress,
+        userAgent: metadata.userAgent,
+      })
     }
 
     return NextResponse.json({
@@ -206,7 +141,7 @@ export async function DELETE(req: NextRequest) {
     console.error('Admin fleets DELETE error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -215,4 +150,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

@@ -395,4 +395,4 @@ export function calculatePlanetTemperature(position: number): { min: number; max
 }
 
 // Re-export formatting utilities from centralized location
-export { formatNumber, formatDuration } from '@/lib/utils/format'
+export { formatNumber, formatDuration, formatRelativeTime } from '@/lib/utils/format'

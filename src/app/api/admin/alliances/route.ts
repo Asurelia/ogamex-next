@@ -2,11 +2,12 @@
  * Admin Alliance Management API
  * GET /api/admin/alliances - List alliances with filters
  * PATCH /api/admin/alliances - Update alliance
- * DELETE /api/admin/alliances - Delete alliance
+ * DELETE /api/admin/alliances - Delete alliance (soft delete)
+ * POST /api/admin/alliances - Member actions (add/remove/set_rank)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAdminAuth, logAdminAction, getRequestMetadata } from '@/lib/admin/middleware'
 import { z } from 'zod'
 
 // Validation schemas
@@ -16,7 +17,7 @@ const allianceFilterSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().max(100).optional(),
-  include_deleted: z.coerce.boolean().default(false), // Toggle to show soft-deleted
+  include_deleted: z.coerce.boolean().default(false),
 })
 
 const allianceUpdateSchema = z.object({
@@ -42,67 +43,13 @@ const allianceMemberActionSchema = z.object({
   reason: z.string().min(3).max(500).optional(),
 })
 
-// Check admin permission helper
-async function checkAdminPermission(supabase: ReturnType<typeof createClient>) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized', status: 401 }
-
-  const { data: adminRole } = await supabase
-    .from('admin_roles')
-    .select('role, permissions')
-    .eq('user_id', user.id)
-    .eq('active', true)
-    .single()
-
-  if (!adminRole) return { error: 'Admin access required', status: 403 }
-
-  const hasPermission =
-    adminRole.role === 'super_admin' ||
-    adminRole.role === 'game_master' ||
-    adminRole.permissions?.includes('players:modify')
-
-  if (!hasPermission) return { error: 'Insufficient permissions', status: 403 }
-
-  return { user, adminRole }
-}
-
-// Log audit entry helper
-async function logAudit(
-  supabase: ReturnType<typeof createClient>,
-  adminId: string,
-  action: string,
-  entityType: string,
-  entityId: string | null,
-  oldValue: Record<string, unknown> | null,
-  newValue: Record<string, unknown> | null,
-  req: NextRequest
-) {
-  await supabase.from('audit_log').insert({
-    admin_id: adminId,
-    action,
-    entity_type: entityType,
-    entity_id: entityId,
-    old_value: oldValue,
-    new_value: newValue,
-    ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip'),
-    user_agent: req.headers.get('user-agent'),
-  })
-}
-
 // GET - List alliances
-export async function GET(req: NextRequest) {
+export const GET = withAdminAuth(async (request: NextRequest, { supabase }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const searchParams = Object.fromEntries(req.nextUrl.searchParams)
+    const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const filters = allianceFilterSchema.parse(searchParams)
     const offset = (filters.page - 1) * filters.limit
 
-    // First get alliances with member counts
     let query = supabase
       .from('alliances')
       .select(`
@@ -181,7 +128,7 @@ export async function GET(req: NextRequest) {
     console.error('Admin alliances GET error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -190,18 +137,12 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH - Update alliance
-export async function PATCH(req: NextRequest) {
+export const PATCH = withAdminAuth(async (request: NextRequest, { supabase, user }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { id, ...updates } = allianceUpdateSchema.parse(body)
 
     // Get current alliance data
@@ -244,16 +185,15 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
 
     // Log audit
-    await logAudit(
-      supabase,
-      auth.user.id,
-      'update',
-      'alliance',
-      id,
-      existingAlliance,
-      { ...existingAlliance, ...updates },
-      req
-    )
+    const metadata = getRequestMetadata(request)
+    await logAdminAction(supabase, user.id, 'update', {
+      entityType: 'alliance',
+      entityId: id,
+      oldValue: existingAlliance,
+      newValue: { ...existingAlliance, ...updates },
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    })
 
     return NextResponse.json({
       success: true,
@@ -263,7 +203,7 @@ export async function PATCH(req: NextRequest) {
     console.error('Admin alliances PATCH error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -272,18 +212,12 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE - Soft delete alliance
-export async function DELETE(req: NextRequest) {
+export const DELETE = withAdminAuth(async (request: NextRequest, { supabase, user }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { id, reason } = allianceDeleteSchema.parse(body)
 
     // Get current alliance data
@@ -291,7 +225,7 @@ export async function DELETE(req: NextRequest) {
       .from('alliances')
       .select('*')
       .eq('id', id)
-      .is('deleted_at', null) // Only non-deleted alliances
+      .is('deleted_at', null)
       .single()
 
     if (!existingAlliance) {
@@ -301,7 +235,7 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    // Remove all members from alliance first (they lose membership when alliance is deleted)
+    // Remove all members from alliance first
     const { error: memberError } = await supabase
       .from('users')
       .update({ alliance_id: null, alliance_rank: null })
@@ -309,12 +243,12 @@ export async function DELETE(req: NextRequest) {
 
     if (memberError) throw memberError
 
-    // Soft delete alliance (set deleted_at timestamp)
+    // Soft delete alliance
     const { error } = await supabase
       .from('alliances')
       .update({
         deleted_at: new Date().toISOString(),
-        deleted_by: auth.user.id,
+        deleted_by: user.id,
         delete_reason: reason,
       })
       .eq('id', id)
@@ -322,16 +256,15 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error
 
     // Log audit
-    await logAudit(
-      supabase,
-      auth.user.id,
-      'soft_delete',
-      'alliance',
-      id,
-      existingAlliance,
-      { deleted_at: new Date().toISOString(), deleted_by: auth.user.id, delete_reason: reason },
-      req
-    )
+    const metadata = getRequestMetadata(request)
+    await logAdminAction(supabase, user.id, 'soft_delete', {
+      entityType: 'alliance',
+      entityId: id,
+      oldValue: existingAlliance,
+      newValue: { deleted_at: new Date().toISOString(), deleted_by: user.id, delete_reason: reason },
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    })
 
     return NextResponse.json({
       success: true,
@@ -341,7 +274,7 @@ export async function DELETE(req: NextRequest) {
     console.error('Admin alliances DELETE error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -350,18 +283,12 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // POST - Member actions (add/remove/set_rank)
-export async function POST(req: NextRequest) {
+export const POST = withAdminAuth(async (request: NextRequest, { supabase, user }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { alliance_id, user_id, action, rank, reason } = allianceMemberActionSchema.parse(body)
 
     // Verify alliance exists
@@ -379,13 +306,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify user exists
-    const { data: user } = await supabase
+    const { data: targetUser } = await supabase
       .from('users')
       .select('id, username, alliance_id, alliance_rank')
       .eq('id', user_id)
       .single()
 
-    if (!user) {
+    if (!targetUser) {
       return NextResponse.json(
         { success: false, error: 'User not found' },
         { status: 404 }
@@ -397,7 +324,7 @@ export async function POST(req: NextRequest) {
 
     switch (action) {
       case 'add':
-        if (user.alliance_id) {
+        if (targetUser.alliance_id) {
           return NextResponse.json(
             { success: false, error: 'User is already in an alliance' },
             { status: 400 }
@@ -408,7 +335,7 @@ export async function POST(req: NextRequest) {
         break
 
       case 'remove':
-        if (user.alliance_id !== alliance_id) {
+        if (targetUser.alliance_id !== alliance_id) {
           return NextResponse.json(
             { success: false, error: 'User is not in this alliance' },
             { status: 400 }
@@ -419,7 +346,7 @@ export async function POST(req: NextRequest) {
         break
 
       case 'set_rank':
-        if (user.alliance_id !== alliance_id) {
+        if (targetUser.alliance_id !== alliance_id) {
           return NextResponse.json(
             { success: false, error: 'User is not in this alliance' },
             { status: 400 }
@@ -445,16 +372,15 @@ export async function POST(req: NextRequest) {
     if (error) throw error
 
     // Log audit
-    await logAudit(
-      supabase,
-      auth.user.id,
-      auditAction,
-      'alliance_member',
-      user_id,
-      { alliance_id: user.alliance_id, alliance_rank: user.alliance_rank },
-      { alliance_id: updateData.alliance_id, alliance_rank: updateData.alliance_rank, reason },
-      req
-    )
+    const metadata = getRequestMetadata(request)
+    await logAdminAction(supabase, user.id, auditAction, {
+      entityType: 'alliance_member',
+      entityId: user_id,
+      oldValue: { alliance_id: targetUser.alliance_id, alliance_rank: targetUser.alliance_rank },
+      newValue: { alliance_id: updateData.alliance_id, alliance_rank: updateData.alliance_rank, reason },
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    })
 
     return NextResponse.json({
       success: true,
@@ -464,7 +390,7 @@ export async function POST(req: NextRequest) {
     console.error('Admin alliances POST error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -473,4 +399,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

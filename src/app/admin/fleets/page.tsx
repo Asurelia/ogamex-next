@@ -314,7 +314,7 @@ export default function AdminFleetsPage() {
       <ConfirmDialog
         isOpen={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false })}
-        onConfirm={(reason) => deleteDialog.fleet && handleDelete(deleteDialog.fleet, reason)}
+        onConfirm={(reason) => deleteDialog.fleet && reason && handleDelete(deleteDialog.fleet, reason)}
         title="Cancel Fleet Mission"
         message={`Are you sure you want to cancel this ${deleteDialog.fleet?.mission_type} mission?`}
         confirmText="Cancel Mission"
@@ -325,7 +325,7 @@ export default function AdminFleetsPage() {
       <ConfirmDialog
         isOpen={bulkDeleteDialog}
         onClose={() => setBulkDeleteDialog(false)}
-        onConfirm={handleBulkDelete}
+        onConfirm={(reason) => reason && handleBulkDelete(reason)}
         title="Cancel Multiple Fleets"
         message={`Are you sure you want to cancel ${selectedFleets.length} fleet mission(s)?`}
         confirmText="Cancel All"

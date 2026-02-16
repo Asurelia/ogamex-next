@@ -227,9 +227,9 @@ export const auditLogEntrySchema = z.object({
   action: z.string(),
   entity_type: z.string(),
   entity_id: uuidSchema.optional(),
-  old_value: z.record(z.unknown()).optional(),
-  new_value: z.record(z.unknown()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  old_value: z.record(z.string(), z.unknown()).optional(),
+  new_value: z.record(z.string(), z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   ip_address: z.string().optional(),
   user_agent: z.string().optional(),
 })

@@ -456,10 +456,10 @@ function InfoPanel({
                 <div>Star: <span className="text-yellow-400">{displaySystem.starType.replace('_', ' ')}</span></div>
                 <div>Status: <span className="text-green-400">{displaySystem.discoveryLevel}</span></div>
                 {'bodies' in displaySystem && (
-                  <div>Bodies: <span className="text-blue-400">{displaySystem.bodies.length}</span></div>
+                  <div>Bodies: <span className="text-blue-400">{(displaySystem.bodies as unknown[]).length}</span></div>
                 )}
                 {'connections' in displaySystem && (
-                  <div>Connections: <span className="text-purple-400">{displaySystem.connections.length}</span></div>
+                  <div>Connections: <span className="text-purple-400">{(displaySystem.connections as unknown[]).length}</span></div>
                 )}
               </div>
             </>
@@ -518,11 +518,10 @@ function SceneContent({ navigation, onSystemSelect, onCameraChange, initialCamer
     if (onSystemSelect && selectedSystem) {
       // Wait for selection to complete
       setTimeout(() => {
-        const system = navigation.getSelectedSystem()
-        if (system) onSystemSelect(system)
+        if (selectedSystem) onSystemSelect(selectedSystem)
       }, 100)
     }
-  }, [selectSystem, onSystemSelect, selectedSystem, navigation])
+  }, [selectSystem, onSystemSelect, selectedSystem])
 
   return (
     <>
@@ -666,7 +665,8 @@ export function GalaxyMap3D({
           params: {
             Points: { threshold: touchTolerance },
             Line: { threshold: touchTolerance * 0.5 },
-          },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any,
         }}
         // Use debounced size if available
         style={canvasSize ? { width: canvasSize.width, height: canvasSize.height } : undefined}

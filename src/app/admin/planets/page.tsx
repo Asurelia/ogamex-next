@@ -261,7 +261,7 @@ export default function AdminPlanetsPage() {
       <ConfirmDialog
         isOpen={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false })}
-        onConfirm={(reason) => deleteDialog.planet && handleDelete(deleteDialog.planet, reason)}
+        onConfirm={(reason) => deleteDialog.planet && reason && handleDelete(deleteDialog.planet, reason)}
         title="Delete Planet"
         message={`Are you sure you want to delete "${deleteDialog.planet?.name}"? This action cannot be undone.`}
         confirmText="Delete Planet"

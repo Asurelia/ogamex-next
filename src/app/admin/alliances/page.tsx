@@ -234,7 +234,7 @@ export default function AdminAlliancesPage() {
       <ConfirmDialog
         isOpen={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false })}
-        onConfirm={(reason) => deleteDialog.alliance && handleDelete(deleteDialog.alliance, reason)}
+        onConfirm={(reason) => deleteDialog.alliance && reason && handleDelete(deleteDialog.alliance, reason)}
         title="Delete Alliance"
         message={`Are you sure you want to delete "[${deleteDialog.alliance?.tag}] ${deleteDialog.alliance?.name}"? All ${deleteDialog.alliance?.member_count || 0} members will be removed from the alliance.`}
         confirmText="Delete Alliance"

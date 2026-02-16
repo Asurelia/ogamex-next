@@ -38,7 +38,7 @@ interface MarketListingsResponse {
 }
 
 export default function MarketplacePage() {
-  const { currentPlanet, refreshResources } = useGameStore()
+  const { currentPlanet } = useGameStore()
   const [activeTab, setActiveTab] = useState<Tab>('browse')
   const [listings, setListings] = useState<MarketListing[]>([])
   const [myListings, setMyListings] = useState<MarketListing[]>([])
@@ -142,7 +142,7 @@ export default function MarketplacePage() {
       if (data.success) {
         setSelectedListing(null)
         loadListings()
-        refreshResources()
+        // TODO: Refresh resources after purchase
         alert('Achat effectue avec succes!')
       } else {
         alert(data.error || 'Erreur lors de l\'achat')

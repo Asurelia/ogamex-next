@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { formatNumber, calculateDistance, calculateFleetDuration } from '@/lib/game'
+import { formatNumber, calculateDistance, calculateFleetDuration } from '@/lib/game/formulas'
 import { HoloCard, HoloButton, HoloStats, HoloInput } from '@/components/ui'
 import { RECYCLER_CAPACITY } from '@/lib/debris/types'
 

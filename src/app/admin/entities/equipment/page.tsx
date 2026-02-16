@@ -258,12 +258,12 @@ export default function EquipmentPage() {
       <DataTable
         data={equipment}
         columns={columns}
+        keyField="id"
         loading={loading}
         onEdit={canEdit ? setEditingEquipment : undefined}
         onDelete={canDelete ? setDeleteConfirm : undefined}
-        searchKeys={['template_key', 'name']}
-        filterKey="slot"
-        filterOptions={EQUIPMENT_SLOTS}
+        searchable
+        searchPlaceholder="Search by key or name..."
       />
 
       {/* Edit Modal */}
@@ -355,15 +355,14 @@ export default function EquipmentPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          title="Delete Equipment"
-          message={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-          loading={saving}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Equipment"
+        message={deleteConfirm ? `Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.` : ''}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+        loading={saving}
+      />
     </motion.div>
   )
 }

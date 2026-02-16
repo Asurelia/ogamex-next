@@ -108,13 +108,16 @@ export default function FormationsPage() {
       key: 'positions',
       label: 'Positions',
       width: '100px',
-      render: (value: unknown[]) => `${value?.length || 0} positions`
+      render: (value: unknown) => `${Array.isArray(value) ? value.length : 0} positions`
     },
     {
       key: 'requirements',
       label: 'Min Ships',
       width: '100px',
-      render: (value: Record<string, unknown>) => (value?.minShips as number) || 0
+      render: (value: unknown) => {
+        const req = value as Record<string, unknown> | null
+        return (req?.minShips as number) || 0
+      }
     },
     {
       key: 'enabled',
@@ -187,10 +190,12 @@ export default function FormationsPage() {
       <DataTable
         data={formations}
         columns={columns}
+        keyField="id"
         loading={loading}
         onEdit={canEdit ? setEditingFormation : undefined}
         onDelete={canDelete ? setDeleteConfirm : undefined}
-        searchKeys={['formation_key', 'name']}
+        searchable
+        searchPlaceholder="Search by key or name..."
       />
 
       {/* Edit Modal */}
@@ -338,15 +343,14 @@ export default function FormationsPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          title="Delete Formation"
-          message={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-          loading={saving}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Formation"
+        message={deleteConfirm ? `Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.` : ''}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+        loading={saving}
+      />
     </motion.div>
   )
 }

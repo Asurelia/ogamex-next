@@ -273,8 +273,8 @@ export default function GalaxyPage() {
       // Build position array (1-15)
       const positionData: GalaxyPosition[] = []
       for (let pos = 1; pos <= 15; pos++) {
-        const planet = planets?.find((p) => p.position === pos)
-        const debrisField = debris?.find((d) => d.position === pos)
+        const planet = planets?.find((p: { position: number }) => p.position === pos)
+        const debrisField = debris?.find((d: { position: number }) => d.position === pos)
 
         positionData.push({
           position: pos,

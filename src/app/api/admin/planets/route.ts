@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { withAdminAuth, logAdminAction, getRequestMetadata } from '@/lib/admin/middleware'
 import { z } from 'zod'
 
 // Validation schemas
@@ -34,63 +34,10 @@ const planetDeleteSchema = z.object({
   reason: z.string().min(3).max(500),
 })
 
-// Check admin permission helper
-async function checkAdminPermission(supabase: ReturnType<typeof createClient>) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Unauthorized', status: 401 }
-
-  const { data: adminRole } = await supabase
-    .from('admin_roles')
-    .select('role, permissions')
-    .eq('user_id', user.id)
-    .eq('active', true)
-    .single()
-
-  if (!adminRole) return { error: 'Admin access required', status: 403 }
-
-  const hasPermission =
-    adminRole.role === 'super_admin' ||
-    adminRole.role === 'game_master' ||
-    adminRole.permissions?.includes('players:modify')
-
-  if (!hasPermission) return { error: 'Insufficient permissions', status: 403 }
-
-  return { user, adminRole }
-}
-
-// Log audit entry helper
-async function logAudit(
-  supabase: ReturnType<typeof createClient>,
-  adminId: string,
-  action: string,
-  entityType: string,
-  entityId: string | null,
-  oldValue: Record<string, unknown> | null,
-  newValue: Record<string, unknown> | null,
-  req: NextRequest
-) {
-  await supabase.from('audit_log').insert({
-    admin_id: adminId,
-    action,
-    entity_type: entityType,
-    entity_id: entityId,
-    old_value: oldValue,
-    new_value: newValue,
-    ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip'),
-    user_agent: req.headers.get('user-agent'),
-  })
-}
-
 // GET - List planets
-export async function GET(req: NextRequest) {
+export const GET = withAdminAuth(async (request: NextRequest, { supabase }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const searchParams = Object.fromEntries(req.nextUrl.searchParams)
+    const searchParams = Object.fromEntries(request.nextUrl.searchParams)
     const filters = planetFilterSchema.parse(searchParams)
     const offset = (filters.page - 1) * filters.limit
 
@@ -156,7 +103,7 @@ export async function GET(req: NextRequest) {
     console.error('Admin planets GET error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -165,18 +112,12 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // PATCH - Update planet
-export async function PATCH(req: NextRequest) {
+export const PATCH = withAdminAuth(async (request: NextRequest, { supabase, user }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { id, ...updates } = planetUpdateSchema.parse(body)
 
     // Get current planet data
@@ -202,16 +143,15 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
 
     // Log audit
-    await logAudit(
-      supabase,
-      auth.user.id,
-      'update',
-      'planet',
-      id,
-      existingPlanet,
-      { ...existingPlanet, ...updates },
-      req
-    )
+    const metadata = getRequestMetadata(request)
+    await logAdminAction(supabase, user.id, 'update', {
+      entityType: 'planet',
+      entityId: id,
+      oldValue: existingPlanet,
+      newValue: { ...existingPlanet, ...updates },
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    })
 
     return NextResponse.json({
       success: true,
@@ -221,7 +161,7 @@ export async function PATCH(req: NextRequest) {
     console.error('Admin planets PATCH error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -230,18 +170,12 @@ export async function PATCH(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // DELETE - Delete planet
-export async function DELETE(req: NextRequest) {
+export const DELETE = withAdminAuth(async (request: NextRequest, { supabase, user }) => {
   try {
-    const supabase = await createClient()
-    const auth = await checkAdminPermission(supabase)
-    if ('error' in auth) {
-      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
-    }
-
-    const body = await req.json()
+    const body = await request.json()
     const { id, reason } = planetDeleteSchema.parse(body)
 
     // Get current planet data
@@ -258,7 +192,7 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    // Check if it's the user's homeworld (position 1 of first planet)
+    // Check if it's the user's homeworld
     const { data: userPlanets } = await supabase
       .from('planets')
       .select('id')
@@ -283,16 +217,15 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error
 
     // Log audit
-    await logAudit(
-      supabase,
-      auth.user.id,
-      'delete',
-      'planet',
-      id,
-      existingPlanet,
-      { destroyed: true, admin_reason: reason },
-      req
-    )
+    const metadata = getRequestMetadata(request)
+    await logAdminAction(supabase, user.id, 'delete', {
+      entityType: 'planet',
+      entityId: id,
+      oldValue: existingPlanet,
+      newValue: { destroyed: true, admin_reason: reason },
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+    })
 
     return NextResponse.json({
       success: true,
@@ -302,7 +235,7 @@ export async function DELETE(req: NextRequest) {
     console.error('Admin planets DELETE error:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, error: 'Validation error', details: error.errors },
+        { success: false, error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -311,4 +244,4 @@ export async function DELETE(req: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
