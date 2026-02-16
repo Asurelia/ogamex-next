@@ -109,37 +109,37 @@ export default function DefensesPage() {
       key: 'cost_metal',
       label: 'Metal',
       width: '100px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'cost_crystal',
       label: 'Crystal',
       width: '100px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'structural_integrity',
       label: 'Hull',
       width: '100px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'shield_power',
       label: 'Shield',
       width: '80px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'weapon_power',
       label: 'Attack',
       width: '80px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'enabled',
       label: 'Enabled',
       width: '80px',
-      render: (value: boolean) => (
+      render: (value: unknown) => (
         <span className={value ? 'text-green-400' : 'text-red-400'}>
           {value ? '✓' : '✗'}
         </span>

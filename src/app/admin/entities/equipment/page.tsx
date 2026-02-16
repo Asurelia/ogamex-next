@@ -149,9 +149,9 @@ export default function EquipmentPage() {
       key: 'rarity',
       label: 'Rarity',
       width: '100px',
-      render: (value: string) => (
-        <span className={RARITY_COLORS[value] || 'text-gray-400'}>
-          {value.charAt(0).toUpperCase() + value.slice(1)}
+      render: (value: unknown) => (
+        <span className={RARITY_COLORS[value as string] || 'text-gray-400'}>
+          {(value as string).charAt(0).toUpperCase() + (value as string).slice(1)}
         </span>
       )
     },
@@ -170,7 +170,7 @@ export default function EquipmentPage() {
       key: 'enabled',
       label: 'Enabled',
       width: '80px',
-      render: (value: boolean) => (
+      render: (value: unknown) => (
         <span className={value ? 'text-green-400' : 'text-red-400'}>
           {value ? '✓' : '✗'}
         </span>

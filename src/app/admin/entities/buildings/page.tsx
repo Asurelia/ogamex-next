@@ -119,25 +119,25 @@ export default function BuildingsPage() {
       key: 'base_cost_metal',
       label: 'Metal',
       width: '100px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'base_cost_crystal',
       label: 'Crystal',
       width: '100px',
-      render: (value: number) => value.toLocaleString()
+      render: (value: unknown) => (value as number).toLocaleString()
     },
     {
       key: 'price_factor',
       label: 'Factor',
       width: '80px',
-      render: (value: number) => value.toFixed(2)
+      render: (value: unknown) => (value as number).toFixed(2)
     },
     {
       key: 'enabled',
       label: 'Enabled',
       width: '80px',
-      render: (value: boolean) => (
+      render: (value: unknown) => (
         <span className={value ? 'text-green-400' : 'text-red-400'}>
           {value ? '✓' : '✗'}
         </span>

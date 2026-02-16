@@ -120,7 +120,7 @@ export default function FormationsPage() {
       key: 'enabled',
       label: 'Enabled',
       width: '80px',
-      render: (value: boolean) => (
+      render: (value: unknown) => (
         <span className={value ? 'text-green-400' : 'text-red-400'}>
           {value ? '✓' : '✗'}
         </span>
