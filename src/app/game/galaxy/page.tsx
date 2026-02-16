@@ -25,6 +25,7 @@ interface DeepLinkState {
 /**
  * Custom hook for URL-based state synchronization (deep linking)
  * Allows F5 to restore exact map position
+ * NOTE: This hook uses useSearchParams which requires Suspense boundary
  */
 function useDeepLink(initialState: DeepLinkState) {
   const searchParams = useSearchParams()
@@ -162,7 +163,41 @@ interface GalaxyPosition {
 
 type ViewMode = '2d' | '3d'
 
+// Loading fallback for Suspense
+function GalaxyPageLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="h-8 w-48 bg-ogame-dark rounded animate-pulse" />
+        <div className="h-8 w-24 bg-ogame-dark rounded animate-pulse" />
+      </div>
+      <div className="ogame-panel">
+        <div className="ogame-panel-content">
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Main page export with Suspense boundary
+ * Required for useSearchParams in Next.js 14+
+ */
 export default function GalaxyPage() {
+  return (
+    <Suspense fallback={<GalaxyPageLoading />}>
+      <GalaxyPageContent />
+    </Suspense>
+  )
+}
+
+/**
+ * Galaxy page content (uses useSearchParams via useDeepLink hook)
+ */
+function GalaxyPageContent() {
   const { currentPlanet, user } = useGameStore()
   const [galaxy, setGalaxy] = useState(currentPlanet?.galaxy || 1)
   const [system, setSystem] = useState(currentPlanet?.system || 1)

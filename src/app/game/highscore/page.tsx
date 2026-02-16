@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase/client'
@@ -24,7 +24,40 @@ import {
 // Auto-refresh interval (5 minutes)
 const REFRESH_INTERVAL = 5 * 60 * 1000
 
+// Loading fallback for Suspense
+function HighscorePageLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="h-8 w-48 bg-white/10 rounded animate-pulse" />
+        <div className="h-8 w-24 bg-white/10 rounded animate-pulse" />
+      </div>
+      <div className="h-12 bg-white/10 rounded animate-pulse" />
+      <div className="space-y-2">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="h-12 bg-white/5 rounded animate-pulse" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Main page export with Suspense boundary
+ * Required for useSearchParams in Next.js 14+
+ */
 export default function HighscorePage() {
+  return (
+    <Suspense fallback={<HighscorePageLoading />}>
+      <HighscorePageContent />
+    </Suspense>
+  )
+}
+
+/**
+ * Highscore page content (uses useSearchParams)
+ */
+function HighscorePageContent() {
   const { user } = useGameStore()
   const router = useRouter()
   const searchParams = useSearchParams()
