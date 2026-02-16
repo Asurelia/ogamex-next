@@ -41,3 +41,26 @@ export type { DangerLevel, ProductionModifiers, FleetRiskResult, StarInfo } from
 // Service
 export { GalaxyService } from './GalaxyService'
 export { default as GalaxyServiceDefault } from './GalaxyService'
+
+// Map Controller
+export {
+  GalaxyMapController,
+  getGalaxyMapController,
+  disposeGalaxyMapController,
+  MAP_CONFIG,
+} from './GalaxyMapController'
+export type {
+  GalaxyCoordinates,
+  ViewportBounds,
+  SystemSummary,
+  SystemDetails,
+  CelestialBodySummary,
+  ConnectionSummary,
+  StarEffects,
+  DiscoveryLevel,
+  ZoomLevel,
+  CameraState,
+  LoadingState,
+  MapControllerState,
+  MapControllerCallbacks,
+} from './GalaxyMapController'
