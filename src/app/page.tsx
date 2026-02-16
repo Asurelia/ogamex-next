@@ -1,55 +1,15 @@
-'use client'
-
 import Link from 'next/link'
-import { useEffect, useState, Suspense } from 'react'
-import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+import { StarsBackground } from '@/components/home/StarsBackground'
 
-// Generate random stars for background
-function generateStars(count: number) {
-  return Array.from({ length: count }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    delay: Math.random() * 3,
-    size: Math.random() * 2 + 1,
-  }))
-}
-
-// Loading fallback
-function HomePageLoading() {
-  return (
-    <div className="min-h-screen bg-ogame-bg flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
-    </div>
-  )
-}
-
-// Content component that uses translations
-function HomePageContent() {
-  const [stars, setStars] = useState<ReturnType<typeof generateStars>>([])
-  const t = useTranslations('home')
-  const tAuth = useTranslations('auth')
-
-  useEffect(() => {
-    setStars(generateStars(100))
-  }, [])
+export default async function HomePage() {
+  const t = await getTranslations('home')
+  const tAuth = await getTranslations('auth')
 
   return (
     <div className="min-h-screen space-background relative overflow-hidden">
-      {/* Animated stars */}
-      {stars.map(star => (
-        <div
-          key={star.id}
-          className="star"
-          style={{
-            left: `${star.left}%`,
-            top: `${star.top}%`,
-            animationDelay: `${star.delay}s`,
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-          }}
-        />
-      ))}
+      {/* Client-side animated stars */}
+      <StarsBackground />
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
@@ -116,13 +76,5 @@ function HomePageContent() {
         </div>
       </div>
     </div>
-  )
-}
-
-export default function HomePage() {
-  return (
-    <Suspense fallback={<HomePageLoading />}>
-      <HomePageContent />
-    </Suspense>
   )
 }
