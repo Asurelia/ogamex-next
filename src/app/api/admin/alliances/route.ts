@@ -16,6 +16,7 @@ const allianceFilterSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().max(100).optional(),
+  include_deleted: z.coerce.boolean().default(false), // Toggle to show soft-deleted
 })
 
 const allianceUpdateSchema = z.object({
@@ -114,10 +115,18 @@ export async function GET(req: NextRequest) {
         application_open,
         created_at,
         founder_id,
+        deleted_at,
+        deleted_by,
+        delete_reason,
         users!alliances_founder_id_fkey(username)
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + filters.limit - 1)
+
+    // Filter soft-deleted unless include_deleted is true
+    if (!filters.include_deleted) {
+      query = query.is('deleted_at', null)
+    }
 
     if (filters.search) {
       query = query.or(`name.ilike.%${filters.search}%,tag.ilike.%${filters.search}%`)
@@ -265,7 +274,7 @@ export async function PATCH(req: NextRequest) {
   }
 }
 
-// DELETE - Delete alliance
+// DELETE - Soft delete alliance
 export async function DELETE(req: NextRequest) {
   try {
     const supabase = await createClient()
@@ -282,16 +291,17 @@ export async function DELETE(req: NextRequest) {
       .from('alliances')
       .select('*')
       .eq('id', id)
+      .is('deleted_at', null) // Only non-deleted alliances
       .single()
 
     if (!existingAlliance) {
       return NextResponse.json(
-        { success: false, error: 'Alliance not found' },
+        { success: false, error: 'Alliance not found or already deleted' },
         { status: 404 }
       )
     }
 
-    // Remove all members from alliance first
+    // Remove all members from alliance first (they lose membership when alliance is deleted)
     const { error: memberError } = await supabase
       .from('users')
       .update({ alliance_id: null, alliance_rank: null })
@@ -299,10 +309,14 @@ export async function DELETE(req: NextRequest) {
 
     if (memberError) throw memberError
 
-    // Delete alliance
+    // Soft delete alliance (set deleted_at timestamp)
     const { error } = await supabase
       .from('alliances')
-      .delete()
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: auth.user.id,
+        delete_reason: reason,
+      })
       .eq('id', id)
 
     if (error) throw error
@@ -311,17 +325,17 @@ export async function DELETE(req: NextRequest) {
     await logAudit(
       supabase,
       auth.user.id,
-      'delete',
+      'soft_delete',
       'alliance',
       id,
       existingAlliance,
-      { deleted: true, admin_reason: reason },
+      { deleted_at: new Date().toISOString(), deleted_by: auth.user.id, delete_reason: reason },
       req
     )
 
     return NextResponse.json({
       success: true,
-      message: 'Alliance deleted successfully',
+      message: 'Alliance soft-deleted successfully',
     })
   } catch (error) {
     console.error('Admin alliances DELETE error:', error)

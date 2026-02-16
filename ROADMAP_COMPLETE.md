@@ -282,6 +282,60 @@ This roadmap reflects the ACTUAL implementation status found in the repository.
 
 ---
 
+## Hardening & Fixes (Production Readiness)
+
+> Applied: 2026-02-16 | Priority: High
+
+### UX / State Management
+
+| Fix | Status | Description |
+|-----|--------|-------------|
+| Deep Linking for GalaxyMap | ✅ DONE | URL params sync (g, s, v, cx, cy, cz, z) without page reload |
+| F5 restores position | ✅ DONE | Camera state persisted via URL, restored on refresh |
+| Debounced URL updates | ✅ DONE | 500ms debounce prevents history spam |
+
+**Files Modified:**
+- `src/app/game/galaxy/page.tsx` - Added `useDeepLink` hook
+
+### 3D Mobile UX
+
+| Fix | Status | Description |
+|-----|--------|-------------|
+| Touch-friendly hitbox | ✅ DONE | Invisible hitbox mesh 2x larger than star for touch |
+| Raycaster tolerance | ✅ DONE | Points threshold configured via `touchTolerance` prop |
+| Touch device detection | ✅ DONE | Auto-detects `ontouchstart` / `maxTouchPoints` |
+
+**Files Modified:**
+- `src/components/game/3d/GalaxyMap3D.tsx` - Added hitbox mesh, touch tolerance
+
+### Admin Safety (Soft Delete)
+
+| Fix | Status | Description |
+|-----|--------|-------------|
+| Alliance soft delete | ✅ DONE | Uses `deleted_at` timestamp instead of hard DELETE |
+| Deleted by tracking | ✅ DONE | `deleted_by` stores admin who performed action |
+| Delete reason | ✅ DONE | `delete_reason` stored for audit |
+| Admin toggle | ✅ DONE | "Show Deleted" checkbox in alliance admin |
+| Visual indicator | ✅ DONE | 🗑️ icon for soft-deleted items |
+
+**Files Modified:**
+- `src/app/api/admin/alliances/route.ts` - Soft delete logic
+- `src/app/admin/alliances/page.tsx` - Toggle + visual indicator
+- Migration: `add_soft_delete_to_alliances`
+
+### Performance
+
+| Fix | Status | Description |
+|-----|--------|-------------|
+| Canvas resize debounce | ✅ DONE | 150ms debounce on ResizeObserver |
+| Size state management | ✅ DONE | Canvas size controlled via state |
+| Cleanup on unmount | ✅ DONE | ResizeObserver disconnected properly |
+
+**Files Modified:**
+- `src/components/game/3d/GalaxyMap3D.tsx` - Debounced resize handler
+
+---
+
 ## Commands Reference
 
 ```bash

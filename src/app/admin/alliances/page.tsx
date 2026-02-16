@@ -17,6 +17,9 @@ interface Alliance {
   founder_id: string
   founder_username: string | null
   member_count: number
+  deleted_at: string | null
+  deleted_by: string | null
+  delete_reason: string | null
 }
 
 export default function AdminAlliancesPage() {
@@ -29,6 +32,7 @@ export default function AdminAlliancesPage() {
   const [filters, setFilters] = useState({
     min_members: '',
     search: '',
+    include_deleted: false, // Toggle to show soft-deleted alliances
   })
 
   const loadAlliances = useCallback(async () => {
@@ -37,6 +41,7 @@ export default function AdminAlliancesPage() {
       const params = new URLSearchParams()
       if (filters.min_members) params.set('min_members', filters.min_members)
       if (filters.search) params.set('search', filters.search)
+      if (filters.include_deleted) params.set('include_deleted', 'true')
 
       const response = await fetch(`/api/admin/alliances?${params}`)
       const data = await response.json()
@@ -94,6 +99,16 @@ export default function AdminAlliancesPage() {
   }
 
   const columns = [
+    {
+      key: 'deleted_at',
+      label: '',
+      width: '30px',
+      render: (value: unknown) => (
+        value ? (
+          <span className="text-red-500" title={`Deleted: ${new Date(String(value)).toLocaleString()}`}>🗑️</span>
+        ) : null
+      ),
+    },
     {
       key: 'tag',
       label: 'Tag',
@@ -182,9 +197,20 @@ export default function AdminAlliancesPage() {
             className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-sm"
           />
         </div>
+        <div className="flex items-center gap-2 ml-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filters.include_deleted}
+              onChange={(e) => setFilters({ ...filters, include_deleted: e.target.checked })}
+              className="w-4 h-4 rounded bg-gray-800 border-gray-600 text-red-500 focus:ring-red-500"
+            />
+            <span className="text-sm text-gray-400">Show Deleted</span>
+          </label>
+        </div>
         <div className="flex items-end">
           <button
-            onClick={() => setFilters({ min_members: '', search: '' })}
+            onClick={() => setFilters({ min_members: '', search: '', include_deleted: false })}
             className="px-3 py-1.5 text-sm text-gray-400 hover:text-white"
           >
             Clear

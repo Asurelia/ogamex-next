@@ -2,10 +2,117 @@
 
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react'
 import { useTranslations } from 'next-intl'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import type { SystemDetails } from '@/lib/galaxy/GalaxyMapController'
+import type { SystemDetails, ZoomLevel } from '@/lib/galaxy/GalaxyMapController'
+
+// ============================================================================
+// DEEP LINKING HOOK
+// ============================================================================
+
+interface DeepLinkState {
+  galaxy: number
+  system: number
+  viewMode: ViewMode
+  camX?: number
+  camY?: number
+  camZ?: number
+  zoom?: ZoomLevel
+}
+
+/**
+ * Custom hook for URL-based state synchronization (deep linking)
+ * Allows F5 to restore exact map position
+ */
+function useDeepLink(initialState: DeepLinkState) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const isInitialized = useRef(false)
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Parse initial state from URL params
+  const getStateFromUrl = useCallback((): Partial<DeepLinkState> => {
+    const params: Partial<DeepLinkState> = {}
+
+    const g = searchParams.get('g')
+    if (g) params.galaxy = Math.max(1, Math.min(9, parseInt(g) || 1))
+
+    const s = searchParams.get('s')
+    if (s) params.system = Math.max(1, Math.min(499, parseInt(s) || 1))
+
+    const v = searchParams.get('v')
+    if (v === '2d' || v === '3d') params.viewMode = v
+
+    const cx = searchParams.get('cx')
+    if (cx) params.camX = parseFloat(cx)
+
+    const cy = searchParams.get('cy')
+    if (cy) params.camY = parseFloat(cy)
+
+    const cz = searchParams.get('cz')
+    if (cz) params.camZ = parseFloat(cz)
+
+    const z = searchParams.get('z')
+    if (z && ['galaxy', 'sector', 'system', 'body'].includes(z)) {
+      params.zoom = z as ZoomLevel
+    }
+
+    return params
+  }, [searchParams])
+
+  // Update URL without page reload (debounced for camera updates)
+  const updateUrl = useCallback((state: Partial<DeepLinkState>, immediate = false) => {
+    // Clear pending update
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current)
+    }
+
+    const update = () => {
+      const params = new URLSearchParams()
+
+      if (state.galaxy !== undefined) params.set('g', state.galaxy.toString())
+      if (state.system !== undefined) params.set('s', state.system.toString())
+      if (state.viewMode) params.set('v', state.viewMode)
+
+      // Only include camera params in 3D mode
+      if (state.viewMode === '3d') {
+        if (state.camX !== undefined) params.set('cx', state.camX.toFixed(1))
+        if (state.camY !== undefined) params.set('cy', state.camY.toFixed(1))
+        if (state.camZ !== undefined) params.set('cz', state.camZ.toFixed(1))
+        if (state.zoom) params.set('z', state.zoom)
+      }
+
+      const newUrl = `${pathname}?${params.toString()}`
+      // Use replaceState to avoid history spam
+      window.history.replaceState(null, '', newUrl)
+    }
+
+    if (immediate) {
+      update()
+    } else {
+      // Debounce camera updates (500ms)
+      updateTimeoutRef.current = setTimeout(update, 500)
+    }
+  }, [pathname])
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  return {
+    getStateFromUrl,
+    updateUrl,
+    isInitialized,
+  }
+}
 
 // Lazy load 3D component to avoid SSR issues
 const GalaxyMap3D = dynamic(
@@ -64,10 +171,51 @@ export default function GalaxyPage() {
   const [error, setError] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('2d')
   const [webglSupported, setWebglSupported] = useState(true)
+  const [cameraState, setCameraState] = useState<{ x: number; y: number; z: number } | null>(null)
+  const [currentZoom, setCurrentZoom] = useState<ZoomLevel>('galaxy')
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const t = useTranslations('galaxy')
   const tCommon = useTranslations('common')
+
+  // Deep linking hook
+  const { getStateFromUrl, updateUrl, isInitialized } = useDeepLink({
+    galaxy,
+    system,
+    viewMode,
+  })
+
+  // Initialize state from URL on mount
+  useEffect(() => {
+    if (!isInitialized.current) {
+      const urlState = getStateFromUrl()
+
+      if (urlState.galaxy !== undefined) setGalaxy(urlState.galaxy)
+      if (urlState.system !== undefined) setSystem(urlState.system)
+      if (urlState.viewMode) setViewMode(urlState.viewMode)
+      if (urlState.camX !== undefined && urlState.camY !== undefined && urlState.camZ !== undefined) {
+        setCameraState({ x: urlState.camX, y: urlState.camY, z: urlState.camZ })
+      }
+      if (urlState.zoom) setCurrentZoom(urlState.zoom)
+
+      isInitialized.current = true
+    }
+  }, [getStateFromUrl, isInitialized])
+
+  // Sync state to URL when it changes
+  useEffect(() => {
+    if (isInitialized.current) {
+      updateUrl({
+        galaxy,
+        system,
+        viewMode,
+        camX: cameraState?.x,
+        camY: cameraState?.y,
+        camZ: cameraState?.z,
+        zoom: currentZoom,
+      }, viewMode === '2d') // Immediate for 2D, debounced for 3D camera
+    }
+  }, [galaxy, system, viewMode, cameraState, currentZoom, updateUrl])
 
   // Check WebGL support on mount
   useEffect(() => {
@@ -343,9 +491,13 @@ export default function GalaxyPage() {
                 userId={user.id}
                 onSystemSelect={handleSystemSelect}
                 onZoomLevelChange={(level) => {
-                  // Could show zoom level in UI
-                  console.log('Zoom level:', level)
+                  setCurrentZoom(level)
                 }}
+                onCameraChange={(pos) => {
+                  setCameraState(pos)
+                }}
+                initialCameraPosition={cameraState || undefined}
+                touchTolerance={2.0} // Extra tolerance for mobile
                 className="w-full h-full"
               />
             </Suspense>

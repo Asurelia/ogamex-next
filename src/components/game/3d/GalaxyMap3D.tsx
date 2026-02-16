@@ -42,6 +42,12 @@ export interface GalaxyMap3DProps {
   onSystemSelect?: (system: SystemDetails) => void
   onSystemHover?: (system: SystemSummary | null) => void
   onZoomLevelChange?: (level: ZoomLevel) => void
+  /** Callback when camera position changes (for deep linking) */
+  onCameraChange?: (position: { x: number; y: number; z: number }) => void
+  /** Initial camera position (for restoring from URL) */
+  initialCameraPosition?: { x: number; y: number; z: number }
+  /** Touch tolerance multiplier for mobile devices (default: 1.5) */
+  touchTolerance?: number
   className?: string
 }
 
@@ -53,6 +59,8 @@ interface StarNodeProps {
   onClick: () => void
   onPointerOver: () => void
   onPointerOut: () => void
+  /** Touch tolerance multiplier for hitbox (default: 1.5) */
+  touchTolerance?: number
 }
 
 interface HyperlaneProps {
@@ -110,12 +118,20 @@ function StarNode({
   onClick,
   onPointerOver,
   onPointerOut,
+  touchTolerance = 1.5,
 }: StarNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null)
   const glowRef = useRef<THREE.Mesh>(null)
+  const hitboxRef = useRef<THREE.Mesh>(null)
 
   const color = STAR_COLORS[system.starType] || STAR_COLORS.unknown
   const baseSize = STAR_SIZES[system.starType] || 1.0
+
+  // Detect touch device
+  const isTouchDevice = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  }, [])
 
   // Scale based on zoom level
   const scale = useMemo(() => {
@@ -158,13 +174,24 @@ function StarNode({
   // Show label only when zoomed in enough
   const showLabel = zoomLevel === 'system' || zoomLevel === 'body' || isHovered || isSelected
 
+  // Hitbox size for touch devices (larger invisible sphere)
+  const hitboxSize = isTouchDevice ? baseSize * scale * touchTolerance * 2 : baseSize * scale
+
   return (
     <group
       position={[system.positionX, system.positionY, system.positionZ]}
-      onClick={onClick}
-      onPointerOver={onPointerOver}
-      onPointerOut={onPointerOut}
     >
+      {/* Invisible hitbox for touch (larger clickable area) */}
+      <mesh
+        ref={hitboxRef}
+        onClick={onClick}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+      >
+        <sphereGeometry args={[hitboxSize, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
       {/* Star core */}
       <mesh ref={meshRef}>
         <sphereGeometry args={[baseSize * scale, 16, 16]} />
@@ -280,16 +307,32 @@ function Hyperlane({ from, to, isExplored, connectionType }: HyperlaneProps) {
 
 interface CameraControllerProps {
   navigation: UseGalaxyNavigationReturn
+  onCameraChange?: (position: { x: number; y: number; z: number }) => void
+  initialCameraPosition?: { x: number; y: number; z: number }
 }
 
-function CameraController({ navigation }: CameraControllerProps) {
+function CameraController({ navigation, onCameraChange, initialCameraPosition }: CameraControllerProps) {
   const { camera } = useThree()
   const controlsRef = useRef<any>(null)
+  const lastReportedPos = useRef<{ x: number; y: number; z: number } | null>(null)
+  const isInitialized = useRef(false)
+
+  // Set initial camera position on mount
+  useEffect(() => {
+    if (initialCameraPosition && !isInitialized.current) {
+      camera.position.set(
+        initialCameraPosition.x,
+        initialCameraPosition.y,
+        initialCameraPosition.z
+      )
+      isInitialized.current = true
+    }
+  }, [initialCameraPosition, camera])
 
   // Throttled camera update
   const throttledUpdate = useThrottledCameraUpdate(navigation.updateCamera, 32) // ~30fps
 
-  // Sync camera changes to navigation controller
+  // Sync camera changes to navigation controller and report position
   useFrame(() => {
     if (controlsRef.current) {
       const target = controlsRef.current.target as THREE.Vector3
@@ -298,6 +341,21 @@ function CameraController({ navigation }: CameraControllerProps) {
         { x: target.x, y: target.y, z: target.z },
         camera.position.distanceTo(target)
       )
+
+      // Report camera position changes (debounced via threshold)
+      if (onCameraChange) {
+        const pos = { x: camera.position.x, y: camera.position.y, z: camera.position.z }
+        const last = lastReportedPos.current
+
+        // Only report if moved more than 1 unit
+        if (!last ||
+            Math.abs(pos.x - last.x) > 1 ||
+            Math.abs(pos.y - last.y) > 1 ||
+            Math.abs(pos.z - last.z) > 1) {
+          lastReportedPos.current = pos
+          onCameraChange(pos)
+        }
+      }
     }
   })
 
@@ -423,9 +481,12 @@ function InfoPanel({
 interface SceneContentProps {
   navigation: UseGalaxyNavigationReturn
   onSystemSelect?: (system: SystemDetails) => void
+  onCameraChange?: (position: { x: number; y: number; z: number }) => void
+  initialCameraPosition?: { x: number; y: number; z: number }
+  touchTolerance?: number
 }
 
-function SceneContent({ navigation, onSystemSelect }: SceneContentProps) {
+function SceneContent({ navigation, onSystemSelect, onCameraChange, initialCameraPosition, touchTolerance = 1.5 }: SceneContentProps) {
   const {
     systems,
     selectedSystem,
@@ -495,11 +556,16 @@ function SceneContent({ navigation, onSystemSelect }: SceneContentProps) {
           onClick={() => handleSystemClick(system.id)}
           onPointerOver={() => hoverSystem(system.id)}
           onPointerOut={() => hoverSystem(null)}
+          touchTolerance={touchTolerance}
         />
       ))}
 
       {/* Camera controller */}
-      <CameraController navigation={navigation} />
+      <CameraController
+        navigation={navigation}
+        onCameraChange={onCameraChange}
+        initialCameraPosition={initialCameraPosition}
+      />
 
       {/* Ambient light */}
       <ambientLight intensity={0.3} />
@@ -517,8 +583,15 @@ export function GalaxyMap3D({
   onSystemSelect,
   onSystemHover,
   onZoomLevelChange,
+  onCameraChange,
+  initialCameraPosition,
+  touchTolerance = 1.5,
   className = '',
 }: GalaxyMap3DProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null)
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Navigation hook
   const navigation = useGalaxyNavigation({
     galaxyIndex,
@@ -539,11 +612,47 @@ export function GalaxyMap3D({
     }
   }, [navigation.hoveredSystem, onSystemHover])
 
+  // Debounced resize handler (150ms debounce)
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleResize = () => {
+      // Clear pending resize
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current)
+      }
+
+      // Debounce resize updates
+      resizeTimeoutRef.current = setTimeout(() => {
+        const rect = container.getBoundingClientRect()
+        setCanvasSize({ width: rect.width, height: rect.height })
+      }, 150)
+    }
+
+    // Initial size
+    handleResize()
+
+    // Observe resize
+    const resizeObserver = new ResizeObserver(handleResize)
+    resizeObserver.observe(container)
+
+    return () => {
+      resizeObserver.disconnect()
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Default camera position
+  const defaultCameraPosition = initialCameraPosition || { x: 0, y: 100, z: 100 }
+
   return (
-    <div className={`relative w-full h-full ${className}`}>
+    <div ref={containerRef} className={`relative w-full h-full ${className}`}>
       <Canvas
         camera={{
-          position: [0, 100, 100],
+          position: [defaultCameraPosition.x, defaultCameraPosition.y, defaultCameraPosition.z],
           fov: 60,
           near: 0.1,
           far: 2000,
@@ -552,6 +661,15 @@ export function GalaxyMap3D({
           antialias: true,
           alpha: false,
         }}
+        // Pass raycaster params for touch tolerance
+        raycaster={{
+          params: {
+            Points: { threshold: touchTolerance },
+            Line: { threshold: touchTolerance * 0.5 },
+          },
+        }}
+        // Use debounced size if available
+        style={canvasSize ? { width: canvasSize.width, height: canvasSize.height } : undefined}
       >
         <color attach="background" args={['#000008']} />
 
@@ -559,6 +677,9 @@ export function GalaxyMap3D({
           <SceneContent
             navigation={navigation}
             onSystemSelect={onSystemSelect}
+            onCameraChange={onCameraChange}
+            initialCameraPosition={initialCameraPosition}
+            touchTolerance={touchTolerance}
           />
         </Suspense>
       </Canvas>
