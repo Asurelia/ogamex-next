@@ -8,6 +8,8 @@
 
 import { revalidateTag } from 'next/cache'
 
+const DEBUG_CONFIG = process.env.NODE_ENV === 'development'
+
 /**
  * Invalidate all game configuration cache
  */
@@ -15,7 +17,7 @@ export async function invalidateAllGameConfig() {
   // In Next.js 16, revalidateTag requires a second argument for the cacheLife profile
   // Using { expire: 0 } for immediate invalidation
   revalidateTag('game-config', { expire: 0 })
-  console.log('[GameConfig] All game configuration cache invalidated')
+  if (DEBUG_CONFIG) console.log('[GameConfig] All game configuration cache invalidated')
 }
 
 /**
@@ -23,7 +25,7 @@ export async function invalidateAllGameConfig() {
  */
 export async function invalidateShipsConfig() {
   revalidateTag('ships', { expire: 0 })
-  console.log('[GameConfig] Ships configuration cache invalidated')
+  if (DEBUG_CONFIG) console.log('[GameConfig] Ships configuration cache invalidated')
 }
 
 /**
@@ -31,7 +33,7 @@ export async function invalidateShipsConfig() {
  */
 export async function invalidateBuildingsConfig() {
   revalidateTag('buildings', { expire: 0 })
-  console.log('[GameConfig] Buildings configuration cache invalidated')
+  if (DEBUG_CONFIG) console.log('[GameConfig] Buildings configuration cache invalidated')
 }
 
 /**
@@ -39,7 +41,7 @@ export async function invalidateBuildingsConfig() {
  */
 export async function invalidateDefensesConfig() {
   revalidateTag('defenses', { expire: 0 })
-  console.log('[GameConfig] Defenses configuration cache invalidated')
+  if (DEBUG_CONFIG) console.log('[GameConfig] Defenses configuration cache invalidated')
 }
 
 /**
@@ -47,7 +49,7 @@ export async function invalidateDefensesConfig() {
  */
 export async function invalidateResearchConfig() {
   revalidateTag('research', { expire: 0 })
-  console.log('[GameConfig] Research configuration cache invalidated')
+  if (DEBUG_CONFIG) console.log('[GameConfig] Research configuration cache invalidated')
 }
 
 /**
@@ -55,5 +57,5 @@ export async function invalidateResearchConfig() {
  */
 export async function invalidateRapidFireConfig() {
   revalidateTag('rapid-fire', { expire: 0 })
-  console.log('[GameConfig] Rapid fire configuration cache invalidated')
+  if (DEBUG_CONFIG) console.log('[GameConfig] Rapid fire configuration cache invalidated')
 }

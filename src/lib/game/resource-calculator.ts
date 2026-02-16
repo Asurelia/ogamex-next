@@ -217,19 +217,21 @@ export async function updatePlanetResources(
       .order('ends_at', { ascending: true })
 
     if (completedBuildings && completedBuildings.length > 0) {
+      // Process all completed buildings
       for (const building of completedBuildings as BuildingQueueItem[]) {
         const buildingKey = BUILDING_KEYS[building.building_id]
         if (buildingKey) {
           updatedPlanet[buildingKey] = building.target_level
           updatedPlanet.fields_used = (updatedPlanet.fields_used || 0) + 1
         }
-
-        // Delete the completed queue entry
-        await supabase
-          .from('building_queue')
-          .delete()
-          .eq('id', building.id)
       }
+
+      // Batch delete all completed building queue entries (optimized)
+      const buildingIds = (completedBuildings as BuildingQueueItem[]).map(b => b.id)
+      await supabase
+        .from('building_queue')
+        .delete()
+        .in('id', buildingIds)
     }
 
     // Process completed units (ships and defenses)
@@ -241,6 +243,7 @@ export async function updatePlanetResources(
       .order('ends_at', { ascending: true })
 
     if (completedUnits && completedUnits.length > 0) {
+      // Process all completed units
       for (const unit of completedUnits as UnitQueueItem[]) {
         const unitKey = unit.unit_type === 'ship'
           ? SHIP_KEYS[unit.unit_id]
@@ -251,13 +254,14 @@ export async function updatePlanetResources(
           const amountToAdd = unit.amount - (unit.amount_completed || 0)
           updatedPlanet[unitKey] = currentAmount + amountToAdd
         }
-
-        // Delete the completed queue entry
-        await supabase
-          .from('unit_queue')
-          .delete()
-          .eq('id', unit.id)
       }
+
+      // Batch delete all completed unit queue entries (optimized)
+      const unitIds = (completedUnits as UnitQueueItem[]).map(u => u.id)
+      await supabase
+        .from('unit_queue')
+        .delete()
+        .in('id', unitIds)
     }
   }
 

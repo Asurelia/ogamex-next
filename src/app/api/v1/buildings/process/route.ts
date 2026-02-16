@@ -281,10 +281,13 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime
 
-    console.log(
-      `[BuildingProcessor] Completed ${stats.buildings_completed} buildings in ${duration}ms. ` +
-        `Errors: ${stats.buildings_failed}`
-    )
+    // Log summary only if there were buildings processed or errors
+    if (stats.buildings_completed > 0 || stats.buildings_failed > 0) {
+      console.log(
+        `[BuildingProcessor] Completed ${stats.buildings_completed} buildings in ${duration}ms. ` +
+          `Errors: ${stats.buildings_failed}`
+      )
+    }
 
     return NextResponse.json({
       success: true,

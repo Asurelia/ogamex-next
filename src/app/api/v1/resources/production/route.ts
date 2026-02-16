@@ -365,13 +365,16 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime
 
-    // Log summary
-    console.log(
-      `[ResourceProduction] Processed ${stats.planets_processed} planets in ${duration}ms. ` +
-        `Metal: +${Math.floor(stats.total_metal_produced)}, ` +
-        `Crystal: +${Math.floor(stats.total_crystal_produced)}, ` +
-        `Deuterium: +${Math.floor(stats.total_deuterium_produced)}`
-    )
+    // Log summary only if there were planets processed with significant production
+    const totalProduced = stats.total_metal_produced + stats.total_crystal_produced + stats.total_deuterium_produced
+    if (stats.planets_processed > 0 && totalProduced > 0) {
+      console.log(
+        `[ResourceProduction] Processed ${stats.planets_processed} planets in ${duration}ms. ` +
+          `Metal: +${Math.floor(stats.total_metal_produced)}, ` +
+          `Crystal: +${Math.floor(stats.total_crystal_produced)}, ` +
+          `Deuterium: +${Math.floor(stats.total_deuterium_produced)}`
+      )
+    }
 
     return NextResponse.json({
       success: true,

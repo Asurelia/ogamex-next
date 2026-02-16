@@ -27,6 +27,67 @@
  */
 
 // =============================================================================
+// CONSTANTS (Universe, Star Types, Mission Types)
+// =============================================================================
+
+export {
+  UNIVERSE,
+  PROCEDURAL_UNIVERSE,
+  STAR_GAMEPLAY_EFFECTS,
+  MISSION_TYPES,
+} from './constants'
+
+export type {
+  BuildingDefinition,
+  ShipDefinition,
+  DefenseDefinition,
+  ResearchDefinition,
+  MissionTypeId,
+} from './constants'
+
+// =============================================================================
+// FORMULAS (Pure calculation functions)
+// =============================================================================
+
+export {
+  // Cost calculations
+  calculateBuildingCostFromBase,
+  calculateResearchCostFromBase,
+  calculateUnitCostFromBase,
+  // Time calculations
+  calculateBuildingTime,
+  calculateUnitTime,
+  calculateResearchTime,
+  // Production calculations
+  calculateMetalProduction,
+  calculateCrystalProduction,
+  calculateDeuteriumProduction,
+  calculateSolarPlantEnergy,
+  calculateFusionEnergy,
+  calculateMineEnergyConsumption,
+  calculateStorageCapacity,
+  // Fleet calculations
+  calculateDistance,
+  calculateFleetDuration,
+  calculateShipFuelConsumption,
+  calculateCargoCapacityWithBonus,
+  // Combat calculations
+  calculateAttackPower,
+  calculateShieldPower,
+  calculateArmor,
+  // Misc calculations
+  calculateMaxFleetSlots,
+  calculateMaxColonies,
+  calculateMaxExpeditions,
+  calculatePlanetFields,
+  generatePlanetDiameter,
+  calculatePlanetTemperature,
+  // Formatting utilities
+  formatNumber,
+  formatDuration,
+} from './formulas'
+
+// =============================================================================
 // CACHED DATA FETCHERS (use cache)
 // =============================================================================
 

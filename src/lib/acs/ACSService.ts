@@ -19,7 +19,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { calculateFleetCargoCapacity } from '@/game/constants'
+import { calculateFleetCargoCapacity } from '@/lib/game'
 import {
   ACSOperation,
   ACSOperationDB,
@@ -752,14 +752,14 @@ export class ACSService {
             debris: { metal: 0, crystal: 0 },
             moon_chance: 0,
             moon_created: false,
-            participant_results: participants.map(p => ({
+            participant_results: await Promise.all(participants.map(async p => ({
               user_id: p.user_id,
               ships_remaining: p.ships,
               ships_lost: {},
               loot_share: { metal: 0, crystal: 0, deuterium: 0 },
               cargo_used: 0,
-              cargo_capacity: calculateFleetCargoCapacity(p.ships),
-            })),
+              cargo_capacity: await calculateFleetCargoCapacity(p.ships),
+            }))),
           },
         }
       }
@@ -837,11 +837,11 @@ export class ACSService {
     targetPlanetId: string
   ): Promise<ACSBattleResult> {
     // Calculate total cargo capacity
-    const participantCargos = participants.map(p => ({
+    const participantCargos = await Promise.all(participants.map(async p => ({
       userId: p.user_id,
-      capacity: calculateFleetCargoCapacity(p.ships),
+      capacity: await calculateFleetCargoCapacity(p.ships),
       ships: p.ships as Record<string, number>,
-    }))
+    })))
 
     const totalCargo = participantCargos.reduce((sum, p) => sum + p.capacity, 0)
 

@@ -70,9 +70,7 @@ export default function FleetPage() {
 
   // Handle ACS operation creation
   const handleCreateACSOperation = useCallback(async (params: CreateACSOperationParams) => {
-    // TODO: Implement actual API call
-    console.log('Creating ACS operation:', params)
-    // For now, just close the modal
+    // TODO: Implement actual API call to /api/v1/acs
     closeCreateModal()
   }, [closeCreateModal])
 
@@ -83,8 +81,7 @@ export default function FleetPage() {
 
   // Handle actual join submission
   const handleSubmitJoinACS = useCallback(async (params: JoinACSParams) => {
-    // TODO: Implement actual API call
-    console.log('Joining ACS operation:', params)
+    // TODO: Implement actual API call to /api/v1/acs/[operationId]/join
     closeJoinModal()
   }, [closeJoinModal])
 

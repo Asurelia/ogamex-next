@@ -72,11 +72,13 @@ export async function POST(request: NextRequest) {
     const result = await processor.processPendingMissions()
     const duration = Date.now() - startTime
 
-    // Log summary
-    console.log(
-      `[MissionProcessor] Processed ${result.processedCount} missions in ${duration}ms. ` +
-        `Errors: ${result.errors.length}`
-    )
+    // Log summary only if there were missions processed or errors
+    if (result.processedCount > 0 || result.errors.length > 0) {
+      console.log(
+        `[MissionProcessor] Processed ${result.processedCount} missions in ${duration}ms. ` +
+          `Errors: ${result.errors.length}`
+      )
+    }
 
     // Return result
     return NextResponse.json({

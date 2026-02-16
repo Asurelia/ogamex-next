@@ -39,6 +39,9 @@ import {
 // Default TTL: 1 hour in milliseconds
 const DEFAULT_TTL = 60 * 60 * 1000
 
+// Debug logging only in development
+const DEBUG = process.env.NODE_ENV === 'development'
+
 /**
  * Detect if we're running on the server or client
  */
@@ -177,7 +180,7 @@ export class GameConfigService {
 
       // If no data from DB, fallback to constants
       if (!hasShips && !hasBuildings && !hasDefenses && !hasResearch) {
-        console.warn('[GameConfigService] No data in database, using hardcoded constants')
+        if (DEBUG) console.warn('[GameConfigService] No data in database, using hardcoded constants')
         this.loadFromConstants()
         return
       }
@@ -268,7 +271,7 @@ export class GameConfigService {
       this.lastLoad = Date.now()
       this.initialized = true
 
-      console.log('[GameConfigService] Configuration loaded from database')
+      if (DEBUG) console.log('[GameConfigService] Configuration loaded from database')
 
     } catch (error) {
       console.error('[GameConfigService] Error loading from database:', error)
@@ -320,7 +323,7 @@ export class GameConfigService {
     this.lastLoad = Date.now()
     this.initialized = true
 
-    console.log('[GameConfigService] Configuration loaded from constants (fallback)')
+    if (DEBUG) console.log('[GameConfigService] Configuration loaded from constants (fallback)')
   }
 
   /**
@@ -348,7 +351,7 @@ export class GameConfigService {
   invalidateCache(): void {
     this.lastLoad = 0
     this.initialized = false
-    console.log('[GameConfigService] Cache invalidated')
+    if (DEBUG) console.log('[GameConfigService] Cache invalidated')
   }
 
   // ==========================================================================

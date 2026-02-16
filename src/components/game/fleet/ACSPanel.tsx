@@ -58,19 +58,16 @@ export function ACSPanel({
     onJoinOperation(operationId)
   }
 
-  const handleDeclineInvitation = (invitationId: string) => {
-    // Handle decline logic
-    console.log('Declining invitation:', invitationId)
+  const handleDeclineInvitation = async (invitationId: string) => {
+    // TODO: Call /api/v1/acs/invitations/[invitationId]/decline
   }
 
-  const handleLeaveOperation = (operationId: string) => {
-    // Handle leave logic
-    console.log('Leaving operation:', operationId)
+  const handleLeaveOperation = async (operationId: string) => {
+    // TODO: Call /api/v1/acs/[operationId]/leave
   }
 
-  const handleCancelOperation = (operationId: string) => {
-    // Handle cancel logic
-    console.log('Cancelling operation:', operationId)
+  const handleCancelOperation = async (operationId: string) => {
+    // TODO: Call /api/v1/acs/[operationId]/cancel
   }
 
   return (
