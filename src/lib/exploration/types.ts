@@ -343,6 +343,9 @@ export interface InventoryItem {
   acquiredVia: AcquisitionMethod | null
   storageLocation: StorageLocation
 
+  // Market status
+  listedOnMarket?: boolean
+
   // Joined data
   dataCard?: CartographyItem
 }

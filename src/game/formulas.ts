@@ -50,6 +50,7 @@ export {
   // Formatting utilities
   formatNumber,
   formatDuration,
+  formatRelativeTime,
 } from '@/lib/game/formulas'
 
 // Re-export UNIVERSE for backward compatibility

@@ -213,12 +213,12 @@ export default function BuildingsPage() {
       <DataTable
         data={buildings}
         columns={columns}
+        keyField="id"
         loading={loading}
         onEdit={canEdit ? setEditingBuilding : undefined}
         onDelete={canDelete ? setDeleteConfirm : undefined}
-        searchKeys={['key', 'name']}
-        filterKey="category"
-        filterOptions={BUILDING_CATEGORIES}
+        searchable
+        searchPlaceholder="Search by key or name..."
       />
 
       {/* Edit Modal */}
@@ -311,15 +311,14 @@ export default function BuildingsPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          title="Delete Building"
-          message={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-          loading={saving}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Building"
+        message={deleteConfirm ? `Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.` : ''}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+        loading={saving}
+      />
     </motion.div>
   )
 }

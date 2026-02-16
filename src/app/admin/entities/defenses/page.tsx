@@ -203,10 +203,12 @@ export default function DefensesPage() {
       <DataTable
         data={defenses}
         columns={columns}
+        keyField="id"
         loading={loading}
         onEdit={canEdit ? setEditingDefense : undefined}
         onDelete={canDelete ? setDeleteConfirm : undefined}
-        searchKeys={['key', 'name']}
+        searchable
+        searchPlaceholder="Search by key or name..."
       />
 
       {/* Edit Modal */}
@@ -283,15 +285,14 @@ export default function DefensesPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          title="Delete Defense"
-          message={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-          loading={saving}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Defense"
+        message={deleteConfirm ? `Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.` : ''}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+        loading={saving}
+      />
     </motion.div>
   )
 }

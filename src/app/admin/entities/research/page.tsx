@@ -211,12 +211,12 @@ export default function ResearchPage() {
       <DataTable
         data={research}
         columns={columns}
+        keyField="id"
         loading={loading}
         onEdit={canEdit ? setEditingResearch : undefined}
         onDelete={canDelete ? setDeleteConfirm : undefined}
-        searchKeys={['key', 'name']}
-        filterKey="category"
-        filterOptions={RESEARCH_CATEGORIES}
+        searchable
+        searchPlaceholder="Search by key or name..."
       />
 
       {/* Edit Modal */}
@@ -309,15 +309,14 @@ export default function ResearchPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          title="Delete Research"
-          message={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
-          onConfirm={() => handleDelete(deleteConfirm)}
-          onCancel={() => setDeleteConfirm(null)}
-          loading={saving}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Research"
+        message={deleteConfirm ? `Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.` : ''}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+        loading={saving}
+      />
     </motion.div>
   )
 }
