@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useGameStore } from '@/stores/gameStore'
 import { useACSStore } from '@/stores/acsStore'
+import { useAllianceStore } from '@/stores/allianceStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import {
   formatNumber,
@@ -65,14 +66,51 @@ export default function FleetPage() {
   const tRes = useTranslations('resources')
   const tCommon = useTranslations('common')
 
-  // Check if user has alliance (mock for now)
+  // Alliance management for ACS
+  const { alliance, members: allianceMembers, loadMembers } = useAllianceStore()
   const hasAlliance = Boolean(user?.alliance_id)
+
+  // Load alliance members when user has an alliance
+  useEffect(() => {
+    if (hasAlliance && alliance?.id) {
+      loadMembers()
+    }
+  }, [hasAlliance, alliance?.id, loadMembers])
+
+  const { refreshOperations } = useACSStore()
 
   // Handle ACS operation creation
   const handleCreateACSOperation = useCallback(async (params: CreateACSOperationParams) => {
-    // TODO: Implement actual API call to /api/v1/acs
-    closeCreateModal()
-  }, [closeCreateModal])
+    try {
+      const response = await fetch('/api/v1/acs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: params.name,
+          type: params.type,
+          target: {
+            galaxy: params.target_galaxy,
+            system: params.target_system,
+            position: params.target_position,
+            planet_id: params.target_planet_id,
+          },
+          scheduled_arrival: params.scheduled_arrival.toISOString(),
+          hold_time: params.hold_time,
+          alliance_id: params.alliance_id,
+        }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        await refreshOperations()
+      } else {
+        setError(data.error || 'Failed to create ACS operation')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create ACS operation')
+    } finally {
+      closeCreateModal()
+    }
+  }, [closeCreateModal, refreshOperations])
 
   // Handle joining an ACS operation
   const handleJoinACSOperation = useCallback((operationId: string) => {
@@ -81,9 +119,30 @@ export default function FleetPage() {
 
   // Handle actual join submission
   const handleSubmitJoinACS = useCallback(async (params: JoinACSParams) => {
-    // TODO: Implement actual API call to /api/v1/acs/[operationId]/join
-    closeJoinModal()
-  }, [closeJoinModal])
+    if (!currentPlanet) return
+
+    try {
+      const response = await fetch(`/api/v1/acs/${params.operation_id}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ships: params.ships,
+          resources: params.resources,
+          origin_planet_id: currentPlanet.id,
+        }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        await refreshOperations()
+      } else {
+        setError(data.error || 'Failed to join ACS operation')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to join ACS operation')
+    } finally {
+      closeJoinModal()
+    }
+  }, [closeJoinModal, currentPlanet, refreshOperations])
 
   // Get the operation to join
   const operationToJoin = joinOperationId
@@ -821,7 +880,7 @@ export default function FleetPage() {
         isOpen={isCreateModalOpen}
         onClose={closeCreateModal}
         onSubmit={handleCreateACSOperation}
-        allianceMembers={[]} // TODO: Pass actual alliance members
+        allianceMembers={allianceMembers.filter(m => m.user_id !== user?.id)}
       />
 
       {/* ACS Join Modal */}
