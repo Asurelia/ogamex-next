@@ -571,18 +571,32 @@ export class ACSService {
         ? allOperations
         : allOperations.filter(op => op.status !== 'completed' && op.status !== 'cancelled')
 
-      // Get participants for each
-      const operations: ACSOperation[] = []
-      for (const op of filtered) {
-        const { data: participants } = await this.supabase
-          .from('acs_participants')
-          .select('*')
-          .eq('acs_operation_id', op.id)
-
-        operations.push(
-          dbToOperation(op as ACSOperationDB, (participants || []).map(dbToParticipant))
-        )
+      if (filtered.length === 0) {
+        return { success: true, operations: [] }
       }
+
+      // Batch fetch all participants for filtered operations (fixes N+1 query)
+      const operationIds = filtered.map(op => op.id)
+      const { data: allParticipants } = await this.supabase
+        .from('acs_participants')
+        .select('*')
+        .in('acs_operation_id', operationIds)
+
+      // Group participants by operation ID
+      const participantsByOp = new Map<string, typeof allParticipants>()
+      for (const p of allParticipants || []) {
+        const existing = participantsByOp.get(p.acs_operation_id) || []
+        existing.push(p)
+        participantsByOp.set(p.acs_operation_id, existing)
+      }
+
+      // Build operations with their participants
+      const operations: ACSOperation[] = filtered.map(op =>
+        dbToOperation(
+          op as ACSOperationDB,
+          (participantsByOp.get(op.id) || []).map(dbToParticipant)
+        )
+      )
 
       return { success: true, operations }
     } catch (error) {
@@ -883,20 +897,22 @@ export class ACSService {
         cargo_used: cargoUsed,
         cargo_capacity: participant.capacity,
       })
+    }
 
-      // Update participant in database
-      await this.supabase
+    // Batch update all participants in parallel (fixes N+1 query)
+    await Promise.all(participantResults.map(result =>
+      this.supabase
         .from('acs_participants')
         .update({
           status: 'returned',
-          ships_lost: shipsLost,
-          loot_metal: lootShare.metal,
-          loot_crystal: lootShare.crystal,
-          loot_deuterium: lootShare.deuterium,
+          ships_lost: result.ships_lost,
+          loot_metal: result.loot_share.metal,
+          loot_crystal: result.loot_share.crystal,
+          loot_deuterium: result.loot_share.deuterium,
         })
         .eq('acs_operation_id', operationId)
-        .eq('user_id', participant.userId)
-    }
+        .eq('user_id', result.user_id)
+    ))
 
     if (battleResult.winner === 'attacker') {
       await this.supabase
@@ -926,8 +942,10 @@ export class ACSService {
     operationId: string,
     participants: ACSParticipantDB[]
   ): Promise<void> {
-    for (const participant of participants) {
-      await this.supabase
+    // Batch update all participants in parallel (fixes N+1 query)
+    await Promise.all([
+      // Update all participants at once using IN clause
+      this.supabase
         .from('acs_participants')
         .update({
           status: 'returned',
@@ -937,13 +955,13 @@ export class ACSService {
           loot_deuterium: 0,
         })
         .eq('acs_operation_id', operationId)
-        .eq('user_id', participant.user_id)
-    }
-
-    await this.supabase
-      .from('acs_operations')
-      .update({ status: 'completed' })
-      .eq('id', operationId)
+        .in('user_id', participants.map(p => p.user_id)),
+      // Update operation status
+      this.supabase
+        .from('acs_operations')
+        .update({ status: 'completed' })
+        .eq('id', operationId)
+    ])
   }
 
   // ==========================================================================

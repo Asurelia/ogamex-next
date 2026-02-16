@@ -365,9 +365,9 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime
 
-    // Log summary only if there were planets processed with significant production
+    // Log summary only if there were planets processed with significant production (production logging)
     const totalProduced = stats.total_metal_produced + stats.total_crystal_produced + stats.total_deuterium_produced
-    if (stats.planets_processed > 0 && totalProduced > 0) {
+    if (process.env.LOG_GAME_PROCESSING === 'true' && stats.planets_processed > 0 && totalProduced > 0) {
       console.log(
         `[ResourceProduction] Processed ${stats.planets_processed} planets in ${duration}ms. ` +
           `Metal: +${Math.floor(stats.total_metal_produced)}, ` +

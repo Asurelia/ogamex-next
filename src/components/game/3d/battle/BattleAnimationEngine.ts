@@ -10,466 +10,73 @@
  * - Object pooling for particle effects and projectiles
  * - LOD system for large-scale battles
  * - Event-driven callbacks for UI synchronization
+ *
+ * @module BattleAnimationEngine
  */
 
 import { gsap } from 'gsap'
 import * as THREE from 'three'
-import type { BattleResult, CombatRound, CombatUnit, FleetComposition, DefenseComposition } from '../../../../lib/battle/types'
+import type { CombatRound } from '../../../../lib/battle/types'
 
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
+// Import from extracted modules
+import type {
+  AnimationPhase,
+  BattleData,
+  BattleSceneRef,
+  EngineCallbacks,
+  EngineState,
+  LODLevel,
+  PhaseTiming,
+  PooledEffect,
+  ShipRef,
+  TimelineEvent,
+} from './battle-animation-types'
 
-/**
- * Reference to a ship in the 3D scene
- */
-export interface ShipRef {
-  id: string
-  unitKey: string
-  unitId: number
-  mesh: THREE.Object3D
-  position: THREE.Vector3
-  rotation: THREE.Euler
-  scale: number
-  side: 'attacker' | 'defender'
-  isDestroyed: boolean
-  currentHealth: number
-  maxHealth: number
-  currentShield: number
-  maxShield: number
-}
+import {
+  calculateLODLevel,
+  calculateRoundDuration,
+  clamp,
+  DEFAULT_PHASE_TIMING,
+} from './battle-animation-config'
 
-/**
- * Reference to the 3D battle scene
- */
-export interface BattleSceneRef {
-  scene: THREE.Scene
-  camera: THREE.Camera
-  renderer: THREE.WebGLRenderer
-  attackerGroup: THREE.Group
-  defenderGroup: THREE.Group
-  effectsGroup: THREE.Group
-  getShipRefs: () => Map<string, ShipRef>
-  addEffect: (effect: THREE.Object3D) => void
-  removeEffect: (effect: THREE.Object3D) => void
-}
+import { EffectPool } from './battle-effect-pool'
+import { CameraController } from './battle-camera-controller'
 
-/**
- * Battle data input structure
- */
-export interface BattleData {
-  result: BattleResult
-  attackerFleet: FleetComposition
-  defenderFleet: FleetComposition
-  defenderDefense: DefenseComposition
-}
+// Re-export types for backward compatibility
+export type {
+  AnimationPhase,
+  BattleAnimationControls,
+  BattleData,
+  BattleSceneRef,
+  CameraConfig,
+  CameraShotType,
+  EngineCallbacks,
+  EngineState,
+  LODLevel,
+  PhaseTiming,
+  PooledEffect,
+  ShipRef,
+  TimelineEvent,
+  TimelineEventData,
+  TimelineEventType,
+  UseBattleAnimationReturn,
+} from './battle-animation-types'
 
-/**
- * Timeline event types
- */
-export type TimelineEventType =
-  | 'target_lock'
-  | 'fire'
-  | 'projectile_travel'
-  | 'shield_impact'
-  | 'hull_impact'
-  | 'destroy'
-  | 'explosion'
-  | 'camera_move'
-  | 'camera_shake'
-  | 'effect_spawn'
-  | 'effect_remove'
-  | 'round_start'
-  | 'round_end'
-  | 'phase_change'
+// Re-export config for backward compatibility
+export {
+  CAMERA_PRESETS,
+  calculateLODLevel,
+  calculateRoundDuration,
+  clamp,
+  DEFAULT_PHASE_TIMING,
+  EFFECT_POOL_CONFIG,
+  generateEventId,
+  lerp,
+  LOD_THRESHOLDS,
+} from './battle-animation-config'
 
-/**
- * Timeline event data
- */
-export interface TimelineEventData {
-  sourceId?: string
-  targetId?: string
-  position?: THREE.Vector3
-  direction?: THREE.Vector3
-  damage?: number
-  side?: 'attacker' | 'defender'
-  effectType?: string
-  cameraTarget?: THREE.Vector3
-  cameraPosition?: THREE.Vector3
-  phase?: AnimationPhase
-  roundNumber?: number
-  intensity?: number
-  duration?: number
-}
-
-/**
- * Timeline event structure
- */
-export interface TimelineEvent {
-  id: string
-  time: number
-  type: TimelineEventType
-  data: TimelineEventData
-  execute: () => void
-  onComplete?: () => void
-}
-
-/**
- * Animation phase types
- */
-export type AnimationPhase = 'idle' | 'targeting' | 'firing' | 'impact' | 'resolution' | 'transition'
-
-/**
- * Phase timing configuration
- */
-export interface PhaseTiming {
-  targeting: number
-  firing: number
-  impact: number
-  resolution: number
-  transition: number
-}
-
-/**
- * Camera shot types for cinematic effects
- */
-export type CameraShotType =
-  | 'overview'
-  | 'follow_projectile'
-  | 'zoom_impact'
-  | 'wide_explosion'
-  | 'ship_closeup'
-  | 'dramatic_angle'
-
-/**
- * Camera configuration
- */
-export interface CameraConfig {
-  type: CameraShotType
-  position: THREE.Vector3
-  lookAt: THREE.Vector3
-  fov?: number
-  duration: number
-  ease: string
-}
-
-/**
- * Effect pool item
- */
-export interface PooledEffect {
-  id: string
-  type: string
-  object: THREE.Object3D
-  inUse: boolean
-  createdAt: number
-}
-
-/**
- * Engine state
- */
-export interface EngineState {
-  isInitialized: boolean
-  isPlaying: boolean
-  isPaused: boolean
-  currentRound: number
-  totalRounds: number
-  currentPhase: AnimationPhase
-  progress: number
-  speedMultiplier: number
-  currentTime: number
-  totalDuration: number
-}
-
-/**
- * Engine callbacks
- */
-export interface EngineCallbacks {
-  onRoundStart?: (round: number) => void
-  onRoundEnd?: (round: number) => void
-  onBattleEnd?: (result: BattleResult) => void
-  onShipDestroyed?: (ship: ShipRef, side: 'attacker' | 'defender') => void
-  onPhaseChange?: (phase: AnimationPhase, round: number) => void
-  onProgressUpdate?: (progress: number) => void
-  onDamageDealt?: (sourceId: string, targetId: string, damage: number, shieldDamage: number) => void
-}
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-/**
- * Default phase timings in seconds
- */
-const DEFAULT_PHASE_TIMING: PhaseTiming = {
-  targeting: 0.5,
-  firing: 1.0,
-  impact: 0.5,
-  resolution: 0.5,
-  transition: 0.3,
-}
-
-/**
- * Effect pool configuration
- */
-const EFFECT_POOL_CONFIG = {
-  maxLaserEffects: 50,
-  maxExplosionEffects: 20,
-  maxShieldHitEffects: 30,
-  maxDebrisEffects: 100,
-  cleanupInterval: 5000, // ms
-  effectLifetime: 3000, // ms
-}
-
-/**
- * LOD thresholds for battle size
- */
-const LOD_THRESHOLDS = {
-  small: 20, // < 20 units: full detail
-  medium: 50, // 20-50 units: reduced particles
-  large: 100, // 50-100 units: batch animations
-  massive: 200, // > 100 units: simplified effects
-}
-
-/**
- * Camera animation presets
- */
-const CAMERA_PRESETS: Record<CameraShotType, Partial<CameraConfig>> = {
-  overview: {
-    fov: 60,
-    duration: 1.5,
-    ease: 'power2.inOut',
-  },
-  follow_projectile: {
-    fov: 45,
-    duration: 0.8,
-    ease: 'power1.out',
-  },
-  zoom_impact: {
-    fov: 35,
-    duration: 0.3,
-    ease: 'power3.out',
-  },
-  wide_explosion: {
-    fov: 70,
-    duration: 0.5,
-    ease: 'power2.out',
-  },
-  ship_closeup: {
-    fov: 40,
-    duration: 1.0,
-    ease: 'power2.inOut',
-  },
-  dramatic_angle: {
-    fov: 50,
-    duration: 2.0,
-    ease: 'power1.inOut',
-  },
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-/**
- * Generate unique ID for timeline events
- */
-function generateEventId(): string {
-  return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-}
-
-/**
- * Calculate LOD level based on unit count
- */
-function calculateLODLevel(unitCount: number): 'full' | 'reduced' | 'batch' | 'simplified' {
-  if (unitCount < LOD_THRESHOLDS.small) return 'full'
-  if (unitCount < LOD_THRESHOLDS.medium) return 'reduced'
-  if (unitCount < LOD_THRESHOLDS.large) return 'batch'
-  return 'simplified'
-}
-
-/**
- * Calculate round duration based on unit count and phase timings
- */
-function calculateRoundDuration(timing: PhaseTiming): number {
-  return timing.targeting + timing.firing + timing.impact + timing.resolution + timing.transition
-}
-
-/**
- * Linear interpolation
- */
-function lerp(start: number, end: number, t: number): number {
-  return start + (end - start) * t
-}
-
-/**
- * Clamp value between min and max
- */
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value))
-}
-
-// ============================================================================
-// EFFECT POOL CLASS
-// ============================================================================
-
-/**
- * Object pool for managing reusable visual effects
- */
-class EffectPool {
-  private pools: Map<string, PooledEffect[]> = new Map()
-  private cleanupTimer: ReturnType<typeof setInterval> | null = null
-  private effectsGroup: THREE.Group | null = null
-
-  constructor() {
-    this.pools.set('laser', [])
-    this.pools.set('explosion', [])
-    this.pools.set('shield_hit', [])
-    this.pools.set('debris', [])
-  }
-
-  /**
-   * Initialize pool with scene reference
-   */
-  initialize(effectsGroup: THREE.Group): void {
-    this.effectsGroup = effectsGroup
-    this.startCleanupTimer()
-  }
-
-  /**
-   * Acquire an effect from the pool or create new
-   */
-  acquire(type: string, createFn: () => THREE.Object3D): PooledEffect {
-    const pool = this.pools.get(type) || []
-
-    // Find available pooled effect
-    const available = pool.find(e => !e.inUse)
-    if (available) {
-      available.inUse = true
-      available.createdAt = Date.now()
-      available.object.visible = true
-      return available
-    }
-
-    // Create new effect
-    const object = createFn()
-    const effect: PooledEffect = {
-      id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      type,
-      object,
-      inUse: true,
-      createdAt: Date.now(),
-    }
-
-    pool.push(effect)
-    this.pools.set(type, pool)
-
-    if (this.effectsGroup) {
-      this.effectsGroup.add(object)
-    }
-
-    return effect
-  }
-
-  /**
-   * Release an effect back to the pool
-   */
-  release(effect: PooledEffect): void {
-    effect.inUse = false
-    effect.object.visible = false
-  }
-
-  /**
-   * Start automatic cleanup of expired effects
-   */
-  private startCleanupTimer(): void {
-    if (this.cleanupTimer) return
-
-    this.cleanupTimer = setInterval(() => {
-      const now = Date.now()
-
-      this.pools.forEach((pool, type) => {
-        // Find expired effects
-        const maxEffects = this.getMaxEffects(type)
-        const inUseCount = pool.filter(e => e.inUse).length
-
-        // Clean up unused effects that exceed the limit
-        if (pool.length > maxEffects) {
-          const toRemove = pool
-            .filter(e => !e.inUse && now - e.createdAt > EFFECT_POOL_CONFIG.effectLifetime)
-            .slice(0, pool.length - maxEffects)
-
-          toRemove.forEach(effect => {
-            if (this.effectsGroup) {
-              this.effectsGroup.remove(effect.object)
-            }
-            effect.object.traverse(child => {
-              if ((child as THREE.Mesh).geometry) {
-                (child as THREE.Mesh).geometry.dispose()
-              }
-              if ((child as THREE.Mesh).material) {
-                const material = (child as THREE.Mesh).material
-                if (Array.isArray(material)) {
-                  material.forEach(m => m.dispose())
-                } else {
-                  material.dispose()
-                }
-              }
-            })
-          })
-
-          this.pools.set(type, pool.filter(e => !toRemove.includes(e)))
-        }
-      })
-    }, EFFECT_POOL_CONFIG.cleanupInterval)
-  }
-
-  /**
-   * Get max effects for a type
-   */
-  private getMaxEffects(type: string): number {
-    switch (type) {
-      case 'laser': return EFFECT_POOL_CONFIG.maxLaserEffects
-      case 'explosion': return EFFECT_POOL_CONFIG.maxExplosionEffects
-      case 'shield_hit': return EFFECT_POOL_CONFIG.maxShieldHitEffects
-      case 'debris': return EFFECT_POOL_CONFIG.maxDebrisEffects
-      default: return 20
-    }
-  }
-
-  /**
-   * Dispose all pooled effects
-   */
-  dispose(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer)
-      this.cleanupTimer = null
-    }
-
-    this.pools.forEach(pool => {
-      pool.forEach(effect => {
-        if (this.effectsGroup) {
-          this.effectsGroup.remove(effect.object)
-        }
-        effect.object.traverse(child => {
-          if ((child as THREE.Mesh).geometry) {
-            (child as THREE.Mesh).geometry.dispose()
-          }
-          if ((child as THREE.Mesh).material) {
-            const material = (child as THREE.Mesh).material
-            if (Array.isArray(material)) {
-              material.forEach(m => m.dispose())
-            } else {
-              material.dispose()
-            }
-          }
-        })
-      })
-    })
-
-    this.pools.clear()
-    this.effectsGroup = null
-  }
-}
+// Re-export hook for backward compatibility
+export { useBattleAnimation } from './useBattleAnimation'
 
 // ============================================================================
 // BATTLE ANIMATION ENGINE CLASS
@@ -525,7 +132,7 @@ export class BattleAnimationEngine {
   private destroyedShips: Set<string> = new Set()
 
   // LOD management
-  private lodLevel: 'full' | 'reduced' | 'batch' | 'simplified' = 'full'
+  private lodLevel: LODLevel = 'full'
 
   // ============================================================================
   // INITIALIZATION
@@ -694,11 +301,8 @@ export class BattleAnimationEngine {
       this.cameraController?.moveToOverview(duration * 0.8)
     }, [], startTime)
 
-    // Targeting lines animation (staggered)
-    const staggerDelay = duration / Math.max(round.attackerShots, 1)
-
     // For each attacker, show targeting line to random defender
-    this.shipRefs.forEach((ship, id) => {
+    this.shipRefs.forEach((ship) => {
       if (ship.side === 'attacker' && !ship.isDestroyed) {
         const delay = startTime + Math.random() * duration * 0.8
 
@@ -718,7 +322,7 @@ export class BattleAnimationEngine {
    */
   private addFiringPhase(
     timeline: gsap.core.Timeline,
-    round: CombatRound,
+    _round: CombatRound,
     startTime: number,
     duration: number
   ): void {
@@ -823,9 +427,6 @@ export class BattleAnimationEngine {
     startTime: number,
     duration: number
   ): void {
-    // Identify destroyed ships this round
-    const previousRound = this.battleData?.result.rounds[round.roundNumber - 2]
-
     // Calculate destroyed ships by comparing snapshots
     const destroyedAttackers = round.attackerUnitsLost
     const destroyedDefenders = round.defenderUnitsLost
@@ -907,14 +508,14 @@ export class BattleAnimationEngine {
     })
 
     // Store for later cleanup
-    ;(ship as any)._targetingLine = effect
+    ;(ship as ShipRef & { _targetingLine?: PooledEffect })._targetingLine = effect
   }
 
   /**
    * Hide targeting line
    */
   private hideTargetingLine(ship: ShipRef): void {
-    const effect = (ship as any)._targetingLine as PooledEffect | undefined
+    const effect = (ship as ShipRef & { _targetingLine?: PooledEffect })._targetingLine
     if (!effect) return
 
     const line = effect.object as THREE.Line
@@ -925,7 +526,7 @@ export class BattleAnimationEngine {
       duration: 0.1,
       onComplete: () => {
         this.effectPool.release(effect)
-        delete (ship as any)._targetingLine
+        delete (ship as ShipRef & { _targetingLine?: PooledEffect })._targetingLine
       },
     })
   }
@@ -967,11 +568,6 @@ export class BattleAnimationEngine {
 
     // Position at attacker
     projectile.position.copy(attacker.position)
-
-    // Calculate direction
-    const direction = new THREE.Vector3()
-      .subVectors(target.position, attacker.position)
-      .normalize()
 
     // Rotate to face direction
     projectile.lookAt(target.position)
@@ -1315,7 +911,7 @@ export class BattleAnimationEngine {
   /**
    * Spawn debris particles
    */
-  private spawnDebris(position: THREE.Vector3, scale: number): void {
+  private spawnDebris(position: THREE.Vector3, _scale: number): void {
     if (!this.scene) return
 
     const debrisCount = this.lodLevel === 'full' ? 8 : 4
@@ -1632,375 +1228,4 @@ export class BattleAnimationEngine {
       totalDuration: 0,
     }
   }
-}
-
-// ============================================================================
-// CAMERA CONTROLLER CLASS
-// ============================================================================
-
-/**
- * Camera controller for cinematic battle shots
- */
-class CameraController {
-  private camera: THREE.Camera
-  private scene: THREE.Scene
-  private originalPosition: THREE.Vector3
-  private originalQuaternion: THREE.Quaternion
-  private currentTween: gsap.core.Tween | null = null
-  private shakeOffset: THREE.Vector3 = new THREE.Vector3()
-  private isShaking: boolean = false
-
-  constructor(camera: THREE.Camera, scene: THREE.Scene) {
-    this.camera = camera
-    this.scene = scene
-    this.originalPosition = camera.position.clone()
-    this.originalQuaternion = camera.quaternion.clone()
-  }
-
-  /**
-   * Move camera to overview position
-   */
-  moveToOverview(duration: number): void {
-    this.killCurrentTween()
-
-    // Calculate center of battle
-    const center = new THREE.Vector3(0, 0, 0)
-    const distance = 50
-
-    const position = new THREE.Vector3(
-      center.x + distance * 0.7,
-      center.y + distance * 0.5,
-      center.z + distance * 0.7
-    )
-
-    this.animateTo(position, center, duration, 'power2.inOut')
-  }
-
-  /**
-   * Follow a projectile from source to target
-   */
-  followProjectile(source: THREE.Vector3, target: THREE.Vector3, duration: number): void {
-    this.killCurrentTween()
-
-    // Position camera to the side of the projectile path
-    const midpoint = new THREE.Vector3().addVectors(source, target).multiplyScalar(0.5)
-    const direction = new THREE.Vector3().subVectors(target, source).normalize()
-
-    // Calculate perpendicular offset
-    const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x).normalize()
-    const offset = 10
-
-    const position = new THREE.Vector3()
-      .copy(midpoint)
-      .add(perpendicular.multiplyScalar(offset))
-      .add(new THREE.Vector3(0, 5, 0))
-
-    this.animateTo(position, midpoint, duration, 'power1.out')
-  }
-
-  /**
-   * Wide shot for multiple explosions
-   */
-  wideExplosionShot(duration: number): void {
-    this.killCurrentTween()
-
-    const position = new THREE.Vector3(0, 80, 80)
-    const lookAt = new THREE.Vector3(0, 0, 0)
-
-    this.animateTo(position, lookAt, duration, 'power2.out')
-  }
-
-  /**
-   * Apply camera shake
-   */
-  shake(intensity: number, duration: number): void {
-    if (this.isShaking) return
-
-    this.isShaking = true
-    const startTime = performance.now()
-    const originalPos = this.camera.position.clone()
-
-    const shakeLoop = () => {
-      const elapsed = (performance.now() - startTime) / 1000
-      if (elapsed >= duration) {
-        this.camera.position.copy(originalPos)
-        this.isShaking = false
-        return
-      }
-
-      const decay = 1 - elapsed / duration
-      const currentIntensity = intensity * decay
-
-      this.shakeOffset.set(
-        (Math.random() - 0.5) * currentIntensity * 2,
-        (Math.random() - 0.5) * currentIntensity * 2,
-        (Math.random() - 0.5) * currentIntensity * 2
-      )
-
-      this.camera.position.copy(originalPos).add(this.shakeOffset)
-
-      requestAnimationFrame(shakeLoop)
-    }
-
-    requestAnimationFrame(shakeLoop)
-  }
-
-  /**
-   * Animate camera to position
-   */
-  private animateTo(
-    position: THREE.Vector3,
-    lookAt: THREE.Vector3,
-    duration: number,
-    ease: string
-  ): void {
-    // Calculate target quaternion
-    const tempCamera = this.camera.clone()
-    tempCamera.position.copy(position)
-    tempCamera.lookAt(lookAt)
-    const targetQuaternion = tempCamera.quaternion.clone()
-
-    const startPos = this.camera.position.clone()
-    const startQuat = this.camera.quaternion.clone()
-
-    const progress = { value: 0 }
-
-    this.currentTween = gsap.to(progress, {
-      value: 1,
-      duration,
-      ease,
-      onUpdate: () => {
-        this.camera.position.lerpVectors(startPos, position, progress.value)
-        this.camera.quaternion.slerpQuaternions(startQuat, targetQuaternion, progress.value)
-      },
-    })
-  }
-
-  /**
-   * Kill current camera animation
-   */
-  private killCurrentTween(): void {
-    if (this.currentTween) {
-      this.currentTween.kill()
-      this.currentTween = null
-    }
-  }
-
-  /**
-   * Dispose camera controller
-   */
-  dispose(): void {
-    this.killCurrentTween()
-  }
-}
-
-// ============================================================================
-// REACT HOOK
-// ============================================================================
-
-import { useCallback, useEffect, useRef, useState } from 'react'
-
-/**
- * Battle animation controls interface
- */
-export interface BattleAnimationControls {
-  play: () => void
-  pause: () => void
-  stop: () => void
-  setSpeed: (speed: number) => void
-  seekTo: (round: number) => void
-}
-
-/**
- * Battle animation hook return type
- */
-export interface UseBattleAnimationReturn {
-  engine: BattleAnimationEngine | null
-  currentRound: number
-  totalRounds: number
-  isPlaying: boolean
-  isPaused: boolean
-  progress: number
-  currentPhase: AnimationPhase
-  speedMultiplier: number
-  controls: BattleAnimationControls
-  initialize: (scene: BattleSceneRef, battleData: BattleData) => void
-  setCallbacks: (callbacks: EngineCallbacks) => void
-}
-
-/**
- * React hook for using the Battle Animation Engine
- *
- * @example
- * ```tsx
- * const {
- *   engine,
- *   currentRound,
- *   isPlaying,
- *   progress,
- *   controls,
- *   initialize,
- *   setCallbacks
- * } = useBattleAnimation()
- *
- * // Initialize when scene and data are ready
- * useEffect(() => {
- *   if (sceneRef && battleData) {
- *     initialize(sceneRef, battleData)
- *   }
- * }, [sceneRef, battleData])
- *
- * // Set callbacks
- * setCallbacks({
- *   onRoundStart: (round) => console.log(`Round ${round} started`),
- *   onShipDestroyed: (ship, side) => console.log(`${side} ship destroyed`)
- * })
- *
- * // Use controls
- * <button onClick={controls.play}>Play</button>
- * <button onClick={controls.pause}>Pause</button>
- * <input
- *   type="range"
- *   value={progress * 100}
- *   onChange={(e) => controls.seekTo(Math.ceil(e.target.value / 100 * totalRounds))}
- * />
- * ```
- */
-export function useBattleAnimation(): UseBattleAnimationReturn {
-  const engineRef = useRef<BattleAnimationEngine | null>(null)
-
-  // State
-  const [currentRound, setCurrentRound] = useState(0)
-  const [totalRounds, setTotalRounds] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isPaused, setIsPaused] = useState(false)
-  const [progress, setProgress] = useState(0)
-  const [currentPhase, setCurrentPhase] = useState<AnimationPhase>('idle')
-  const [speedMultiplier, setSpeedMultiplier] = useState(1)
-
-  // Create engine on mount
-  useEffect(() => {
-    engineRef.current = new BattleAnimationEngine()
-
-    return () => {
-      engineRef.current?.dispose()
-      engineRef.current = null
-    }
-  }, [])
-
-  // Initialize engine
-  const initialize = useCallback((scene: BattleSceneRef, battleData: BattleData) => {
-    if (!engineRef.current) return
-
-    engineRef.current.initialize(scene, battleData)
-
-    const state = engineRef.current.getState()
-    setTotalRounds(state.totalRounds)
-    setCurrentRound(state.currentRound)
-    setProgress(state.progress)
-    setCurrentPhase(state.currentPhase)
-
-    // Set up state sync callbacks
-    engineRef.current.setCallbacks({
-      onRoundStart: (round) => setCurrentRound(round),
-      onProgressUpdate: (p) => setProgress(p),
-      onPhaseChange: (phase) => setCurrentPhase(phase),
-      onBattleEnd: () => {
-        setIsPlaying(false)
-        setIsPaused(false)
-      },
-    })
-  }, [])
-
-  // Set callbacks
-  const setCallbacks = useCallback((callbacks: EngineCallbacks) => {
-    if (!engineRef.current) return
-
-    // Merge with state sync callbacks
-    const existingCallbacks = {
-      onRoundStart: (round: number) => {
-        setCurrentRound(round)
-        callbacks.onRoundStart?.(round)
-      },
-      onProgressUpdate: (p: number) => {
-        setProgress(p)
-        callbacks.onProgressUpdate?.(p)
-      },
-      onPhaseChange: (phase: AnimationPhase, round: number) => {
-        setCurrentPhase(phase)
-        callbacks.onPhaseChange?.(phase, round)
-      },
-      onBattleEnd: (result: BattleResult) => {
-        setIsPlaying(false)
-        setIsPaused(false)
-        callbacks.onBattleEnd?.(result)
-      },
-      onRoundEnd: callbacks.onRoundEnd,
-      onShipDestroyed: callbacks.onShipDestroyed,
-      onDamageDealt: callbacks.onDamageDealt,
-    }
-
-    engineRef.current.setCallbacks(existingCallbacks)
-  }, [])
-
-  // Controls
-  const controls: BattleAnimationControls = {
-    play: useCallback(() => {
-      engineRef.current?.play()
-      setIsPlaying(true)
-      setIsPaused(false)
-    }, []),
-
-    pause: useCallback(() => {
-      engineRef.current?.pause()
-      setIsPlaying(false)
-      setIsPaused(true)
-    }, []),
-
-    stop: useCallback(() => {
-      engineRef.current?.stop()
-      setIsPlaying(false)
-      setIsPaused(false)
-      setCurrentRound(0)
-      setProgress(0)
-      setCurrentPhase('idle')
-    }, []),
-
-    setSpeed: useCallback((speed: number) => {
-      engineRef.current?.setSpeed(speed)
-      setSpeedMultiplier(speed)
-    }, []),
-
-    seekTo: useCallback((round: number) => {
-      engineRef.current?.seekToRound(round)
-      setCurrentRound(round)
-    }, []),
-  }
-
-  return {
-    engine: engineRef.current,
-    currentRound,
-    totalRounds,
-    isPlaying,
-    isPaused,
-    progress,
-    currentPhase,
-    speedMultiplier,
-    controls,
-    initialize,
-    setCallbacks,
-  }
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export {
-  DEFAULT_PHASE_TIMING,
-  EFFECT_POOL_CONFIG,
-  LOD_THRESHOLDS,
-  CAMERA_PRESETS,
-  calculateLODLevel,
-  calculateRoundDuration,
 }

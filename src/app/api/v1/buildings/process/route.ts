@@ -281,8 +281,8 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime
 
-    // Log summary only if there were buildings processed or errors
-    if (stats.buildings_completed > 0 || stats.buildings_failed > 0) {
+    // Log summary only if there were buildings processed or errors (production logging)
+    if (process.env.LOG_GAME_PROCESSING === 'true' && (stats.buildings_completed > 0 || stats.buildings_failed > 0)) {
       console.log(
         `[BuildingProcessor] Completed ${stats.buildings_completed} buildings in ${duration}ms. ` +
           `Errors: ${stats.buildings_failed}`

@@ -54,20 +54,58 @@ export function ACSPanel({
     },
   ]
 
+  const { refreshOperations, refreshInvitations } = useACSStore()
+
   const handleAcceptInvitation = (invitationId: string, operationId: string) => {
     onJoinOperation(operationId)
   }
 
   const handleDeclineInvitation = async (invitationId: string) => {
-    // TODO: Call /api/v1/acs/invitations/[invitationId]/decline
+    try {
+      const response = await fetch(`/api/v1/acs/invitations/${invitationId}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.success) {
+        refreshInvitations()
+      } else {
+        console.error('Failed to decline invitation:', data.error)
+      }
+    } catch (error) {
+      console.error('Failed to decline invitation:', error)
+    }
   }
 
   const handleLeaveOperation = async (operationId: string) => {
-    // TODO: Call /api/v1/acs/[operationId]/leave
+    try {
+      const response = await fetch(`/api/v1/acs/${operationId}/leave`, {
+        method: 'POST',
+      })
+      const data = await response.json()
+      if (data.success) {
+        refreshOperations()
+      } else {
+        console.error('Failed to leave operation:', data.error)
+      }
+    } catch (error) {
+      console.error('Failed to leave operation:', error)
+    }
   }
 
   const handleCancelOperation = async (operationId: string) => {
-    // TODO: Call /api/v1/acs/[operationId]/cancel
+    try {
+      const response = await fetch(`/api/v1/acs/${operationId}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.success) {
+        refreshOperations()
+      } else {
+        console.error('Failed to cancel operation:', data.error)
+      }
+    } catch (error) {
+      console.error('Failed to cancel operation:', error)
+    }
   }
 
   return (

@@ -17,6 +17,7 @@ interface ACSState {
   addOperation: (operation: ACSOperation) => void
   updateOperation: (operationId: string, updates: Partial<ACSOperation>) => void
   removeOperation: (operationId: string) => void
+  refreshOperations: () => Promise<void>
 
   // Pending invitations
   invitations: ACSInvitation[]
@@ -24,6 +25,7 @@ interface ACSState {
   addInvitation: (invitation: ACSInvitation) => void
   removeInvitation: (invitationId: string) => void
   updateInvitationStatus: (invitationId: string, status: ACSInvitation['status']) => void
+  refreshInvitations: () => Promise<void>
 
   // UI state
   selectedOperationId: string | null
@@ -95,6 +97,18 @@ export const useACSStore = create<ACSState>((set, get) => ({
         state.selectedOperationId === operationId ? null : state.selectedOperationId,
     })),
 
+  refreshOperations: async () => {
+    try {
+      const response = await fetch('/api/v1/acs')
+      const data = await response.json()
+      if (data.success) {
+        set({ currentOperations: data.operations })
+      }
+    } catch (error) {
+      console.error('Failed to refresh operations:', error)
+    }
+  },
+
   // Invitations management
   setInvitations: (invitations) => set({ invitations }),
 
@@ -114,6 +128,18 @@ export const useACSStore = create<ACSState>((set, get) => ({
         inv.id === invitationId ? { ...inv, status } : inv
       ),
     })),
+
+  refreshInvitations: async () => {
+    try {
+      const response = await fetch('/api/v1/acs/invitations')
+      const data = await response.json()
+      if (data.success) {
+        set({ invitations: data.invitations })
+      }
+    } catch (error) {
+      console.error('Failed to refresh invitations:', error)
+    }
+  },
 
   // UI state
   setSelectedOperationId: (id) => set({ selectedOperationId: id }),

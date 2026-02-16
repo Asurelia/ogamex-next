@@ -432,58 +432,83 @@ export class CartographyService {
       return { success: false, error: 'Card has expired' }
     }
 
-    // 3. Create discoveries for all systems in the card
+    // 3. Create discoveries for all systems in the card (batch optimized)
     const discoveries: PlayerDiscovery[] = []
     const systemIds = payload.systems || []
 
+    if (systemIds.length === 0) {
+      return { success: false, error: 'Card has no system data' }
+    }
+
+    // Batch fetch all existing discoveries for these systems (fixes N+1 query)
+    const { data: existingDiscoveries } = await this.supabase
+      .from('player_discoveries')
+      .select('id, solar_system_id, discovery_level')
+      .eq('user_id', userId)
+      .in('solar_system_id', systemIds)
+
+    // Create lookup map for existing discoveries
+    const existingMap = new Map<string, { id: string; discovery_level: string }>()
+    for (const disc of existingDiscoveries || []) {
+      existingMap.set(disc.solar_system_id, {
+        id: disc.id,
+        discovery_level: disc.discovery_level
+      })
+    }
+
+    const levelOrder = ['detected', 'scanned', 'explored', 'mapped']
+    const cardLevel = levelOrder.indexOf('explored') // Cards provide explored level
+
+    // Separate systems into those needing update vs insert
+    const toUpdate: string[] = []
+    const toInsert: string[] = []
+
     for (const systemId of systemIds) {
-      // Check if user already has this discovery
-      const { data: existingDiscovery } = await this.supabase
-        .from('player_discoveries')
-        .select('id, discovery_level')
-        .eq('user_id', userId)
-        .eq('solar_system_id', systemId)
-        .single()
-
-      if (existingDiscovery) {
-        // Upgrade discovery level if card provides better data
-        const levelOrder = ['detected', 'scanned', 'explored', 'mapped']
-        const currentLevel = levelOrder.indexOf(existingDiscovery.discovery_level)
-        const cardLevel = levelOrder.indexOf('explored') // Cards provide explored level
-
+      const existing = existingMap.get(systemId)
+      if (existing) {
+        const currentLevel = levelOrder.indexOf(existing.discovery_level)
         if (cardLevel > currentLevel) {
-          const { data: updated, error: updateError } = await this.supabase
-            .from('player_discoveries')
-            .update({
-              discovery_level: 'explored',
-              scan_quality: Math.max(payload.quality, 80),
-              last_scanned_at: new Date().toISOString()
-            })
-            .eq('id', existingDiscovery.id)
-            .select()
-            .single()
-
-          if (!updateError && updated) {
-            discoveries.push(this.mapDiscovery(updated))
-          }
+          toUpdate.push(existing.id)
         }
       } else {
-        // Create new discovery
-        const { data: newDiscovery, error: discoveryError } = await this.supabase
-          .from('player_discoveries')
-          .insert({
-            user_id: userId,
-            solar_system_id: systemId,
-            discovery_level: 'explored',
-            discovered_via: 'data_card',
-            scan_quality: payload.quality
-          })
-          .select()
-          .single()
+        toInsert.push(systemId)
+      }
+    }
 
-        if (!discoveryError && newDiscovery) {
-          discoveries.push(this.mapDiscovery(newDiscovery))
-        }
+    // Batch update existing discoveries that need upgrade
+    if (toUpdate.length > 0) {
+      const { data: updated } = await this.supabase
+        .from('player_discoveries')
+        .update({
+          discovery_level: 'explored',
+          scan_quality: Math.max(payload.quality, 80),
+          last_scanned_at: new Date().toISOString()
+        })
+        .in('id', toUpdate)
+        .select()
+
+      for (const disc of updated || []) {
+        discoveries.push(this.mapDiscovery(disc))
+      }
+    }
+
+    // Batch insert new discoveries
+    if (toInsert.length > 0) {
+      const insertData = toInsert.map(systemId => ({
+        user_id: userId,
+        solar_system_id: systemId,
+        discovery_level: 'explored',
+        discovered_via: 'data_card',
+        scan_quality: payload.quality
+      }))
+
+      const { data: inserted } = await this.supabase
+        .from('player_discoveries')
+        .insert(insertData)
+        .select()
+
+      for (const disc of inserted || []) {
+        discoveries.push(this.mapDiscovery(disc))
       }
     }
 
