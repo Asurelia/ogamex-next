@@ -184,6 +184,32 @@ function RecycleIcon({ className = 'w-5 h-5', active = false }: { className?: st
   )
 }
 
+function MarketplaceIcon({ className = 'w-5 h-5', active = false }: { className?: string; active?: boolean }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
+      <path d="M3 3h18l-2 9H5L3 3z" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.2 : 1} />
+      <path d="M5 12l-1 5a2 2 0 002 2h12a2 2 0 002-2l-1-5" />
+      <circle cx="8" cy="21" r="1.5" fill={active ? 'currentColor' : 'none'} />
+      <circle cx="16" cy="21" r="1.5" fill={active ? 'currentColor' : 'none'} />
+      {active && <path d="M10 8h4M12 6v4" strokeWidth={2} />}
+    </svg>
+  )
+}
+
+function InventoryIcon({ className = 'w-5 h-5', active = false }: { className?: string; active?: boolean }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
+      <rect x="3" y="5" width="18" height="14" rx="2" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.2 : 1} />
+      <path d="M3 9h18" />
+      <path d="M9 9v10" />
+      <path d="M15 9v10" />
+      <rect x="5" y="11" width="2" height="2" fill="currentColor" opacity="0.5" />
+      <rect x="11" y="11" width="2" height="2" fill="currentColor" opacity="0.5" />
+      <rect x="17" y="11" width="2" height="2" fill="currentColor" opacity="0.5" />
+    </svg>
+  )
+}
+
 // Menu icons
 function MenuIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
@@ -217,6 +243,8 @@ const navItems: NavItem[] = [
   { href: '/game/tactical-map', key: 'tacticalMap', icon: TacticalIcon, category: 'military', transitionType: 'zoom' },
   { href: '/game/espionage', key: 'espionage', icon: EspionageIcon, category: 'military', transitionType: 'fade' },
   { href: '/game/recycle', key: 'recycle', icon: RecycleIcon, category: 'military', transitionType: 'fade' },
+  { href: '/game/inventory', key: 'inventory', icon: InventoryIcon, category: 'empire', transitionType: 'fade' },
+  { href: '/game/marketplace', key: 'marketplace', icon: MarketplaceIcon, category: 'empire', transitionType: 'fade' },
   { href: '/game/messages', key: 'messages', icon: MessagesIcon, category: 'social', transitionType: 'fade' },
   { href: '/game/alliance', key: 'alliance', icon: AllianceIcon, category: 'social', transitionType: 'fade' },
   { href: '/game/highscore', key: 'highscore', icon: HighscoreIcon, category: 'social', transitionType: 'fade' },
