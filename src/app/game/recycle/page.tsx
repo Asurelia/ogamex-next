@@ -4,9 +4,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { formatNumber } from '@/game/formulas'
+import { formatNumber, calculateDistance, calculateFleetDuration } from '@/lib/game'
 import { HoloCard, HoloButton, HoloStats, HoloInput } from '@/components/ui'
 import { RECYCLER_CAPACITY } from '@/lib/debris/types'
+
+// Recycler speed (base speed from OGame)
+const RECYCLER_BASE_SPEED = 2000
 
 // ============================================================================
 // TYPES
@@ -149,6 +152,18 @@ export default function RecyclePage() {
     try {
       const supabase = getSupabaseClient()
 
+      // Calculate distance and flight time
+      const distance = calculateDistance(
+        currentPlanet.galaxy,
+        currentPlanet.system,
+        currentPlanet.position,
+        selectedDebris.galaxy,
+        selectedDebris.system,
+        selectedDebris.position
+      )
+      const flightDuration = calculateFleetDuration(distance, RECYCLER_BASE_SPEED, 100, 1)
+      const arrivalTime = new Date(Date.now() + flightDuration * 1000)
+
       // Create fleet mission
       const { error: missionError } = await supabase.from('fleet_missions').insert({
         user_id: user?.id,
@@ -163,8 +178,7 @@ export default function RecyclePage() {
         recycler: recyclerAmount,
         status: 'outbound',
         started_at: new Date().toISOString(),
-        // Calculate arrival time (simplified - would need proper distance/speed calculation)
-        arrives_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min placeholder
+        arrives_at: arrivalTime.toISOString(),
       })
 
       if (missionError) throw missionError
