@@ -23,6 +23,7 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: messages[locale]
+    messages: messages[locale],
+    timeZone: 'UTC'
   }
 })
