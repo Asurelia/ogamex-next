@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
 
 // Generate random stars for background
@@ -15,7 +15,17 @@ function generateStars(count: number) {
   }))
 }
 
-export default function HomePage() {
+// Loading fallback
+function HomePageLoading() {
+  return (
+    <div className="min-h-screen bg-ogame-bg flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
+
+// Content component that uses translations
+function HomePageContent() {
   const [stars, setStars] = useState<ReturnType<typeof generateStars>>([])
   const t = useTranslations('home')
   const tAuth = useTranslations('auth')
@@ -106,5 +116,13 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<HomePageLoading />}>
+      <HomePageContent />
+    </Suspense>
   )
 }
