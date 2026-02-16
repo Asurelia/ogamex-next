@@ -159,6 +159,31 @@ function TacticalIcon({ className = 'w-5 h-5', active = false }: { className?: s
   )
 }
 
+function EspionageIcon({ className = 'w-5 h-5', active = false }: { className?: string; active?: boolean }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
+      <circle cx="12" cy="10" r="6" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.2 : 1} />
+      <path d="M12 16v4" />
+      <path d="M8 20h8" />
+      <circle cx="12" cy="10" r="2" fill={active ? 'currentColor' : 'none'} />
+      <path d="M3 12c2-3 5-6 9-6s7 3 9 6" opacity="0.5" />
+      <path d="M3 12c2 3 5 6 9 6s7-3 9-6" opacity="0.5" />
+    </svg>
+  )
+}
+
+function RecycleIcon({ className = 'w-5 h-5', active = false }: { className?: string; active?: boolean }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
+      <path d="M12 3l4 6H8l4-6z" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.3 : 1} />
+      <path d="M20 12l-4 6 4-2" />
+      <path d="M4 12l4 6-4-2" />
+      <path d="M12 21l-4-6h8l-4 6z" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.3 : 1} />
+      <circle cx="12" cy="12" r="3" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.5 : 1} />
+    </svg>
+  )
+}
+
 // Menu icons
 function MenuIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
@@ -190,6 +215,8 @@ const navItems: NavItem[] = [
   { href: '/game/defense', key: 'defense', icon: DefenseIcon, category: 'military', transitionType: 'fade' },
   { href: '/game/fleet', key: 'fleet', icon: FleetIcon, category: 'military', transitionType: 'zoom' },
   { href: '/game/tactical-map', key: 'tacticalMap', icon: TacticalIcon, category: 'military', transitionType: 'zoom' },
+  { href: '/game/espionage', key: 'espionage', icon: EspionageIcon, category: 'military', transitionType: 'fade' },
+  { href: '/game/recycle', key: 'recycle', icon: RecycleIcon, category: 'military', transitionType: 'fade' },
   { href: '/game/messages', key: 'messages', icon: MessagesIcon, category: 'social', transitionType: 'fade' },
   { href: '/game/alliance', key: 'alliance', icon: AllianceIcon, category: 'social', transitionType: 'fade' },
   { href: '/game/highscore', key: 'highscore', icon: HighscoreIcon, category: 'social', transitionType: 'fade' },

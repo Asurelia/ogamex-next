@@ -66,6 +66,8 @@
     "fleet": "Fleet",
     "galaxy": "Galaxy",
     "tacticalMap": "Tactical Map",
+    "espionage": "Espionage",
+    "recycle": "Recycle",
     "messages": "Messages",
     "alliance": "Alliance",
     "highscore": "Highscore",
