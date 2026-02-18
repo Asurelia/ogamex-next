@@ -37,7 +37,13 @@ interface CockpitSidebarProps {
     metal: number
     crystal: number
     deuterium: number
-    energy: { current: number; max: number }
+    metalMax?: number
+    crystalMax?: number
+    deuteriumMax?: number
+    metalPerHour?: number
+    crystalPerHour?: number
+    deuteriumPerHour?: number
+    energy: { current: number; max: number; used?: number }
   }
   alerts?: Array<{
     type: 'attack' | 'construction' | 'fleet' | 'message'
@@ -65,13 +71,13 @@ interface NavItem {
 // ============================================================================
 
 const navigationItems: NavItem[] = [
-  { scene: 'orbital', icon: '🌍', label: 'Vue Orbitale', color: '#00d4ff' },
-  { scene: 'mines', icon: '⛏️', label: 'Production', color: '#ffa500' },
-  { scene: 'shipyard', icon: '🚀', label: 'Chantier Naval', color: '#00ff88' },
-  { scene: 'research', icon: '🔬', label: 'Recherche', color: '#aa44ff' },
-  { scene: 'defense', icon: '🛡️', label: 'Defenses', color: '#ff4444' },
-  { scene: 'fleet', icon: '🚢', label: 'Flottes', color: '#4488ff' },
-  { scene: 'galaxy', icon: '🌌', label: 'Carte Galactique', color: '#ff88ff' },
+  { scene: 'orbital', icon: '○', label: 'Vue Orbitale', color: '#00d4ff' },
+  { scene: 'mines', icon: '◇', label: 'Production', color: '#ffa500' },
+  { scene: 'shipyard', icon: '▷', label: 'Chantier Naval', color: '#00ff88' },
+  { scene: 'research', icon: '◈', label: 'Recherche', color: '#aa44ff' },
+  { scene: 'defense', icon: '◆', label: 'Defenses', color: '#ff4444' },
+  { scene: 'fleet', icon: '▸', label: 'Flottes', color: '#4488ff' },
+  { scene: 'galaxy', icon: '✧', label: 'Carte Galactique', color: '#ff88ff' },
 ]
 
 // ============================================================================
@@ -369,56 +375,83 @@ interface ResourceGaugeProps {
   label: string
   value: number
   max?: number
+  perHour?: number
   color: string
   icon: string
+  showStorage?: boolean
+  isEnergy?: boolean
 }
 
 const ResourceGauge = memo(function ResourceGauge({
   label,
   value,
   max,
+  perHour,
   color,
   icon,
+  showStorage = true,
+  isEnergy = false,
 }: ResourceGaugeProps) {
-  const percentage = max ? Math.min((value / max) * 100, 100) : null
+  // Calculate percentage based on storage capacity
+  const percentage = max && max > 0 ? Math.min((value / max) * 100, 100) : 50
+  // Calculate per minute from per hour (or show consumption for energy)
+  const perMinute = perHour ? perHour / 60 : 0
+  // Format per minute with sign (for energy, show consumption directly)
+  const perMinuteStr = isEnergy && perHour
+    ? `(-${Math.abs(perHour)} used)`
+    : perMinute !== 0
+      ? `${perMinute >= 0 ? '+' : ''}${perMinute.toFixed(1)}/min`
+      : ''
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between">
+    <div
+      className="p-1.5 rounded border border-white/10 bg-black/30"
+      style={{ borderColor: `${color}30` }}
+    >
+      <div className="flex items-center justify-between mb-0.5">
         <div className="flex items-center gap-1.5">
-          <span className="text-sm">{icon}</span>
+          <span className="text-xs" style={{ color }}>{icon}</span>
           <span className="text-[10px] uppercase tracking-wider text-white/60">
             {label}
           </span>
         </div>
-        <span className="text-xs font-mono" style={{ color }}>
-          {formatNumber(value)}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-mono" style={{ color }}>
+            {formatNumber(Math.floor(value))}
+          </span>
+          {perMinuteStr && (
+            <span
+              className="text-[9px] font-mono"
+              style={{ color: perMinute >= 0 ? '#00ff88' : '#ff4444' }}
+            >
+              ({perMinuteStr})
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Gauge bar */}
-      <div className="relative h-1.5 bg-black/60 rounded-full overflow-hidden border border-white/10">
+      {/* Gauge bar - shows storage fill level */}
+      <div className="relative h-1 bg-black/60 rounded-full overflow-hidden border border-white/5">
         <motion.div
           className="absolute inset-y-0 left-0 rounded-full"
           style={{
             background: `linear-gradient(90deg, ${color}80, ${color})`,
-            boxShadow: `0 0 8px ${color}60`,
+            boxShadow: `0 0 6px ${color}40`,
           }}
           initial={{ width: 0 }}
-          animate={{ width: percentage ? `${percentage}%` : '60%' }}
+          animate={{ width: `${percentage}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
         />
-
-        {/* Animated glow */}
-        <motion.div
-          className="absolute inset-y-0 w-4 rounded-full"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${color}40, transparent)`,
-          }}
-          animate={{ left: ['-10%', '110%'] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-        />
       </div>
+
+      {/* Storage info */}
+      {showStorage && max !== undefined && (
+        <div className="flex justify-end mt-0.5">
+          <span className="text-[8px] font-mono text-white/40">
+            {formatNumber(Math.floor(value))}/{formatNumber(max)}
+          </span>
+        </div>
+      )}
     </div>
   )
 })
@@ -442,44 +475,34 @@ const NavButton = memo(function NavButton({
     <motion.button
       onClick={onClick}
       className={`
-        relative w-full px-3 py-2 rounded-lg flex items-center gap-2
+        relative w-full px-2 py-1.5 rounded flex items-center gap-2
         border transition-all duration-200
         ${isActive
           ? 'bg-cyan-900/40 border-cyan-500/50'
           : 'bg-black/30 border-white/10 hover:border-cyan-500/30 hover:bg-cyan-900/20'
         }
       `}
-      whileHover={{ x: 4 }}
+      whileHover={{ x: 2 }}
       whileTap={{ scale: 0.98 }}
     >
       {/* Active indicator glow */}
       {isActive && (
         <motion.div
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full"
           style={{
             background: item.color,
-            boxShadow: `0 0 10px ${item.color}`,
+            boxShadow: `0 0 8px ${item.color}`,
           }}
           layoutId="navIndicator"
         />
       )}
 
-      <span className="text-lg">{item.icon}</span>
+      <span className="text-sm">{item.icon}</span>
       <span
-        className={`text-xs font-medium ${isActive ? 'text-white' : 'text-white/70'}`}
+        className={`text-[11px] font-medium ${isActive ? 'text-white' : 'text-white/70'}`}
       >
         {item.label}
       </span>
-
-      {/* Hover effect */}
-      <motion.div
-        className="absolute inset-0 rounded-lg pointer-events-none"
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
-        style={{
-          background: `linear-gradient(90deg, ${item.color}10, transparent)`,
-        }}
-      />
     </motion.button>
   )
 })
@@ -600,220 +623,182 @@ export const CockpitSidebar = memo(function CockpitSidebar({
     ? (resources.energy.current / resources.energy.max) * 100
     : 0
 
+  // Calculate slots info
+  const usedSlots = planets.length
+  const maxSlots = 15 // Maximum colonies in OGame
+  const freeSlots = maxSlots - usedSlots
+
   return (
     <motion.aside
       initial={{ x: -280, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="w-64 h-full bg-black/80 backdrop-blur-lg flex flex-col"
+      className="w-64 h-full bg-black/80 backdrop-blur-lg flex flex-col overflow-hidden"
     >
       <CockpitFrame>
-        {/* Scan line effect */}
-        <ScanLine />
+        <div className="h-full flex flex-col overflow-hidden">
+          {/* Scan line effect */}
+          <ScanLine />
 
-        {/* ============================================
-            HEADER - Status Indicator
-            ============================================ */}
-        <div className="p-3 border-b border-cyan-500/20">
-          <div className="flex items-center justify-between">
-            <StatusIndicator
-              status={alerts.some(a => a.type === 'attack') ? 'danger' : 'online'}
-              label={alerts.some(a => a.type === 'attack') ? 'ALERT' : 'TACTICAL ONLINE'}
-            />
-            <div className="flex items-center gap-1">
+          {/* HEADER - Status Indicator + Slots Info */}
+          <div className="p-2 border-b border-cyan-500/20 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <StatusIndicator
+                status={alerts.some(a => a.type === 'attack') ? 'danger' : 'online'}
+                label={alerts.some(a => a.type === 'attack') ? 'ALERT' : 'TACTICAL ONLINE'}
+              />
+              {/* Slots indicator */}
+              <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded border border-cyan-500/30">
+                <span className="text-[9px] font-mono text-cyan-400">{usedSlots}/{maxSlots}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-500/30 scrollbar-track-transparent">
+            {/* COLONY SLOTS */}
+            <div className="p-2 border-b border-cyan-500/20">
+              <div className="flex items-center justify-between mb-1 px-1">
+                <h3
+                  className="text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ color: '#00d4ff', textShadow: '0 0 8px rgba(0, 212, 255, 0.5)' }}
+                >
+                  COLONY SLOTS
+                </h3>
+                <span className="text-[10px] text-white/40 font-mono">
+                  {planets.length}/15
+                </span>
+              </div>
+              <div className="space-y-1">
+                {planets.map((planet, index) => (
+                  <PlanetSlot
+                    key={planet.id}
+                    planet={planet}
+                    isSelected={planet.id === currentPlanetId}
+                    onSelect={() => onSelectPlanet(planet.id)}
+                    slotNumber={index + 1}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* NAVIGATION */}
+            <div className="p-2 border-b border-cyan-500/20">
+              <h3
+                className="text-[10px] font-semibold uppercase tracking-wider mb-1 px-1"
+                style={{ color: '#00d4ff', textShadow: '0 0 8px rgba(0, 212, 255, 0.5)' }}
+              >
+                NAVIGATION
+              </h3>
+              <div className="space-y-0.5">
+                {navigationItems.map((item) => (
+                  <NavButton
+                    key={item.scene}
+                    item={item}
+                    isActive={currentScene === item.scene}
+                    onClick={() => onNavigateScene(item.scene)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* RESOURCES */}
+            <div className="p-2 border-b border-cyan-500/20">
+              <h3
+                className="text-[10px] font-semibold uppercase tracking-wider mb-1.5"
+                style={{ color: '#00d4ff', textShadow: '0 0 8px rgba(0, 212, 255, 0.5)' }}
+              >
+                RESOURCES
+              </h3>
+              <div className="space-y-1">
+                <ResourceGauge
+                  label="Metal"
+                  value={resources.metal}
+                  max={resources.metalMax}
+                  perHour={resources.metalPerHour}
+                  color="#cccccc"
+                  icon="○"
+                />
+                <ResourceGauge
+                  label="Crystal"
+                  value={resources.crystal}
+                  max={resources.crystalMax}
+                  perHour={resources.crystalPerHour}
+                  color="#77bbff"
+                  icon="◆"
+                />
+                <ResourceGauge
+                  label="Deuterium"
+                  value={resources.deuterium}
+                  max={resources.deuteriumMax}
+                  perHour={resources.deuteriumPerHour}
+                  color="#00cc99"
+                  icon="◇"
+                />
+                <ResourceGauge
+                  label="Energy"
+                  value={resources.energy.current}
+                  max={resources.energy.max}
+                  perHour={resources.energy.used ? -resources.energy.used : undefined}
+                  color={energyPercentage < 30 ? '#ff4444' : '#ffcc00'}
+                  icon="⌁"
+                  isEnergy
+                />
+              </div>
+            </div>
+
+            {/* CONSTRUCTION TIMERS */}
+            {constructions.length > 0 && (
+              <div className="p-2 border-b border-cyan-500/20">
+                <h3
+                  className="text-[10px] font-semibold uppercase tracking-wider mb-1 px-1"
+                  style={{ color: '#ffa500', textShadow: '0 0 8px rgba(255, 165, 0, 0.5)' }}
+                >
+                  IN PROGRESS
+                </h3>
+                <div className="space-y-1">
+                  {constructions.slice(0, 3).map((construction, index) => (
+                    <ConstructionTimer key={index} construction={construction} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ALERTS */}
+            {alerts.length > 0 && (
+              <div className="p-2">
+                <h3
+                  className="text-[10px] font-semibold uppercase tracking-wider mb-1 px-1"
+                  style={{
+                    color: alerts.some(a => a.type === 'attack') ? '#ff4444' : '#00d4ff',
+                    textShadow: alerts.some(a => a.type === 'attack')
+                      ? '0 0 8px rgba(255, 68, 68, 0.5)'
+                      : '0 0 8px rgba(0, 212, 255, 0.5)',
+                  }}
+                >
+                  ALERTS
+                </h3>
+                <div className="space-y-1">
+                  <AnimatePresence>
+                    {alerts.slice(0, 3).map((alert, index) => (
+                      <AlertItem key={index} alert={alert} />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* FOOTER */}
+          <div className="p-2 border-t border-cyan-500/20 flex-shrink-0">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-[9px] font-mono text-white/30">OGameX</span>
               <motion.div
-                className="w-1.5 h-1.5 rounded-full bg-cyan-500"
-                animate={{ opacity: [0.5, 1, 0.5] }}
+                className="w-1 h-1 rounded-full bg-cyan-500/50"
+                animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              <span className="text-[10px] font-mono text-white/40">SYS</span>
             </div>
-          </div>
-
-          {/* Decorative line */}
-          <div
-            className="mt-2 h-px"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent)',
-            }}
-          />
-        </div>
-
-        {/* ============================================
-            PLANET SLOTS
-            ============================================ */}
-        <div className="flex-shrink-0 p-2 border-b border-cyan-500/20">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <h3
-              className="text-[10px] font-semibold uppercase tracking-wider"
-              style={{
-                color: '#00d4ff',
-                textShadow: '0 0 8px rgba(0, 212, 255, 0.5)',
-              }}
-            >
-              COLONY SLOTS
-            </h3>
-            <span className="text-[10px] text-white/40 font-mono">
-              {planets.length}/15
-            </span>
-          </div>
-
-          <div className="space-y-1 max-h-[180px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-cyan-500/30 scrollbar-track-transparent">
-            {planets.map((planet, index) => (
-              <PlanetSlot
-                key={planet.id}
-                planet={planet}
-                isSelected={planet.id === currentPlanetId}
-                onSelect={() => onSelectPlanet(planet.id)}
-                slotNumber={index + 1}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* ============================================
-            NAVIGATION
-            ============================================ */}
-        <div className="flex-1 overflow-y-auto p-2 border-b border-cyan-500/20">
-          <h3
-            className="text-[10px] font-semibold uppercase tracking-wider mb-2 px-1"
-            style={{
-              color: '#00d4ff',
-              textShadow: '0 0 8px rgba(0, 212, 255, 0.5)',
-            }}
-          >
-            NAVIGATION
-          </h3>
-
-          <div className="space-y-1">
-            {navigationItems.map((item) => (
-              <NavButton
-                key={item.scene}
-                item={item}
-                isActive={currentScene === item.scene}
-                onClick={() => onNavigateScene(item.scene)}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* ============================================
-            RESOURCE GAUGES
-            ============================================ */}
-        <div className="p-3 border-b border-cyan-500/20">
-          <h3
-            className="text-[10px] font-semibold uppercase tracking-wider mb-2"
-            style={{
-              color: '#00d4ff',
-              textShadow: '0 0 8px rgba(0, 212, 255, 0.5)',
-            }}
-          >
-            RESOURCES
-          </h3>
-
-          <div className="space-y-2">
-            <ResourceGauge
-              label="Metal"
-              value={resources.metal}
-              color="#cccccc"
-              icon="⬡"
-            />
-            <ResourceGauge
-              label="Crystal"
-              value={resources.crystal}
-              color="#77bbff"
-              icon="💎"
-            />
-            <ResourceGauge
-              label="Deuterium"
-              value={resources.deuterium}
-              color="#00cc99"
-              icon="⚗️"
-            />
-            <ResourceGauge
-              label="Energy"
-              value={resources.energy.current}
-              max={resources.energy.max}
-              color={energyPercentage < 30 ? '#ff4444' : '#ffcc00'}
-              icon="⚡"
-            />
-          </div>
-        </div>
-
-        {/* ============================================
-            CONSTRUCTION TIMERS
-            ============================================ */}
-        {constructions.length > 0 && (
-          <div className="p-2 border-b border-cyan-500/20">
-            <h3
-              className="text-[10px] font-semibold uppercase tracking-wider mb-2 px-1"
-              style={{
-                color: '#ffa500',
-                textShadow: '0 0 8px rgba(255, 165, 0, 0.5)',
-              }}
-            >
-              IN PROGRESS
-            </h3>
-            <div className="space-y-1">
-              {constructions.slice(0, 3).map((construction, index) => (
-                <ConstructionTimer key={index} construction={construction} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ============================================
-            ALERTS
-            ============================================ */}
-        {alerts.length > 0 && (
-          <div className="p-2">
-            <h3
-              className="text-[10px] font-semibold uppercase tracking-wider mb-2 px-1"
-              style={{
-                color: alerts.some(a => a.type === 'attack') ? '#ff4444' : '#00d4ff',
-                textShadow: alerts.some(a => a.type === 'attack')
-                  ? '0 0 8px rgba(255, 68, 68, 0.5)'
-                  : '0 0 8px rgba(0, 212, 255, 0.5)',
-              }}
-            >
-              ALERTS
-            </h3>
-            <div className="space-y-1 max-h-[100px] overflow-y-auto">
-              <AnimatePresence>
-                {alerts.slice(0, 3).map((alert, index) => (
-                  <AlertItem key={index} alert={alert} />
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        )}
-
-        {/* ============================================
-            FOOTER DECORATION
-            ============================================ */}
-        <div className="mt-auto p-2">
-          <div
-            className="h-px"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent)',
-            }}
-          />
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <motion.div
-              className="w-1 h-1 rounded-full bg-cyan-500/50"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0 }}
-            />
-            <motion.div
-              className="w-1 h-1 rounded-full bg-cyan-500/50"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
-            />
-            <motion.div
-              className="w-1 h-1 rounded-full bg-cyan-500/50"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.6 }}
-            />
           </div>
         </div>
       </CockpitFrame>

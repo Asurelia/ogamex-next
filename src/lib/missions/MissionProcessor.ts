@@ -168,8 +168,10 @@ export class MissionProcessor {
    * Build the context object for mission processing
    */
   private async buildMissionContext(mission: FleetMission): Promise<MissionContext> {
-    // Fetch origin planet
-    const originPlanet = await this.fetchPlanet(mission.origin_planet_id)
+    // Fetch origin planet (may be null for some mission types)
+    const originPlanet = mission.origin_planet_id
+      ? await this.fetchPlanet(mission.origin_planet_id)
+      : null
 
     // Fetch target planet (if exists)
     const targetPlanet = await this.fetchTargetPlanet(

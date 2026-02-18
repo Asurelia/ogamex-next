@@ -28,6 +28,7 @@ import {
   MissionReturnResult,
   Resources,
   ShipCounts,
+  DefenseCounts,
   emptyResources,
   emptyShipCounts,
   SHIP_KEYS,
@@ -160,8 +161,9 @@ export class EspionageMission extends BaseMission {
       return this.errorArrival('Cannot spy on your own planet')
     }
 
-    // Get probe count from mission
-    const probeCount = mission.espionage_probe || 0
+    // Get probe count from mission (ships stored as JSON)
+    const ships = this.getShips(mission)
+    const probeCount = ships.espionage_probe || 0
     if (probeCount === 0) {
       return this.errorArrival('No espionage probes in mission')
     }
@@ -189,7 +191,7 @@ export class EspionageMission extends BaseMission {
     await this.saveEspionageReport(mission.user_id, report)
 
     // Calculate surviving probes
-    const survivingProbes = Math.max(0, probeCount - counterEspionage.probesLost)
+    const survivingProbes = Math.max(0, probeCount - counterEspionage.probesDestroyed)
     const returnShips = emptyShipCounts()
     returnShips.espionage_probe = survivingProbes
 
@@ -294,17 +296,17 @@ export class EspionageMission extends BaseMission {
     // Effective difference
     const effectiveDiff = baseDiff + probeBonus
 
-    // Determine info level
-    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS[InfoLevel.RESEARCH]) {
+    // Determine info level based on thresholds
+    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS.RESEARCH) {
       return InfoLevel.RESEARCH
     }
-    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS[InfoLevel.BUILDINGS]) {
+    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS.BUILDINGS) {
       return InfoLevel.BUILDINGS
     }
-    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS[InfoLevel.DEFENSE]) {
+    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS.DEFENSE) {
       return InfoLevel.DEFENSE
     }
-    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS[InfoLevel.FLEET]) {
+    if (effectiveDiff >= INFO_LEVEL_THRESHOLDS.FLEET) {
       return InfoLevel.FLEET
     }
     return InfoLevel.RESOURCES
@@ -359,7 +361,7 @@ export class EspionageMission extends BaseMission {
 
     return {
       detected,
-      probesLost,
+      probesDestroyed: probesLost,
       detectionChance: Math.round(detectionChance * 100) / 100,
     }
   }
@@ -379,37 +381,36 @@ export class EspionageMission extends BaseMission {
     counterEspionage: CounterEspionageResult
   ): EspionageReport {
     const now = new Date().toISOString()
-    const reportId = `esp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+    const survivingProbes = Math.max(0, probeCount - counterEspionage.probesDestroyed)
 
     const report: EspionageReport = {
-      id: reportId,
-      target_planet_id: target.id,
-      target_player_id: target.user_id,
-      target_planet_name: target.name,
-      target_coordinates: `[${target.galaxy}:${target.system}:${target.position}]`,
-      spy_count: probeCount,
-      info_level: infoLevel,
-      counter_espionage: counterEspionage.detected,
-      probes_lost: counterEspionage.probesLost,
-      counter_espionage_chance: counterEspionage.detectionChance,
-      created_at: now,
-    }
-
-    // Always include resources (level 1)
-    report.resources = {
-      metal: target.metal,
-      crystal: target.crystal,
-      deuterium: target.deuterium,
+      targetPlanetId: target.id,
+      targetPlayerId: target.user_id,
+      targetPlayerName: target.name,
+      coordinates: {
+        galaxy: target.galaxy,
+        system: target.system,
+        position: target.position,
+      },
+      timestamp: now,
+      resources: {
+        metal: target.metal,
+        crystal: target.crystal,
+        deuterium: target.deuterium,
+      },
+      counterEspionage,
+      infoLevel,
+      survivingProbes,
     }
 
     // Fleet (level 2+)
     if (infoLevel >= InfoLevel.FLEET) {
-      report.fleet = this.extractFleet(target)
+      report.fleet = this.extractFleet(target) as unknown as ShipCounts
     }
 
     // Defense (level 3+)
     if (infoLevel >= InfoLevel.DEFENSE) {
-      report.defense = this.extractDefense(target)
+      report.defense = this.extractDefense(target) as unknown as DefenseCounts
     }
 
     // Buildings (level 4+)
@@ -506,14 +507,14 @@ export class EspionageMission extends BaseMission {
   ): Promise<{ success: boolean; error?: string }> {
     const { error } = await this.supabase.from('espionage_reports').insert({
       user_id: userId,
-      target_user_id: report.target_player_id,
-      target_planet_id: report.target_planet_id,
+      target_user_id: report.targetPlayerId,
+      target_planet_id: report.targetPlanetId,
       resources: report.resources || null,
       buildings: report.buildings || null,
       research: report.research || null,
       ships: report.fleet || null,
       defense: report.defense || null,
-      counter_espionage_chance: report.counter_espionage_chance,
+      counter_espionage_chance: report.counterEspionage.detectionChance,
     })
 
     if (error) {
@@ -569,7 +570,7 @@ export class EspionageMission extends BaseMission {
           'espionage',
           'Counter-Espionage Alert',
           `Your counter-espionage detected enemy spy probes at ${targetPlanet.name} ${targetCoords}.\n\n` +
-            `${counterEspionage.probesLost} probe(s) were destroyed by your defense systems.`
+            `${counterEspionage.probesDestroyed} probe(s) were destroyed by your defense systems.`
         )
       )
     }
@@ -585,11 +586,12 @@ export class EspionageMission extends BaseMission {
     counterEspionage: CounterEspionageResult
   ): string {
     const lines: string[] = []
+    const coords = `[${report.coordinates.galaxy}:${report.coordinates.system}:${report.coordinates.position}]`
 
     // Header
-    lines.push(`Espionage Report on ${report.target_planet_name} ${report.target_coordinates}`)
-    lines.push(`Probes sent: ${report.spy_count}`)
-    lines.push(`Counter-espionage chance: ${report.counter_espionage_chance}%`)
+    lines.push(`Espionage Report on ${report.targetPlayerName} ${coords}`)
+    lines.push(`Surviving probes: ${report.survivingProbes}`)
+    lines.push(`Counter-espionage chance: ${Math.round(counterEspionage.detectionChance * 100)}%`)
     lines.push('')
 
     // Resources (always visible)
@@ -605,13 +607,13 @@ export class EspionageMission extends BaseMission {
     if (report.fleet && Object.keys(report.fleet).length > 0) {
       lines.push('=== FLEET ===')
       for (const [ship, count] of Object.entries(report.fleet)) {
-        if (count > 0) {
+        if (typeof count === 'number' && count > 0) {
           const shipName = this.formatKeyName(ship)
           lines.push(`${shipName}: ${count.toLocaleString()}`)
         }
       }
       lines.push('')
-    } else if (report.info_level >= InfoLevel.FLEET) {
+    } else if (report.infoLevel >= InfoLevel.FLEET) {
       lines.push('=== FLEET ===')
       lines.push('No fleet stationed.')
       lines.push('')
@@ -621,13 +623,13 @@ export class EspionageMission extends BaseMission {
     if (report.defense && Object.keys(report.defense).length > 0) {
       lines.push('=== DEFENSE ===')
       for (const [def, count] of Object.entries(report.defense)) {
-        if (count > 0) {
+        if (typeof count === 'number' && count > 0) {
           const defName = this.formatKeyName(def)
           lines.push(`${defName}: ${count.toLocaleString()}`)
         }
       }
       lines.push('')
-    } else if (report.info_level >= InfoLevel.DEFENSE) {
+    } else if (report.infoLevel >= InfoLevel.DEFENSE) {
       lines.push('=== DEFENSE ===')
       lines.push('No defense structures.')
       lines.push('')
@@ -637,7 +639,7 @@ export class EspionageMission extends BaseMission {
     if (report.buildings && Object.keys(report.buildings).length > 0) {
       lines.push('=== BUILDINGS ===')
       for (const [building, level] of Object.entries(report.buildings)) {
-        if (level > 0) {
+        if (typeof level === 'number' && level > 0) {
           const buildingName = this.formatKeyName(building)
           lines.push(`${buildingName}: Level ${level}`)
         }
@@ -649,7 +651,7 @@ export class EspionageMission extends BaseMission {
     if (report.research && Object.keys(report.research).length > 0) {
       lines.push('=== RESEARCH ===')
       for (const [tech, level] of Object.entries(report.research)) {
-        if (level > 0) {
+        if (typeof level === 'number' && level > 0) {
           const techName = this.formatKeyName(tech)
           lines.push(`${techName}: Level ${level}`)
         }
@@ -660,7 +662,7 @@ export class EspionageMission extends BaseMission {
     // Counter-espionage status
     if (counterEspionage.detected) {
       lines.push('=== WARNING ===')
-      lines.push(`Your probes were detected! ${counterEspionage.probesLost} probe(s) destroyed.`)
+      lines.push(`Your probes were detected! ${counterEspionage.probesDestroyed} probe(s) destroyed.`)
     } else {
       lines.push('Your probes were not detected.')
     }

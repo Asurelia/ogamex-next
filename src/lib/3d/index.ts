@@ -78,3 +78,64 @@ export {
   type CombatEffectsProps,
   type CinematicEffectsProps,
 } from './effects'
+
+// Procedural Planet Generation
+export {
+  ProceduralPlanet,
+  createProceduralPlanet,
+  mapLegacyType,
+  seedFromId,
+  multiSeedFromId,
+  seedToInt,
+  type ProceduralPlanetType,
+  type PlanetParams,
+  type PlanetColors,
+} from './procedural-planet'
+
+// Particle Effects (three.quarks VFX)
+export {
+  getParticleBatchRenderer,
+  updateParticles,
+  disposeParticles,
+  createExplosionEffect,
+  createImpactEffect,
+  createLaserTrail,
+  createEngineExhaust,
+  removeEngineExhaust,
+  createShieldImpact,
+  createWarpEffect as createWarpParticles,
+  createDebrisField,
+  createCustomEffect,
+  type CustomEffectParams,
+} from './particle-effects'
+
+// Volumetric Nebula Background
+export {
+  VolumetricNebula,
+  createVolumetricNebula,
+  createPurpleNebula,
+  createFireNebula,
+  createCyanNebula,
+  createEmeraldNebula,
+  type NebulaConfig,
+} from './volumetric-nebula'
+
+// Warp/Hyperspace Effects
+export {
+  WarpEffect,
+  WarpFlash,
+  createWarpEffect,
+  createWarpFlash,
+  type WarpConfig,
+} from './warp-effect'
+
+// Instanced Stars (High-Performance Galaxy Rendering)
+export {
+  InstancedStars,
+  createInstancedStars,
+  getStarColor,
+  getRandomStarType,
+  type Star,
+  type StarType as InstancedStarType,
+  type InstancedStarsConfig,
+} from './instanced-stars'

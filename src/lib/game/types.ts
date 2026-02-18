@@ -3,7 +3,46 @@
  * Types for database rows and cache structures
  */
 
-import type { ShipDefinition, BuildingDefinition, DefenseDefinition, ResearchDefinition } from '@/game/constants'
+import type { ShipCounts } from '@/types/game-core'
+
+import type { ShipDefinition, BuildingDefinition, DefenseDefinition, ResearchDefinition } from './constants'
+
+// ============================================================================
+// FLEET & DEFENSE COMPOSITION
+// ============================================================================
+
+export type FleetComposition = Partial<ShipCounts>
+
+export interface DefenseComposition {
+  rocket_launcher?: number
+  light_laser?: number
+  heavy_laser?: number
+  gauss_cannon?: number
+  ion_cannon?: number
+  plasma_turret?: number
+  small_shield_dome?: number
+  large_shield_dome?: number
+}
+
+export interface TechLevels {
+  weaponsTech: number
+  shieldTech: number
+  armorTech: number
+}
+
+export interface AdvancedTechLevels extends TechLevels {
+  energyTech: number
+  laserTech: number
+  ionTech: number
+  plasmaTech: number
+  hyperspaceTech: number
+  combustionTech: number
+  impulseTech: number
+  hyperspaceDriveTech: number
+  ionicTech?: number
+  hackingTech?: number
+  boardingTech?: number
+}
 
 // ============================================================================
 // DATABASE ROW TYPES

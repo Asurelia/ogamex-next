@@ -197,17 +197,11 @@ export interface DefenseLosses {
 }
 
 // ============================================================================
-// RESOURCES
+// RESOURCES (re-exported from centralized game-core)
 // ============================================================================
 
-/**
- * Resources type for debris and loot
- */
-export interface Resources {
-  metal: number
-  crystal: number
-  deuterium: number
-}
+export type { Resources } from '@/types/game-core'
+import type { Resources } from '@/types/game-core'
 
 // ============================================================================
 // BATTLE RESULT

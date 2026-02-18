@@ -96,6 +96,13 @@ export interface LoadingState {
   lastLoadTime: number
 }
 
+export interface SystemConnection {
+  fromId: string
+  toId: string
+  connectionType: string
+  distance: number
+}
+
 export interface MapControllerState {
   galaxyIndex: number
   camera: CameraState
@@ -103,12 +110,14 @@ export interface MapControllerState {
   loading: LoadingState
   activeSystems: Map<string, SystemSummary>
   bufferSystems: Map<string, SystemSummary>
+  connections: SystemConnection[]
   selectedSystem: SystemDetails | null
   hoveredSystem: SystemSummary | null
 }
 
 export interface MapControllerCallbacks {
   onSystemsLoaded?: (systems: SystemSummary[], zone: 'active' | 'buffer') => void
+  onConnectionsLoaded?: (connections: SystemConnection[]) => void
   onSystemSelected?: (system: SystemDetails | null) => void
   onSystemHovered?: (system: SystemSummary | null) => void
   onZoomLevelChanged?: (level: ZoomLevel) => void
@@ -127,8 +136,8 @@ export const MAP_CONFIG = {
   DEBOUNCE_SYSTEM_SELECT: 50,      // Near-instant for selection
 
   // Zone radii (in game units)
-  ACTIVE_ZONE_RADIUS: 50,          // Fully loaded systems
-  BUFFER_ZONE_RADIUS: 100,         // Metadata only
+  ACTIVE_ZONE_RADIUS: 200,         // Fully loaded systems (large enough to see all systems)
+  BUFFER_ZONE_RADIUS: 500,         // Metadata only
   PRELOAD_THRESHOLD: 0.7,          // Start loading buffer when 70% to edge
 
   // Loading limits
@@ -245,6 +254,7 @@ export class GalaxyMapController {
       },
       activeSystems: new Map(),
       bufferSystems: new Map(),
+      connections: [],
       selectedSystem: null,
       hoveredSystem: null,
     }
@@ -414,12 +424,18 @@ export class GalaxyMapController {
 
       const { target } = this.state.camera
 
+      // Debug: Log RPC parameters
+      const galaxyId = await this.getGalaxyId()
+      console.log('[GalaxyMapController] loadActiveZone - userId:', this.userId, 'galaxyId:', galaxyId, 'target:', target, 'radius:', MAP_CONFIG.ACTIVE_ZONE_RADIUS)
+
       // Call RPC function
       const { data, error } = await this.supabase.rpc('get_systems_in_viewport', {
-        p_galaxy_id: await this.getGalaxyId(),
+        p_galaxy_id: galaxyId,
         p_center_x: target.x,
         p_center_y: target.y,
+        p_center_z: target.z,
         p_radius: MAP_CONFIG.ACTIVE_ZONE_RADIUS,
+        p_user_id: this.userId,
         p_limit: MAP_CONFIG.MAX_ACTIVE_SYSTEMS,
       })
 
@@ -427,6 +443,13 @@ export class GalaxyMapController {
       if (abortController.signal.aborted) return
 
       if (error) throw error
+
+      // Debug: Log raw RPC response
+      console.log('[GalaxyMapController] RPC returned', data?.length || 0, 'systems')
+      if (data && data.length > 0) {
+        const exploredSystems = data.filter((d: Record<string, unknown>) => d.is_explored === true)
+        console.log('[GalaxyMapController] Explored systems in response:', exploredSystems.length, exploredSystems.map((s: Record<string, unknown>) => ({ id: s.id, index: s.system_index, level: s.discovery_level })))
+      }
 
       // Transform and cache results
       const systems = this.transformSystems(data || [])
@@ -446,6 +469,9 @@ export class GalaxyMapController {
 
       // Notify callback
       this.callbacks.onSystemsLoaded?.(systems, 'active')
+
+      // Load connections for visible systems
+      await this.loadConnections(systems.map(s => s.id))
 
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
@@ -478,7 +504,9 @@ export class GalaxyMapController {
         p_galaxy_id: await this.getGalaxyId(),
         p_center_x: target.x,
         p_center_y: target.y,
+        p_center_z: target.z,
         p_radius: MAP_CONFIG.BUFFER_ZONE_RADIUS,
+        p_user_id: this.userId,
         p_limit: MAP_CONFIG.MAX_BUFFER_SYSTEMS,
       })
 
@@ -731,20 +759,72 @@ export class GalaxyMapController {
   }
 
   // ============================================================================
-  // HELPERS
+  // CONNECTION LOADING
   // ============================================================================
 
   /**
-   * Get galaxy UUID from index
+   * Load connections between visible systems
+   */
+  private async loadConnections(systemIds: string[]): Promise<void> {
+    if (systemIds.length === 0) return
+
+    try {
+      const { data, error } = await this.supabase.rpc('get_connections_for_systems', {
+        p_system_ids: systemIds,
+      })
+
+      if (error) {
+        console.warn('[GalaxyMapController] Failed to load connections:', error)
+        return
+      }
+
+      // Transform connections
+      const connections: SystemConnection[] = (data || []).map((c: Record<string, unknown>) => ({
+        fromId: c.system_a_id as string,
+        toId: c.system_b_id as string,
+        connectionType: c.connection_type as string || 'hyperlane',
+        distance: c.distance as number || 1,
+      }))
+
+      // Update state
+      this.state.connections = connections
+
+      // Notify callback
+      this.callbacks.onConnectionsLoaded?.(connections)
+
+      console.log('[GalaxyMapController] Loaded', connections.length, 'connections')
+    } catch (error) {
+      console.error('[GalaxyMapController] Error loading connections:', error)
+    }
+  }
+
+  // ============================================================================
+  // HELPERS
+  // ============================================================================
+
+  // Galaxy ID cache (avoids repeated DB queries)
+  private galaxyIdCache: Map<number, string> = new Map()
+
+  /**
+   * Get galaxy UUID from index (cached)
    */
   private async getGalaxyId(): Promise<string> {
+    // Check cache first
+    const cached = this.galaxyIdCache.get(this.state.galaxyIndex)
+    if (cached) return cached
+
     const { data } = await this.supabase
       .from('galaxies')
       .select('id')
       .eq('galaxy_index', this.state.galaxyIndex)
       .single()
 
-    return data?.id || ''
+    const galaxyId = data?.id || ''
+    if (galaxyId) {
+      this.galaxyIdCache.set(this.state.galaxyIndex, galaxyId)
+    }
+
+    return galaxyId
   }
 
   /**

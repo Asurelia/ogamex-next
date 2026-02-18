@@ -735,7 +735,7 @@ function SceneContent({
       <directionalLight position={[10, 10, 5]} intensity={0.6} color="#ffffff" />
       <pointLight position={[-20, 10, -10]} intensity={0.3} color="#ffcc88" />
 
-      {/* Central planet */}
+      {/* Central planet with PBR textures (auto-loaded based on type) */}
       <Planet3D
         type={planet.type}
         variant={planetVariant}
@@ -744,6 +744,7 @@ function SceneContent({
         rotationSpeed={0.001}
         selected={false}
         atmosphereOpacity={0.18}
+        normalScale={1.5}
       />
 
       {/* Planet info label */}

@@ -1,6 +1,9 @@
 export { Planet3D } from './Planet3D'
 export type { PlanetType } from './Planet3D'
+export { TexturedPlanet3D } from './TexturedPlanet3D'
+export type { TexturedPlanet3DProps } from './TexturedPlanet3D'
 export { Starfield } from './Starfield'
+export type { StarfieldProps } from './Starfield'
 export { Sun3D } from './Sun3D'
 export { OrbitRing } from './OrbitRing'
 
@@ -92,3 +95,15 @@ export type {
   BattleAnimationControls,
   UseBattleAnimationReturn,
 } from './battle'
+
+// Advanced 3D Effects
+export { NebulaBackground } from './NebulaBackground'
+export type { NebulaBackgroundProps } from './NebulaBackground'
+
+export { WarpTunnel, WarpFlashEffect } from './WarpTunnel'
+export type { WarpTunnelProps, WarpTunnelRef, WarpFlashProps, WarpFlashRef } from './WarpTunnel'
+
+// Galaxy Map
+export { GalaxyMap3D } from './GalaxyMap3D'
+export type { GalaxyMap3DProps } from './GalaxyMap3D'
+export { GalaxyMap3DOptimized } from './GalaxyMap3DOptimized'

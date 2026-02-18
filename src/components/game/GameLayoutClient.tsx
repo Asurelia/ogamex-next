@@ -5,9 +5,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/stores/gameStore'
 import { ResourceBar } from '@/components/game/ResourceBar'
-import { PageTransition } from '@/components/game/PageTransition'
-import type { PlanetType as VisualPlanetType } from '@/lib/3d/constants'
-import type { Planet as DBPlanet } from '@/types/database'
 import type { SceneType } from '@/components/game/3d/GameScene3DManager'
 
 // ============================================================================
@@ -19,15 +16,6 @@ const Navigation3D = dynamic(
   { ssr: false }
 )
 
-const PlanetSidebar = dynamic(
-  () => import('@/components/game/PlanetSidebar').then(mod => mod.PlanetSidebar),
-  { ssr: false }
-)
-
-const GameSidebar = dynamic(
-  () => import('@/components/game/GameSidebar').then(mod => mod.GameSidebar),
-  { ssr: false }
-)
 
 const GameScene3DManager = dynamic(
   () => import('@/components/game/3d/GameScene3DManager').then(mod => mod.GameScene3DManager),
@@ -54,25 +42,7 @@ const DevOverlay = dynamic(
 // ============================================================================
 
 interface GameLayoutClientProps {
-  children: React.ReactNode
-}
-
-// Planet type for the 3D sidebar
-interface SidebarPlanet {
-  id: string
-  name: string
-  coordinates: {
-    galaxy: number
-    system: number
-    position: number
-  }
-  resources: {
-    metal: number
-    crystal: number
-    deuterium: number
-  }
-  type: VisualPlanetType
-  variant?: number
+  children?: React.ReactNode // Kept for Next.js layout compatibility, but not rendered
 }
 
 // Alert type for CockpitFrame
@@ -94,139 +64,6 @@ interface RadarPoint {
   y: number
   type: 'friendly' | 'hostile' | 'neutral'
 }
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Generate a visual planet type based on position
- * This creates a consistent visual type based on the planet's coordinates
- */
-function getVisualPlanetType(galaxy: number, system: number, position: number): VisualPlanetType {
-  // Use position and coordinates to generate a consistent type
-  // Position 1-3: closer to sun - desert/dry
-  // Position 4-6: habitable zone - normal/jungle/water
-  // Position 7-9: cold zone - ice
-  // Position 10-15: outer - gas/ice
-
-  if (position <= 3) {
-    return position === 1 ? 'desert' : position === 2 ? 'dry' : 'desert'
-  } else if (position <= 6) {
-    const types: VisualPlanetType[] = ['normal', 'jungle', 'water']
-    return types[(galaxy + system + position) % 3]
-  } else if (position <= 9) {
-    return position === 9 ? 'ice' : 'normal'
-  } else {
-    return position % 2 === 0 ? 'gas' : 'ice'
-  }
-}
-
-/**
- * Convert database planets to sidebar format
- */
-function convertPlanetsForSidebar(planets: DBPlanet[]): SidebarPlanet[] {
-  return planets.map(planet => ({
-    id: planet.id,
-    name: planet.name,
-    coordinates: {
-      galaxy: planet.galaxy,
-      system: planet.system,
-      position: planet.position,
-    },
-    resources: {
-      metal: planet.metal ?? 0,
-      crystal: planet.crystal ?? 0,
-      deuterium: planet.deuterium ?? 0,
-    },
-    type: getVisualPlanetType(planet.galaxy, planet.system, planet.position),
-    variant: ((planet.position - 1) % 10) + 1,
-  }))
-}
-
-// ============================================================================
-// SIDEBAR CONTROLLER (Legacy - for non-3D mode)
-// ============================================================================
-
-const SidebarController = memo(function SidebarController() {
-  const { planets, currentPlanet, selectPlanet, isSidebarOpen } = useGameStore()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
-  // Convert planets to sidebar format
-  const sidebarPlanets = useMemo(
-    () => convertPlanetsForSidebar(planets),
-    [planets]
-  )
-
-  const handlePlanetSelect = useCallback((planetId: string) => {
-    selectPlanet(planetId)
-  }, [selectPlanet])
-
-  // Toggle sidebar collapse on screen resize
-  useEffect(() => {
-    const handleResize = () => {
-      setIsCollapsed(window.innerWidth < 1024)
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  if (!isSidebarOpen) return null
-
-  return (
-    <PlanetSidebar
-      planets={sidebarPlanets}
-      selectedPlanetId={currentPlanet?.id || null}
-      onPlanetSelect={handlePlanetSelect}
-      collapsed={isCollapsed}
-    />
-  )
-})
-
-// ============================================================================
-// 3D SIDEBAR CONTROLLER (New - for 3D mode)
-// ============================================================================
-
-interface GameSidebarControllerProps {
-  currentScene: SceneType
-  onSceneChange: (scene: SceneType) => void
-}
-
-const GameSidebarController = memo(function GameSidebarController({
-  currentScene,
-  onSceneChange,
-}: GameSidebarControllerProps) {
-  const { selectPlanet, isSidebarOpen } = useGameStore()
-  const [isCollapsed, setIsCollapsed] = useState(false)
-
-  const handlePlanetSelect = useCallback((planetId: string) => {
-    selectPlanet(planetId)
-    // When selecting a planet, go to orbital view
-    onSceneChange('orbital')
-  }, [selectPlanet, onSceneChange])
-
-  // Toggle sidebar collapse on screen resize
-  useEffect(() => {
-    const handleResize = () => {
-      setIsCollapsed(window.innerWidth < 1024)
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  if (!isSidebarOpen) return null
-
-  return (
-    <GameSidebar
-      currentScene={currentScene}
-      onSceneChange={onSceneChange}
-      onPlanetSelect={handlePlanetSelect}
-      collapsed={isCollapsed}
-    />
-  )
-})
 
 // ============================================================================
 // NAVIGATION CONTROLLER
@@ -251,45 +88,6 @@ const NavigationController = memo(function NavigationController() {
 })
 
 // ============================================================================
-// BACKGROUND STARFIELD
-// ============================================================================
-
-const BackgroundStarfield = memo(function BackgroundStarfield() {
-  return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950" />
-
-      {/* Static stars layer */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 100 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: `${Math.random() * 2 + 1}px`,
-              height: `${Math.random() * 2 + 1}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.5 + 0.2,
-              animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Nebula effect */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 right-1/3 w-48 h-48 bg-blue-500/15 rounded-full blur-2xl" />
-      </div>
-    </div>
-  )
-})
-
-// ============================================================================
 // 3D CONTENT AREA WITH COCKPIT FRAME
 // ============================================================================
 
@@ -297,14 +95,12 @@ interface Scene3DContentProps {
   currentScene: SceneType
   onSceneChange: (scene: SceneType) => void
   onZoneClick: (zone: SceneType) => void
-  children: React.ReactNode
 }
 
 const Scene3DContent = memo(function Scene3DContent({
   currentScene,
   onSceneChange,
   onZoneClick,
-  children,
 }: Scene3DContentProps) {
   const {
     currentPlanet,
@@ -314,7 +110,6 @@ const Scene3DContent = memo(function Scene3DContent({
     buildingQueue,
     researchQueue,
     fleetMissions,
-    setVisualizationMode,
   } = useGameStore()
   const router = useRouter()
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false)
@@ -342,27 +137,6 @@ const Scene3DContent = memo(function Scene3DContent({
     onSceneChange('orbital')
   }, [selectPlanet, onSceneChange])
 
-  // Handle quick navigation from CockpitFrame
-  const handleQuickNav = useCallback((destination: string) => {
-    const navMap: Record<string, SceneType> = {
-      overview: 'orbital',
-      resources: 'mines',
-      fleet: 'fleet',
-      research: 'research',
-      shipyard: 'shipyard',
-      galaxy: 'galaxy',
-      defense: 'defense',
-    }
-    const scene = navMap[destination]
-    if (scene) {
-      onSceneChange(scene)
-    }
-  }, [onSceneChange])
-
-  // Handle toggle to 2D mode from CockpitFrame settings
-  const handleToggle2D = useCallback(() => {
-    setVisualizationMode('2d')
-  }, [setVisualizationMode])
 
   // Build alerts from game state
   const alerts = useMemo((): CockpitAlert[] => {
@@ -447,14 +221,21 @@ const Scene3DContent = memo(function Scene3DContent({
     return undefined
   }, [buildingQueue, researchQueue, currentPlanet])
 
-  // Build resources for CockpitSidebar
+  // Build resources for CockpitSidebar with full data
   const resources = useMemo(() => ({
     metal: currentPlanet?.metal ?? 0,
     crystal: currentPlanet?.crystal ?? 0,
     deuterium: currentPlanet?.deuterium ?? 0,
+    metalMax: currentPlanet?.metal_max ?? 0,
+    crystalMax: currentPlanet?.crystal_max ?? 0,
+    deuteriumMax: currentPlanet?.deuterium_max ?? 0,
+    metalPerHour: currentPlanet?.metal_per_hour ?? 0,
+    crystalPerHour: currentPlanet?.crystal_per_hour ?? 0,
+    deuteriumPerHour: currentPlanet?.deuterium_per_hour ?? 0,
     energy: {
       current: (currentPlanet?.energy_max ?? 0) - (currentPlanet?.energy_used ?? 0),
       max: currentPlanet?.energy_max ?? 0,
+      used: currentPlanet?.energy_used ?? 0,
     },
   }), [currentPlanet])
 
@@ -540,7 +321,6 @@ const Scene3DContent = memo(function Scene3DContent({
           alerts={alerts}
           radarData={radarData}
           currentConstruction={currentConstruction}
-          onQuickNav={handleQuickNav}
           viewMode="3D"
         >
           {/* 3D Scene content */}
@@ -561,14 +341,6 @@ const Scene3DContent = memo(function Scene3DContent({
           )}
         </CockpitFrame>
 
-        {/* Overlay for page content when needed */}
-        {children && (
-          <div className="absolute inset-0 pointer-events-none z-20">
-            <div className="pointer-events-auto">
-              {children}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Mobile drawer toggle button */}
@@ -595,7 +367,7 @@ const Scene3DContent = memo(function Scene3DContent({
 export const GameLayoutClient = memo(function GameLayoutClient({
   children,
 }: GameLayoutClientProps) {
-  const { isSidebarOpen, visualizationMode } = useGameStore()
+  const { isSidebarOpen } = useGameStore()
   const pathname = usePathname()
 
   // State for 3D scene management
@@ -606,6 +378,7 @@ export const GameLayoutClient = memo(function GameLayoutClient({
     const pathToScene: Record<string, SceneType> = {
       '/game': 'orbital',
       '/game/overview': 'orbital',
+      '/game/dashboard': 'orbital',
       '/game/resources': 'mines',
       '/game/shipyard': 'shipyard',
       '/game/research': 'research',
@@ -627,51 +400,20 @@ export const GameLayoutClient = memo(function GameLayoutClient({
     setCurrentScene(zone)
   }, [])
 
-  // Use 3D mode when visualization mode is '3d'
-  const use3DMode = visualizationMode === '3d'
-
   return (
     <div className="min-h-screen h-screen flex flex-col relative overflow-hidden">
-      {/* Background - only show in 2D mode, 3D has its own background */}
-      {!use3DMode && <BackgroundStarfield />}
-
       {/* Navigation */}
       <div className="relative z-40 flex-shrink-0">
         <NavigationController />
         <ResourceBar />
       </div>
 
-      {/* Main content area */}
-      {use3DMode ? (
-        /* 3D Mode: Full 3D scene with sidebar */
-        <Scene3DContent
-          currentScene={currentScene}
-          onSceneChange={handleSceneChange}
-          onZoneClick={handleZoneClick}
-        >
-          {/* Pass children as overlay content if needed */}
-          {null}
-        </Scene3DContent>
-      ) : (
-        /* 2D Mode: Traditional layout with sidebar and page content */
-        <div className="flex flex-1 overflow-hidden relative z-10">
-          {/* Planet Sidebar (Legacy) */}
-          <SidebarController />
-
-          {/* Page content with transitions */}
-          <main
-            className={`
-              flex-1 overflow-y-auto
-              transition-all duration-300 ease-out
-              ${isSidebarOpen ? '' : 'w-full'}
-            `}
-          >
-            <PageTransition type="fade" duration={0.2} className="p-4 md:p-6">
-              {children}
-            </PageTransition>
-          </main>
-        </div>
-      )}
+      {/* Main content area - Always 3D mode with CockpitSidebar */}
+      <Scene3DContent
+        currentScene={currentScene}
+        onSceneChange={handleSceneChange}
+        onZoneClick={handleZoneClick}
+      />
 
       {/* Developer Overlay (only visible for admins) */}
       <DevOverlay />

@@ -50,23 +50,27 @@ export abstract class BaseMission implements IMissionHandler {
   // ============================================================================
 
   /**
-   * Extract resources from a fleet mission
+   * Extract resources from a fleet mission (stored as cargo_resources JSON)
    */
   protected getResources(mission: FleetMission): Resources {
+    const cargo = mission.cargo_resources as Record<string, number> | null
     return {
-      metal: mission.metal || 0,
-      crystal: mission.crystal || 0,
-      deuterium: mission.deuterium || 0,
+      metal: cargo?.metal || 0,
+      crystal: cargo?.crystal || 0,
+      deuterium: cargo?.deuterium || 0,
     }
   }
 
   /**
-   * Extract ship counts from a fleet mission
+   * Extract ship counts from a fleet mission (stored as ships JSON)
    */
   protected getShips(mission: FleetMission): ShipCounts {
     const ships = emptyShipCounts()
-    for (const key of SHIP_KEYS) {
-      ships[key] = (mission as unknown as Record<string, number>)[key] || 0
+    const missionShips = mission.ships as Record<string, number> | null
+    if (missionShips) {
+      for (const key of SHIP_KEYS) {
+        ships[key] = missionShips[key] || 0
+      }
     }
     return ships
   }
@@ -107,26 +111,9 @@ export abstract class BaseMission implements IMissionHandler {
       destination_position: mission.origin_position,
       destination_type: 'planet' as const,
       mission_type: mission.mission_type,
-      // Ships
-      light_fighter: ships.light_fighter,
-      heavy_fighter: ships.heavy_fighter,
-      cruiser: ships.cruiser,
-      battleship: ships.battleship,
-      battlecruiser: ships.battlecruiser,
-      bomber: ships.bomber,
-      destroyer: ships.destroyer,
-      deathstar: ships.deathstar,
-      small_cargo: ships.small_cargo,
-      large_cargo: ships.large_cargo,
-      colony_ship: ships.colony_ship,
-      recycler: ships.recycler,
-      espionage_probe: ships.espionage_probe,
-      reaper: ships.reaper,
-      pathfinder: ships.pathfinder,
-      // Resources
-      metal: resources.metal,
-      crystal: resources.crystal,
-      deuterium: resources.deuterium,
+      // Ships and resources stored as JSON
+      ships: ships as unknown as { [key: string]: number },
+      cargo_resources: resources as unknown as { [key: string]: number },
       // Timing
       departed_at: returnDeparture.toISOString(),
       arrives_at: returnArrival.toISOString(),
@@ -453,6 +440,6 @@ export abstract class BaseMission implements IMissionHandler {
    * Format coordinates for display in messages
    */
   protected formatCoords(galaxy: number, system: number, position: number): string {
-    return formatCoordinates({ galaxy, system, position })
+    return formatCoordinates(galaxy, system, position)
   }
 }

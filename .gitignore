@@ -5,6 +5,10 @@ node_modules/
 
 # Testing
 coverage/
+playwright-report/
+__tests__/
+*.test.ts
+*.test.tsx
 
 # Next.js
 .next/
@@ -24,6 +28,7 @@ dist/
 
 # Supabase
 .supabase/
+supabase/.temp/
 
 # Debug logs
 npm-debug.log*
@@ -33,10 +38,10 @@ yarn-error.log*
 
 # Local dev
 *.local
+data/
 
 # Editor
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
@@ -44,14 +49,19 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Vercel
 .vercel
 
 # TypeScript
 *.tsbuildinfo
-next-env.d.ts
 
 # Misc
 *.log
 .cache/
+
+# Temp/archive folders
+_archived/
+evemu_Crucible/
+unity_client/

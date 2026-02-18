@@ -1,7 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, memo, useMemo } from 'react'
-import Link from 'next/link'
+import React, { useState, useEffect, memo, useMemo } from 'react'
 
 // ============================================================================
 // TYPES
@@ -32,7 +31,6 @@ interface CockpitFrameProps {
   alerts?: Alert[]
   radarData?: RadarPoint[]
   currentConstruction?: Construction
-  onQuickNav?: (destination: string) => void
   viewMode?: '3D' | '2D'
 }
 
@@ -325,66 +323,6 @@ const ConstructionProgress = memo(function ConstructionProgress({
 })
 
 /**
- * Quick navigation buttons
- */
-const QuickNavButton = memo(function QuickNavButton({
-  icon,
-  label,
-  shortcut,
-  href,
-  onClick,
-  color = 'blue',
-}: {
-  icon: string
-  label: string
-  shortcut: string
-  href?: string
-  onClick?: () => void
-  color?: 'blue' | 'yellow' | 'red' | 'purple' | 'green' | 'cyan'
-}) {
-  const colorStyles = {
-    blue: 'bg-blue-900/40 hover:bg-blue-800/50 border-blue-700/50',
-    yellow: 'bg-yellow-900/40 hover:bg-yellow-800/50 border-yellow-700/50',
-    red: 'bg-red-900/40 hover:bg-red-800/50 border-red-700/50',
-    purple: 'bg-purple-900/40 hover:bg-purple-800/50 border-purple-700/50',
-    green: 'bg-green-900/40 hover:bg-green-800/50 border-green-700/50',
-    cyan: 'bg-cyan-900/40 hover:bg-cyan-800/50 border-cyan-700/50',
-  }
-
-  const content = (
-    <div
-      className={`
-        flex flex-col items-center justify-center
-        w-16 h-14 md:w-20 md:h-16
-        ${colorStyles[color]}
-        border rounded
-        backdrop-blur-sm
-        transition-all duration-200
-        cursor-pointer
-        group
-      `}
-      onClick={onClick}
-    >
-      <span className="text-lg mb-0.5 group-hover:scale-110 transition-transform">{icon}</span>
-      <span className="text-[9px] md:text-[10px] text-ogame-text-header uppercase tracking-wider">
-        {label}
-      </span>
-      <span className="text-[8px] text-ogame-text-muted font-mono">[{shortcut}]</span>
-    </div>
-  )
-
-  if (href) {
-    return (
-      <Link href={href} className="pointer-events-auto">
-        {content}
-      </Link>
-    )
-  }
-
-  return <div className="pointer-events-auto">{content}</div>
-})
-
-/**
  * Scanline effect overlay
  */
 const ScanlineEffect = memo(function ScanlineEffect() {
@@ -488,17 +426,9 @@ export const CockpitFrame = memo(function CockpitFrame({
   alerts,
   radarData,
   currentConstruction,
-  onQuickNav,
   viewMode = '3D',
 }: CockpitFrameProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
-
-  const handleQuickNav = useCallback(
-    (destination: string) => {
-      onQuickNav?.(destination)
-    },
-    [onQuickNav]
-  )
 
   const coordString = coordinates
     ? `[${coordinates.galaxy}:${coordinates.system}:${coordinates.position}]`
@@ -525,8 +455,8 @@ export const CockpitFrame = memo(function CockpitFrame({
 
         {/* Top HUD bar */}
         <div className="absolute top-0 left-0 right-0 h-12 flex items-center justify-between px-32 md:px-36">
+          {/* Left - Planet info */}
           <div className="flex items-center gap-6 pointer-events-auto">
-            {/* Planet info */}
             <div className="flex items-center gap-3 bg-black/40 backdrop-blur-sm px-4 py-1.5 rounded border border-cyan-900/30">
               <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#00ffff]" />
               <div>
@@ -540,16 +470,11 @@ export const CockpitFrame = memo(function CockpitFrame({
             </div>
           </div>
 
+          {/* Right - Clock and settings */}
           <div className="flex items-center gap-4 pointer-events-auto">
             {/* Server clock */}
             <div className="bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded border border-cyan-900/30">
               <ServerClock serverTime={serverTime} />
-            </div>
-
-            {/* View mode indicator */}
-            <div className="bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded border border-cyan-900/30">
-              <span className="text-xs font-mono text-ogame-text-muted">MODE: </span>
-              <span className="text-xs font-mono text-ogame-accent">{viewMode}</span>
             </div>
 
             {/* Settings button */}
@@ -617,61 +542,6 @@ export const CockpitFrame = memo(function CockpitFrame({
           </div>
         </div>
 
-        {/* Bottom HUD bar */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-          <QuickNavButton
-            icon="O"
-            label="Overview"
-            shortcut="O"
-            href="/game/overview"
-            color="blue"
-            onClick={() => handleQuickNav('overview')}
-          />
-          <QuickNavButton
-            icon="R"
-            label="Resources"
-            shortcut="R"
-            href="/game/resources"
-            color="yellow"
-            onClick={() => handleQuickNav('resources')}
-          />
-          <QuickNavButton
-            icon="F"
-            label="Fleet"
-            shortcut="F"
-            href="/game/fleet"
-            color="red"
-            onClick={() => handleQuickNav('fleet')}
-          />
-          <QuickNavButton
-            icon="T"
-            label="Research"
-            shortcut="T"
-            href="/game/research"
-            color="purple"
-            onClick={() => handleQuickNav('research')}
-          />
-          <QuickNavButton
-            icon="S"
-            label="Shipyard"
-            shortcut="S"
-            href="/game/shipyard"
-            color="cyan"
-            onClick={() => handleQuickNav('shipyard')}
-          />
-          <QuickNavButton
-            icon="G"
-            label="Galaxy"
-            shortcut="G"
-            href="/game/galaxy"
-            color="green"
-            onClick={() => handleQuickNav('galaxy')}
-          />
-        </div>
-
-        {/* Bottom frame edge */}
-        <div className="absolute bottom-0 left-32 right-32 h-2 bg-gradient-to-r from-transparent via-cyan-900/20 to-transparent" />
-        <div className="absolute bottom-0 left-32 right-32 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent" />
       </div>
 
       {/* CSS animations */}

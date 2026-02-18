@@ -7,7 +7,7 @@
  * - Advanced stats (accuracy, evasion, crit, point defense, etc.)
  */
 
-import { getCachedGameConfig } from '@/lib/game'
+import { getCachedGameConfig } from '@/lib/game/config-cache'
 import type { DamageTypes, ResistanceTypes, AdvancedCombatStats } from './damage-types'
 import { EMPTY_DAMAGE, EMPTY_RESISTANCES, DEFAULT_COMBAT_STATS } from './damage-types'
 import type { UnitClass } from './advanced-unit'

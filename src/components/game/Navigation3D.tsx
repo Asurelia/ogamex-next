@@ -47,6 +47,17 @@ function OverviewIcon({ className = 'w-5 h-5', active = false }: { className?: s
   )
 }
 
+function DashboardIcon({ className = 'w-5 h-5', active = false }: { className?: string; active?: boolean }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
+      <rect x="3" y="3" width="7" height="7" rx="1" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.3 : 1} />
+      <rect x="14" y="3" width="7" height="7" rx="1" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.2 : 1} />
+      <rect x="3" y="14" width="7" height="7" rx="1" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.2 : 1} />
+      <rect x="14" y="14" width="7" height="7" rx="1" fill={active ? 'currentColor' : 'none'} opacity={active ? 0.3 : 1} />
+    </svg>
+  )
+}
+
 function ResourcesIcon({ className = 'w-5 h-5', active = false }: { className?: string; active?: boolean }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.5}>
@@ -232,7 +243,8 @@ function CloseIcon({ className = 'w-6 h-6' }: { className?: string }) {
 // ============================================================================
 
 const navItems: NavItem[] = [
-  { href: '/game', key: 'overview', icon: OverviewIcon, category: 'main', transitionType: 'zoom' },
+  { href: '/game/overview', key: 'overview', icon: OverviewIcon, category: 'main', transitionType: 'zoom' },
+  { href: '/game/dashboard', key: 'dashboard', icon: DashboardIcon, category: 'main', transitionType: 'fade' },
   { href: '/game/galaxy', key: 'galaxy', icon: GalaxyIcon, category: 'main', transitionType: 'hyperspace' },
   { href: '/game/resources', key: 'resources', icon: ResourcesIcon, category: 'empire', transitionType: 'fade' },
   { href: '/game/facilities', key: 'facilities', icon: FacilitiesIcon, category: 'empire', transitionType: 'fade' },
@@ -601,7 +613,7 @@ const MobileMenu = memo(function MobileMenu({
   }, [isOpen, onClose])
 
   const isActive = useCallback((href: string) => {
-    if (href === '/game') return currentPath === '/game' || currentPath === '/game/overview'
+    if (href === '/game/overview') return currentPath === '/game' || currentPath === '/game/overview'
     return currentPath === href || currentPath.startsWith(href + '/')
   }, [currentPath])
 
@@ -761,39 +773,6 @@ const UserMenu = memo(function UserMenu() {
 })
 
 // ============================================================================
-// 3D/2D MODE TOGGLE
-// ============================================================================
-
-const VisualizationToggle = memo(function VisualizationToggle() {
-  const { visualizationMode, setVisualizationMode } = useGameStore()
-
-  return (
-    <motion.button
-      onClick={() => setVisualizationMode(visualizationMode === '3d' ? '2d' : '3d')}
-      className={`
-        relative px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider
-        transition-all duration-300
-        ${visualizationMode === '3d'
-          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
-          : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-        }
-      `}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      {visualizationMode === '3d' ? '3D' : '2D'}
-      {visualizationMode === '3d' && (
-        <motion.div
-          className="absolute inset-0 rounded-lg bg-cyan-500/20"
-          animate={{ opacity: [0.2, 0.5, 0.2] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      )}
-    </motion.button>
-  )
-})
-
-// ============================================================================
 // MAIN NAVIGATION 3D COMPONENT
 // ============================================================================
 
@@ -915,18 +894,13 @@ export const Navigation3D = memo(function Navigation3D({
               </Link>
             </div>
 
-            {/* Right - Time, 3D toggle, user */}
+            {/* Right - Time, user */}
             <div className="flex items-center gap-3">
               <ServerTime />
-              <VisualizationToggle />
               <UserMenu />
             </div>
           </div>
         </nav>
-
-        {/* Gradient border */}
-        <div className="absolute bottom-0 left-0 right-0 h-px
-                        bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
       </header>
 
       {/* Floating Bottom Navigation Bar (Desktop) */}

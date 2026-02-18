@@ -34,10 +34,14 @@ import {
   type CameraState,
   type LoadingState,
   type MapControllerCallbacks,
+  type SystemConnection,
   type SystemDetails,
   type SystemSummary,
   type ZoomLevel,
 } from '@/lib/galaxy/GalaxyMapController'
+
+// Re-export for convenience
+export type { SystemConnection }
 
 // ============================================================================
 // TYPES
@@ -62,6 +66,7 @@ export interface UseGalaxyNavigationReturn {
   systems: SystemSummary[]
   activeSystems: SystemSummary[]
   bufferSystems: SystemSummary[]
+  connections: SystemConnection[]
   selectedSystem: SystemDetails | null
   hoveredSystem: SystemSummary | null
   zoomLevel: ZoomLevel
@@ -113,6 +118,7 @@ export function useGalaxyNavigation(
   // State
   const [activeSystems, setActiveSystems] = useState<SystemSummary[]>([])
   const [bufferSystems, setBufferSystems] = useState<SystemSummary[]>([])
+  const [connections, setConnections] = useState<SystemConnection[]>([])
   const [selectedSystem, setSelectedSystem] = useState<SystemDetails | null>(null)
   const [hoveredSystem, setHoveredSystem] = useState<SystemSummary | null>(null)
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>('galaxy')
@@ -130,7 +136,25 @@ export function useGalaxyNavigation(
   })
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Create callbacks object
+  // Stable callback refs to avoid recreating controller
+  const callbackRefs = useRef({
+    onSystemsLoaded,
+    onSystemSelected,
+    onZoomLevelChanged,
+    onError,
+  })
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    callbackRefs.current = {
+      onSystemsLoaded,
+      onSystemSelected,
+      onZoomLevelChanged,
+      onError,
+    }
+  }, [onSystemsLoaded, onSystemSelected, onZoomLevelChanged, onError])
+
+  // Create callbacks object with stable refs - ONLY ONCE
   const callbacks = useMemo<MapControllerCallbacks>(() => ({
     onSystemsLoaded: (systems, zone) => {
       if (zone === 'active') {
@@ -138,29 +162,32 @@ export function useGalaxyNavigation(
       } else {
         setBufferSystems(systems)
       }
-      onSystemsLoaded?.(systems, zone)
+      callbackRefs.current.onSystemsLoaded?.(systems, zone)
     },
     onSystemSelected: (system) => {
       setSelectedSystem(system)
-      onSystemSelected?.(system)
+      callbackRefs.current.onSystemSelected?.(system)
     },
     onSystemHovered: (system) => {
       setHoveredSystem(system)
     },
     onZoomLevelChanged: (level) => {
       setZoomLevel(level)
-      onZoomLevelChanged?.(level)
+      callbackRefs.current.onZoomLevelChanged?.(level)
     },
     onLoadingStateChanged: (state) => {
       setLoadingState(state)
     },
+    onConnectionsLoaded: (conns) => {
+      setConnections(conns)
+    },
     onError: (error) => {
       console.error('[GalaxyNavigation] Error:', error)
-      onError?.(error)
+      callbackRefs.current.onError?.(error)
     },
-  }), [onSystemsLoaded, onSystemSelected, onZoomLevelChanged, onError])
+  }), []) // Empty deps - callbacks are stable via refs
 
-  // Initialize controller
+  // Initialize controller ONCE
   useEffect(() => {
     // Create new controller with callbacks
     controllerRef.current = new GalaxyMapController(callbacks)
@@ -169,7 +196,7 @@ export function useGalaxyNavigation(
       controllerRef.current?.dispose()
       controllerRef.current = null
     }
-  }, [callbacks])
+  }, []) // Empty deps - controller is singleton
 
   // Initialize on mount if autoInit
   useEffect(() => {
@@ -281,6 +308,7 @@ export function useGalaxyNavigation(
     systems,
     activeSystems,
     bufferSystems,
+    connections,
     selectedSystem,
     hoveredSystem,
     zoomLevel,

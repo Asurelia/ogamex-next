@@ -9,6 +9,66 @@ import * as THREE from 'three'
 import { useMemo } from 'react'
 import { ATMOSPHERE_COLORS, type PlanetType } from './constants'
 
+// ============================================================================
+// MATERIAL POOL — reuse materials to reduce VRAM usage (~1-5 MB per shader)
+// ============================================================================
+
+const materialPool = new Map<string, THREE.Material>()
+let poolHits = 0
+let poolMisses = 0
+
+/**
+ * Get or create a material from the pool.
+ * Materials are cached by a composite key to avoid duplicate shader compilations.
+ */
+function getPooled<T extends THREE.Material>(
+  key: string,
+  factory: () => T
+): T {
+  const existing = materialPool.get(key)
+  if (existing) {
+    poolHits++
+    return existing as T
+  }
+  poolMisses++
+  const material = factory()
+  materialPool.set(key, material)
+  return material
+}
+
+/**
+ * Build a stable cache key from type + options
+ */
+function buildKey(type: string, options: Record<string, unknown> = {}): string {
+  return `${type}:${JSON.stringify(options, Object.keys(options).sort())}`
+}
+
+/**
+ * Dispose all pooled materials and clear the pool.
+ * Call on full scene teardown.
+ */
+export function disposeMaterialPool(): void {
+  for (const material of materialPool.values()) {
+    material.dispose()
+  }
+  materialPool.clear()
+  poolHits = 0
+  poolMisses = 0
+}
+
+/**
+ * Get pool statistics for monitoring.
+ */
+export function getMaterialPoolStats() {
+  const total = poolHits + poolMisses
+  return {
+    size: materialPool.size,
+    hits: poolHits,
+    misses: poolMisses,
+    hitRate: total > 0 ? `${((poolHits / total) * 100).toFixed(1)}%` : 'N/A'
+  }
+}
+
 // Material options interfaces
 export interface PlanetMaterialOptions {
   atmosphereColor?: string
@@ -90,7 +150,9 @@ export function createAtmosphereMaterial(
   color: string = '#6699cc',
   opacity: number = 0.3
 ): THREE.ShaderMaterial {
-  const atmosphereVertexShader = `
+  const key = buildKey('atmosphere', { color, opacity })
+  return getPooled(key, () => {
+    const atmosphereVertexShader = `
     varying vec3 vNormal;
     varying vec3 vPosition;
 
@@ -101,7 +163,7 @@ export function createAtmosphereMaterial(
     }
   `
 
-  const atmosphereFragmentShader = `
+    const atmosphereFragmentShader = `
     uniform vec3 glowColor;
     uniform float intensity;
     uniform float power;
@@ -118,18 +180,19 @@ export function createAtmosphereMaterial(
     }
   `
 
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      glowColor: { value: new THREE.Color(color) },
-      intensity: { value: opacity },
-      power: { value: 3.0 },
-    },
-    vertexShader: atmosphereVertexShader,
-    fragmentShader: atmosphereFragmentShader,
-    side: THREE.BackSide,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        glowColor: { value: new THREE.Color(color) },
+        intensity: { value: opacity },
+        power: { value: 3.0 },
+      },
+      vertexShader: atmosphereVertexShader,
+      fragmentShader: atmosphereFragmentShader,
+      side: THREE.BackSide,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
   })
 }
 
@@ -149,21 +212,24 @@ export function useAtmosphereMaterial(
  * Create metallic material for spaceships
  */
 export function createShipMaterial(options: ShipMaterialOptions = {}): THREE.MeshStandardMaterial {
-  const {
-    color = '#88ccff',
-    metalness = 0.9,
-    roughness = 0.3,
-    emissive = '#001133',
-    emissiveIntensity = 0.1,
-  } = options
+  const key = buildKey('ship', options as Record<string, unknown>)
+  return getPooled(key, () => {
+    const {
+      color = '#88ccff',
+      metalness = 0.9,
+      roughness = 0.3,
+      emissive = '#001133',
+      emissiveIntensity = 0.1,
+    } = options
 
-  return new THREE.MeshStandardMaterial({
-    color: new THREE.Color(color),
-    metalness,
-    roughness,
-    emissive: new THREE.Color(emissive),
-    emissiveIntensity,
-    envMapIntensity: 1.0,
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(color),
+      metalness,
+      roughness,
+      emissive: new THREE.Color(emissive),
+      emissiveIntensity,
+      envMapIntensity: 1.0,
+    })
   })
 }
 
@@ -463,27 +529,33 @@ export function createEngineTrailMaterial(
   color: string = '#4488ff',
   intensity: number = 1.0
 ): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({
-    color: new THREE.Color(color),
-    transparent: true,
-    opacity: 0.8 * intensity,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  })
+  const key = buildKey('engineTrail', { color, intensity })
+  return getPooled(key, () =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color(color),
+      transparent: true,
+      opacity: 0.8 * intensity,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+  )
 }
 
 /**
  * Create laser beam material
  */
 export function createLaserMaterial(color: string = '#ff0000'): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({
-    color: new THREE.Color(color),
-    transparent: true,
-    opacity: 0.9,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  })
+  const key = buildKey('laser', { color })
+  return getPooled(key, () =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color(color),
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+  )
 }
 
 /**

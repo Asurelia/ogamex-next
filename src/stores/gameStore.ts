@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import type { Planet, User, UserResearch, BuildingQueue, ResearchQueue, FleetMission, ActiveBoost } from '@/types/database'
 
 // Types pour la visualisation 3D
-export type VisualizationMode = '2d' | '3d' | 'tactical'
 export type CameraMode = 'orbit' | 'first-person' | 'strategic'
 export type SelectedObject3DType = 'planet' | 'fleet' | 'building' | 'debris'
 
@@ -70,10 +69,6 @@ interface GameState {
   // Reset
   reset: () => void
 
-  // 3D Visualization - Modes
-  visualizationMode: VisualizationMode
-  setVisualizationMode: (mode: VisualizationMode) => void
-
   // 3D Visualization - Selection
   selectedObject3D: SelectedObject3D | null
   setSelectedObject3D: (obj: SelectedObject3D | null) => void
@@ -107,7 +102,6 @@ const initialState = {
   activeBoosts: [] as ActiveBoost[],
   isSidebarOpen: true,
   // 3D Visualization defaults
-  visualizationMode: '2d' as VisualizationMode,
   selectedObject3D: null as SelectedObject3D | null,
   cameraMode: 'orbit' as CameraMode,
   preferences3D: defaultPreferences3D,
@@ -216,8 +210,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   reset: () => set(initialState),
 
   // 3D Visualization setters
-  setVisualizationMode: (mode) => set({ visualizationMode: mode }),
-
   setSelectedObject3D: (obj) => set({ selectedObject3D: obj }),
 
   setCameraMode: (mode) => set({ cameraMode: mode }),

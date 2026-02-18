@@ -1,143 +1,36 @@
 /**
  * Mission System Types
  * TypeScript types for fleet mission processing
+ * 
+ * Core types (Resources, ShipCounts, Coordinates) are re-exported from
+ * the centralized @/types/game-core module.
  */
 
 import type { MissionType, PlanetType, FleetMission, Planet, UserResearch } from '@/types/database'
-import { formatCoordinatesObj } from '@/lib/utils/format'
 
-// ============================================================================
-// MISSION ENUMS & CONSTANTS
-// ============================================================================
+// Re-export core types from centralized source for backward compatibility
+export {
+  type Resources,
+  emptyResources,
+  sumResources,
+  hasResources,
+  type ShipCounts,
+  SHIP_KEYS,
+  emptyShipCounts,
+  getTotalShips,
+  type DefenseCounts,
+  DEFENSE_KEYS,
+  emptyDefenseCounts,
+  type Coordinates,
+  formatCoordinates,
+  formatCoordinatesObj,
+  MissionTypeId,
+  MissionTypeMap,
+  type MissionTypeIdValue,
+} from '@/types/game-core'
 
-export const MissionTypeId = {
-  ATTACK: 1,
-  ACS_ATTACK: 2,
-  TRANSPORT: 3,
-  DEPLOYMENT: 4,
-  ACS_DEFEND: 5,
-  ESPIONAGE: 6,
-  COLONIZATION: 7,
-  RECYCLE: 8,
-  MOON_DESTRUCTION: 9,
-  EXPEDITION: 15,
-  // Exploration missions (Sprint 2)
-  EXPLORATION_SCAN: 20,
-  EXPLORATION_DEEP: 21,
-  EXPLORATION_MAP: 22,
-  DEPLOY_SATELLITE: 23,
-} as const
-
-export type MissionTypeIdValue = typeof MissionTypeId[keyof typeof MissionTypeId]
-
-export const MissionTypeMap: Record<MissionType, MissionTypeIdValue> = {
-  attack: MissionTypeId.ATTACK,
-  acs_attack: MissionTypeId.ACS_ATTACK,
-  transport: MissionTypeId.TRANSPORT,
-  deployment: MissionTypeId.DEPLOYMENT,
-  acs_defend: MissionTypeId.ACS_DEFEND,
-  espionage: MissionTypeId.ESPIONAGE,
-  colonization: MissionTypeId.COLONIZATION,
-  recycle: MissionTypeId.RECYCLE,
-  moon_destruction: MissionTypeId.MOON_DESTRUCTION,
-  expedition: MissionTypeId.EXPEDITION,
-}
-
-// ============================================================================
-// RESOURCE TYPES
-// ============================================================================
-
-export interface Resources {
-  metal: number
-  crystal: number
-  deuterium: number
-}
-
-export const emptyResources = (): Resources => ({
-  metal: 0,
-  crystal: 0,
-  deuterium: 0,
-})
-
-export const sumResources = (res: Resources): number =>
-  res.metal + res.crystal + res.deuterium
-
-export const hasResources = (res: Resources): boolean =>
-  res.metal > 0 || res.crystal > 0 || res.deuterium > 0
-
-// ============================================================================
-// SHIP TYPES
-// ============================================================================
-
-export interface ShipCounts {
-  light_fighter: number
-  heavy_fighter: number
-  cruiser: number
-  battleship: number
-  battlecruiser: number
-  bomber: number
-  destroyer: number
-  deathstar: number
-  small_cargo: number
-  large_cargo: number
-  colony_ship: number
-  recycler: number
-  espionage_probe: number
-  reaper: number
-  pathfinder: number
-}
-
-export const SHIP_KEYS: (keyof ShipCounts)[] = [
-  'light_fighter',
-  'heavy_fighter',
-  'cruiser',
-  'battleship',
-  'battlecruiser',
-  'bomber',
-  'destroyer',
-  'deathstar',
-  'small_cargo',
-  'large_cargo',
-  'colony_ship',
-  'recycler',
-  'espionage_probe',
-  'reaper',
-  'pathfinder',
-]
-
-export const emptyShipCounts = (): ShipCounts => ({
-  light_fighter: 0,
-  heavy_fighter: 0,
-  cruiser: 0,
-  battleship: 0,
-  battlecruiser: 0,
-  bomber: 0,
-  destroyer: 0,
-  deathstar: 0,
-  small_cargo: 0,
-  large_cargo: 0,
-  colony_ship: 0,
-  recycler: 0,
-  espionage_probe: 0,
-  reaper: 0,
-  pathfinder: 0,
-})
-
-export const getTotalShips = (ships: ShipCounts): number =>
-  SHIP_KEYS.reduce((sum, key) => sum + ships[key], 0)
-
-// ============================================================================
-// COORDINATE TYPES
-// ============================================================================
-
-export interface Coordinates {
-  galaxy: number
-  system: number
-  position: number
-}
-
-// Re-export from centralized format utilities
-export const formatCoordinates = formatCoordinatesObj
+import { MissionTypeId, type MissionTypeIdValue } from '@/types/game-core'
+import type { Resources, ShipCounts, Coordinates } from '@/types/game-core'
 
 // ============================================================================
 // MISSION CONTEXT

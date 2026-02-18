@@ -6,7 +6,7 @@ import { useGameStore } from '@/stores/gameStore'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { formatNumber, formatRelativeTime } from '@/game/formulas'
 import { HoloCard, HoloButton, HoloStats } from '@/components/ui'
-import { InfoLevel } from '@/lib/espionage/types'
+import { InfoLevel } from '@/types/game-core'
 
 // ============================================================================
 // TYPES
@@ -319,10 +319,10 @@ export default function EspionagePage() {
                       <p className="text-cyan-200/50 text-sm">
                         {selectedReport.target_planet
                           ? formatCoords(
-                              selectedReport.target_planet.galaxy,
-                              selectedReport.target_planet.system,
-                              selectedReport.target_planet.position
-                            )
+                            selectedReport.target_planet.galaxy,
+                            selectedReport.target_planet.system,
+                            selectedReport.target_planet.position
+                          )
                           : '[?:?:?]'}
                       </p>
                       <p className="text-cyan-200/60 text-sm">

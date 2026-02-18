@@ -28,6 +28,11 @@ export type MissionType =
   | 'recycle'
   | 'moon_destruction'
   | 'expedition'
+  // Exploration missions (use fleet movement mechanics)
+  | 'exploration_quick_scan'
+  | 'exploration_deep_scan'
+  | 'exploration_cartography'
+  | 'exploration_satellite_deploy'
 export type MessageType =
   | 'espionage'
   | 'battle'
@@ -116,6 +121,7 @@ export interface Database {
           id: string
           user_id: string
           name: string
+          solar_system_id: string | null // From planets_compat view
           galaxy: number
           system: number
           position: number
@@ -284,7 +290,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          origin_planet_id: string
+          origin_planet_id: string | null
           origin_galaxy: number
           origin_system: number
           origin_position: number
@@ -293,37 +299,36 @@ export interface Database {
           destination_position: number
           destination_type: PlanetType
           mission_type: MissionType
-          // Ships
-          light_fighter: number
-          heavy_fighter: number
-          cruiser: number
-          battleship: number
-          battlecruiser: number
-          bomber: number
-          destroyer: number
-          deathstar: number
-          small_cargo: number
-          large_cargo: number
-          colony_ship: number
-          recycler: number
-          espionage_probe: number
-          reaper: number
-          pathfinder: number
-          // Resources
-          metal: number
-          crystal: number
-          deuterium: number
-          // Timing
+          ships: Json
+          cargo_resources: Json
           departed_at: string
           arrives_at: string
           returns_at: string | null
-          // Status
           is_returning: boolean
           processed: boolean
           cancelled: boolean
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['fleet_missions']['Row'], 'id' | 'created_at'>
+        Insert: {
+          user_id: string
+          origin_planet_id?: string | null
+          origin_galaxy: number
+          origin_system: number
+          origin_position: number
+          destination_galaxy: number
+          destination_system: number
+          destination_position: number
+          destination_type: PlanetType
+          mission_type: MissionType
+          ships?: Json
+          cargo_resources?: Json
+          departed_at?: string
+          arrives_at: string
+          returns_at?: string | null
+          is_returning?: boolean
+          processed?: boolean
+          cancelled?: boolean
+        }
         Update: Partial<Database['public']['Tables']['fleet_missions']['Insert']>
       }
 
@@ -575,6 +580,114 @@ export interface Database {
         Update: {
           last_used_at?: string
         }
+      }
+
+      // ==========================
+      // INVENTORY & MARKET
+      // ==========================
+
+      containers: {
+        Row: {
+          id: number
+          owner_id: string
+          name: string | null
+          max_capacity: number
+          location_id: number | null
+          flag: number
+          created_at: string
+        }
+        Insert: {
+          owner_id: string
+          name?: string | null
+          max_capacity?: number
+          location_id?: number | null
+          flag?: number
+        }
+        Update: Partial<Database['public']['Tables']['containers']['Insert']>
+      }
+
+      inventory_items: {
+        Row: {
+          id: number
+          container_id: number
+          type_id: number
+          quantity: number
+          flag: number
+          singleton: boolean
+          attributes: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          container_id: number
+          type_id: number
+          quantity?: number
+          flag?: number
+          singleton?: boolean
+          attributes?: Json
+        }
+        Update: Partial<Database['public']['Tables']['inventory_items']['Insert']>
+      }
+
+      market_orders: {
+        Row: {
+          id: number
+          character_id: string
+          type_id: number
+          region_id: number
+          station_id: number
+          is_buy_order: boolean
+          price: number
+          volume_total: number
+          volume_remaining: number
+          min_volume: number
+          duration: number
+          issued_at: string
+          expires_at: string | null
+          state: number
+          escrow: number
+        }
+        Insert: {
+          character_id: string
+          type_id: number
+          region_id: number
+          station_id: number
+          is_buy_order: boolean
+          price: number
+          volume_total: number
+          volume_remaining: number
+          min_volume?: number
+          duration?: number
+          expires_at?: string | null
+          state?: number
+          escrow?: number
+        }
+        Update: Partial<Database['public']['Tables']['market_orders']['Insert']>
+      }
+
+      market_history: {
+        Row: {
+          id: number
+          region_id: number
+          type_id: number
+          date: string
+          average_price: number
+          highest_price: number
+          lowest_price: number
+          volume: number
+          order_count: number
+        }
+        Insert: {
+          region_id: number
+          type_id: number
+          date: string
+          average_price: number
+          highest_price: number
+          lowest_price: number
+          volume: number
+          order_count: number
+        }
+        Update: never
       }
     }
 

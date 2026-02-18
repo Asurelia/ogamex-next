@@ -58,6 +58,7 @@
   ],
   "exclude": [
     "node_modules",
-    "supabase"
+    "supabase",
+    "_archived"
   ]
 }

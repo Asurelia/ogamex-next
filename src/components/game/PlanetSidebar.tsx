@@ -1,22 +1,13 @@
 'use client'
 
-import { memo, useMemo, useState, useCallback } from 'react'
-import dynamic from 'next/dynamic'
+import { memo, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { PlanetType as VisualPlanetType } from './3d/Planet3D'
 import { HolographicTooltip } from '@/components/ui/HolographicTooltip'
 import { formatNumber, formatCoordinatesObj, formatTimeRemaining } from '@/lib/utils/format'
 
-// Dynamic import for Three.js Canvas to avoid SSR issues
-const Canvas = dynamic(
-  () => import('@react-three/fiber').then((mod) => mod.Canvas),
-  { ssr: false }
-)
-
-const Planet3D = dynamic(
-  () => import('./3d/Planet3D').then((mod) => mod.Planet3D),
-  { ssr: false }
-)
+// Planet types for visuals
+type VisualPlanetType = 'desert' | 'dry' | 'gas' | 'ice' | 'jungle' | 'normal' | 'water'
 
 // ============================================================================
 // TYPES
@@ -198,10 +189,18 @@ function AlertIcon({ className = 'w-4 h-4' }: { className?: string }) {
 }
 
 // ============================================================================
-// MINI PLANET 3D VIEW
+// MINI PLANET IMAGE VIEW (Simple image instead of 3D)
 // ============================================================================
 
-const MiniPlanet3DView = memo(function MiniPlanet3DView({
+/**
+ * Get planet image path based on type and variant
+ */
+function getPlanetImagePath(type: VisualPlanetType, variant: number = 1): string {
+  const safeVariant = Math.max(1, Math.min(10, variant))
+  return `/img/planets/medium/${type}_${safeVariant}.png`
+}
+
+const MiniPlanetImageView = memo(function MiniPlanetImageView({
   type,
   variant = 1,
   isHovered = false,
@@ -210,9 +209,11 @@ const MiniPlanet3DView = memo(function MiniPlanet3DView({
   variant?: number
   isHovered?: boolean
 }) {
+  const imagePath = useMemo(() => getPlanetImagePath(type, variant), [type, variant])
+
   return (
     <motion.div
-      className="w-[60px] h-[60px] rounded-full overflow-hidden"
+      className="w-[60px] h-[60px] rounded-full overflow-hidden relative"
       animate={{
         boxShadow: isHovered
           ? '0 0 20px rgba(0, 255, 255, 0.4), 0 0 40px rgba(0, 200, 255, 0.2)'
@@ -220,15 +221,13 @@ const MiniPlanet3DView = memo(function MiniPlanet3DView({
       }}
       transition={{ duration: 0.3 }}
     >
-      <Canvas
-        style={{ width: 60, height: 60 }}
-        camera={{ position: [0, 0, 2.5], fov: 50 }}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <ambientLight intensity={0.5} />
-        <pointLight position={[5, 5, 5]} intensity={1} />
-        <Planet3D type={type} variant={variant} size={0.8} rotationSpeed={isHovered ? 0.01 : 0.003} />
-      </Canvas>
+      <Image
+        src={imagePath}
+        alt={`${type} planet`}
+        width={60}
+        height={60}
+        className="w-full h-full object-cover"
+      />
     </motion.div>
   )
 })
@@ -570,7 +569,7 @@ const PlanetCard = memo(function PlanetCard({
           )}
 
           <div className="relative flex justify-center">
-            <MiniPlanet3DView type={planet.type} variant={planet.variant} isHovered={isHovered} />
+            <MiniPlanetImageView type={planet.type} variant={planet.variant} isHovered={isHovered} />
             <StatusIndicators planet={planet} />
           </div>
         </motion.button>
@@ -641,7 +640,7 @@ const PlanetCard = memo(function PlanetCard({
         <div className="relative flex gap-3">
           {/* Mini 3D Planet View */}
           <div className="relative flex-shrink-0">
-            <MiniPlanet3DView type={planet.type} variant={planet.variant} isHovered={isHovered} />
+            <MiniPlanetImageView type={planet.type} variant={planet.variant} isHovered={isHovered} />
             <StatusIndicators planet={planet} />
           </div>
 
