@@ -37,6 +37,11 @@ const DevOverlay = dynamic(
   { ssr: false }
 )
 
+const GameWindows = dynamic(
+  () => import('@/components/game/ui/GameWindows').then(mod => mod.GameWindows),
+  { ssr: false }
+)
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -414,6 +419,9 @@ export const GameLayoutClient = memo(function GameLayoutClient({
         onSceneChange={handleSceneChange}
         onZoneClick={handleZoneClick}
       />
+
+      {/* Draggable Game Windows */}
+      <GameWindows />
 
       {/* Developer Overlay (only visible for admins) */}
       <DevOverlay />

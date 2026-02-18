@@ -375,21 +375,23 @@ const GalacticCenter = memo(function GalacticCenter({ position, isVisible, zoomL
   return (
     <group position={position}>
       {/* Advanced Black Hole with Accretion Disk */}
-      <BlackHole3D
-        position={[0, 0, 0]}
-        size={8 * scale}
-        accretionDiskSize={25 * scale}
-        rotationSpeed={0.3}
-        showJets={zoomLevel !== 'galaxy'} // Hide jets at galaxy level
-        simpleMode={useSimpleMode}
-        glowIntensity={glowIntensity}
-        discColors={['#fffaf0', '#ffcc44', '#ff6600', '#ff0044', '#880066']}
-      />
+      <group rotation={[Math.PI * 0.15, 0, Math.PI * 0.1]}>
+        <BlackHole3D
+          position={[0, 0, 0]}
+          size={2 * scale}
+          accretionDiskSize={6 * scale}
+          rotationSpeed={0.3}
+          showJets={zoomLevel !== 'galaxy'} // Hide jets at galaxy level
+          simpleMode={useSimpleMode}
+          glowIntensity={glowIntensity}
+          discColors={['#fffaf0', '#ffcc44', '#ff6600', '#ff0044', '#880066']}
+        />
+      </group>
 
       {/* Label */}
       <Text
-        position={[0, 35 * scale, 0]}
-        fontSize={3 * scale}
+        position={[0, 12 * scale, 0]}
+        fontSize={2 * scale}
         color="#ff6600"
         anchorX="center"
         anchorY="bottom"

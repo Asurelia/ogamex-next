@@ -6,7 +6,6 @@
  * Falls back to hardcoded constants if database is unavailable.
  */
 
-import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import {
   SHIPS,
@@ -157,10 +156,8 @@ export class GameConfigService {
    */
   private async doLoad(): Promise<void> {
     try {
-      // Get appropriate Supabase client
-      const supabase = isServer()
-        ? await createServerClient()
-        : getSupabaseClient()
+      // Get Supabase client (always use browser client for now)
+      const supabase = getSupabaseClient()
 
       // Load all data in parallel
       const [shipsResult, buildingsResult, defensesResult, researchResult, rapidFireResult] =
