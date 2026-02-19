@@ -70,3 +70,6 @@ server/node_modules/
 _archived/
 evemu_Crucible/
 unity_client/
+
+# Large assets (download separately - see ASSETS.md)
+public/assets/skyboxes/large/
