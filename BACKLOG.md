@@ -22,10 +22,10 @@
 - **Files**: `src/engine/EngineController.tsx`, `src/app/game/space/page.tsx`
 - **Details**: Systems ARE registered via wrapSystem in EngineController.tsx, 12 systems running.
 
-### [MISSING] No ship spawning on first login
-- **Status**: OPEN
-- **Files**: `server/src/rooms/SystemRoom.ts`, `server/src/db/supabase.ts`
-- **Details**: New players need auto-spawn of starter ship (Capsule or faction frigate). `loadOrCreateShip()` exists in supabase.ts but needs verification.
+### [FIXED] No ship spawning on first login
+- **Status**: FIXED
+- **Files**: `server/src/db/supabase.ts`
+- **Details**: `loadShipForPlayer()` now auto-creates a Caldari Frigate in Jita for new players. Handles PGRST116 (no rows) gracefully.
 
 ### [MISSING] Combat not usable in-game
 - **Status**: PARTIAL
@@ -250,31 +250,27 @@
 
 ---
 
-## Missing Server Handlers
+## Server Handlers (Recently Implemented)
 
-### [MISSING] No handler for fleet_command message
-- **Status**: OPEN
-- **Files**: `server/src/rooms/SystemRoom.ts`, `server/src/systems/formations.ts`
-- **Details**: Client sends `fleet_command` but server has no handler. formations.ts exists with formation logic.
+### [FIXED] fleet_command handler
+- **Status**: IMPLEMENTED (basic)
+- **Details**: Broadcasts fleet command to all clients. Full fleet group tracking still needed.
 
-### [MISSING] No handler for train_skill message
-- **Status**: OPEN
-- **Files**: `server/src/rooms/SystemRoom.ts`, `server/src/systems/skill-ticker.ts`
-- **Details**: Client sends `train_skill` but server has no handler. skill-ticker.ts exists.
+### [FIXED] train_skill handler
+- **Status**: IMPLEMENTED (basic)
+- **Details**: Acknowledges training start. Full integration with skill-ticker.ts still needed.
 
-### [MISSING] No handler for toggle_module message
-- **Status**: OPEN
-- **Files**: `server/src/rooms/SystemRoom.ts`
-- **Details**: Client sends `toggle_module` but server has no handler. Need module activation/deactivation logic.
+### [FIXED] toggle_module handler
+- **Status**: IMPLEMENTED (basic)
+- **Details**: Consumes capacitor on activation. Full module stat effects still needed.
 
-### [MISSING] No handler for market_order message
-- **Status**: OPEN
-- **Files**: `server/src/rooms/SystemRoom.ts`, `server/src/systems/economy.ts`
-- **Details**: Client sends `market_order` but server has no handler. economy.ts has order matching logic.
+### [FIXED] market_order handler
+- **Status**: IMPLEMENTED (basic)
+- **Details**: Validates docking requirement, acknowledges order. Full economy.ts matchOrders() integration still needed.
 
-### [MISSING] No target locking system
-- **Status**: OPEN
-- **Details**: LockedTargets UI exists in HUDOverlay with shield/armor/hull bars. No server-side lock mechanism (scan resolution timing, max targets). Need lock_target/unlock_target messages.
+### [FIXED] Target locking system
+- **Status**: IMPLEMENTED
+- **Details**: lock_target/unlock_target messages with server-side validation. Sends target info (name, type, shield/armor/hull %, distance) to client. Client updates LockedTargets in HUD.
 
 ---
 
