@@ -15,6 +15,7 @@ import { updatePhysics } from '../systems/physics'
 import { updateCombat } from '../systems/combat'
 import { updateMining } from '../systems/mining'
 import { updateNpcAI } from '../systems/npc-ai'
+import { validateCrossSystemWarp, initiateCrossSystemWarp } from '../systems/warp'
 import { SeededRandom } from '../../../src/lib/galaxy/prng'
 import type { OreType } from '../../../shared/types/ship-types'
 
@@ -350,6 +351,52 @@ export class SystemRoom extends Room<SystemState> {
 
       // Log to SQLite
       logChat(this.state.systemId, chatMsg.channel, chatMsg.senderId, chatMsg.senderName, chatMsg.content)
+    })
+
+    this.onMessage('warp_cross_system', async (client, msg: { targetSystemId: string }) => {
+      const ship = this.state.ships.get(client.sessionId)
+      if (!ship) return
+
+      const error = validateCrossSystemWarp(ship, this.state.systemId, msg.targetSystemId)
+      if (error) {
+        client.send('server_error', { code: 'WARP_DENIED', message: error })
+        return
+      }
+
+      const { targetSystemName } = initiateCrossSystemWarp(ship, msg.targetSystemId)
+
+      // Save ship to new system in Supabase before transfer
+      const meta = this.playerMeta.get(client.sessionId)
+      if (meta) {
+        try {
+          await saveShipState(meta.dbShipId, {
+            system_id: msg.targetSystemId,
+            position_x: 0,
+            position_y: 0,
+            position_z: 0,
+            current_hp: ship.hp,
+            current_shield: ship.shield,
+            current_armor: ship.armor,
+            is_docked: false,
+          })
+        } catch (err) {
+          console.error(`[Room] Failed to save ship for cross-system warp:`, err)
+        }
+      }
+
+      // Notify all clients that the ship is warping out
+      this.broadcast('warp_start', {
+        shipId: ship.id,
+        destinationSystemId: msg.targetSystemId,
+      })
+
+      // Tell this client to switch rooms
+      client.send('system_transfer', {
+        targetSystemId: msg.targetSystemId,
+        targetSystemName,
+      })
+
+      console.log(`[Room] Ship ${client.sessionId} warping to ${targetSystemName} (${msg.targetSystemId})`)
     })
   }
 

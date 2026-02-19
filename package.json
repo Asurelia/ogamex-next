@@ -24,7 +24,9 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.49.0",
     "better-sqlite3": "^12.6.2",
+    "bitecs": "^0.4.0",
     "clsx": "^2.1.1",
+    "colyseus.js": "^0.15.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.34.0",
     "gsap": "^3.14.2",
@@ -38,7 +40,6 @@
     "three": "^0.182.0",
     "three.quarks": "^0.17.0",
     "uuid": "^13.0.0",
-    "colyseus.js": "^0.15.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -50,8 +51,8 @@
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.182.0",
     "@types/uuid": "^10.0.0",
-    "concurrently": "^9.1.0",
     "autoprefixer": "^10.4.0",
+    "concurrently": "^9.1.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.6",
     "jest": "^30.2.0",

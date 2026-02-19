@@ -10,6 +10,7 @@
 
 import { SystemState, ShipState, ShipStateEnum } from '../schema/GameState'
 import { AU_IN_METERS, WARP_SPOOL_TIME } from '../../../shared/types/game-constants'
+import { getUniverseGraph } from '../../../src/data/universe-graph'
 
 // ============================================================================
 // TYPES
@@ -304,4 +305,61 @@ export function estimateWarpTime(
   const warpSpeedMs = warpSpeedAU * AU_IN_METERS
   const travelTime = distanceMeters / warpSpeedMs
   return alignTimeSeconds + SPOOL_DURATION + travelTime
+}
+
+// ============================================================================
+// CROSS-SYSTEM WARP VALIDATION
+// ============================================================================
+
+/**
+ * Validate that a cross-system warp is allowed:
+ * - Ship must not be docked, destroyed, or already warping
+ * - Target system must be a direct gate connection from current system
+ * Returns an error string if invalid, null if valid.
+ */
+export function validateCrossSystemWarp(
+  ship: ShipState,
+  currentSystemId: string,
+  targetSystemId: string
+): string | null {
+  if (!ship || ship.hp <= 0) return 'Ship is destroyed'
+  if (ship.isDocked) return 'Cannot warp while docked'
+  if (ship.state === ShipStateEnum.WARPING || ship.state === ShipStateEnum.WARPING_OUT) {
+    return 'Already warping'
+  }
+
+  const graph = getUniverseGraph()
+  const currentSystem = graph.getSystem(currentSystemId)
+  if (!currentSystem) return 'Current system not found'
+
+  const targetSystem = graph.getSystem(targetSystemId)
+  if (!targetSystem) return 'Target system not found'
+
+  if (!currentSystem.connections.includes(targetSystemId)) {
+    return 'No stargate connection to target system'
+  }
+
+  return null
+}
+
+/**
+ * Initiate a cross-system warp for a ship.
+ * Sets ship state to WARPING_OUT and returns the target system name.
+ */
+export function initiateCrossSystemWarp(
+  ship: ShipState,
+  targetSystemId: string
+): { targetSystemName: string } {
+  const graph = getUniverseGraph()
+  const targetSystem = graph.getSystem(targetSystemId)
+
+  ship.state = ShipStateEnum.WARPING_OUT
+  ship.vx = 0
+  ship.vy = 0
+  ship.vz = 0
+  ship.speed = 0
+
+  return {
+    targetSystemName: targetSystem?.name ?? targetSystemId,
+  }
 }

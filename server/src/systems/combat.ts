@@ -8,6 +8,7 @@
 
 import { SystemState, ShipState, ShipStateEnum } from '../schema/GameState'
 import { DAMAGE_EFFECTIVENESS } from '../../../src/lib/battle/damage-types'
+import { FACTIONS, getFactionDamageProfile } from '../../../src/data/faction-identities'
 
 type CombatCallback = (
   attackerId: string,
@@ -34,16 +35,6 @@ const BASE_DPS: Record<string, number> = {
   battleship: 400,
   industrial: 10,
   mining_barge: 5,
-}
-
-/** Damage type distribution by faction */
-const FACTION_DAMAGE: Record<string, { ballistic: number; ionic: number; explosive: number }> = {
-  amarr: { ballistic: 0.1, ionic: 0.7, explosive: 0.2 },
-  caldari: { ballistic: 0.2, ionic: 0.3, explosive: 0.5 },
-  gallente: { ballistic: 0.3, ionic: 0.4, explosive: 0.3 },
-  minmatar: { ballistic: 0.6, ionic: 0.1, explosive: 0.3 },
-  pirate: { ballistic: 0.4, ionic: 0.2, explosive: 0.4 },
-  npc: { ballistic: 0.34, ionic: 0.33, explosive: 0.33 },
 }
 
 /**
@@ -79,9 +70,9 @@ export function updateCombat(
 
     if (damageThisTick <= 0) return
 
-    // Get damage distribution
+    // Get damage distribution from faction identities
     const faction = ship.faction || 'npc'
-    const dist_profile = FACTION_DAMAGE[faction] || FACTION_DAMAGE.npc
+    const dist_profile = getFactionDamageProfile(faction)
 
     const ballisticDmg = damageThisTick * dist_profile.ballistic
     const ionicDmg = damageThisTick * dist_profile.ionic

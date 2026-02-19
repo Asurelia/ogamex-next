@@ -1,10 +1,25 @@
 /**
  * Ship Type Definitions - Shared between client and server
- *
- * Reuses damage/resistance interfaces from the battle system.
  */
 
-import type { DamageTypes, ResistanceTypes } from '../../src/lib/battle/damage-types'
+export interface DamageTypes {
+  em: number
+  thermal: number
+  kinetic: number
+  explosive: number
+  ionic: number
+  ballistic: number
+}
+
+export interface ResistanceTypes {
+  em: number
+  thermal: number
+  kinetic: number
+  explosive: number
+  ionic_resistance: number
+  ballistic_resistance: number
+  explosive_resistance: number
+}
 
 // ============================================================================
 // FACTIONS

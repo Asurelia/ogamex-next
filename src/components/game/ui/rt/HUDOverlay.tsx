@@ -125,6 +125,38 @@ const LockedTargets = memo(function LockedTargets() {
 })
 
 // ============================================================================
+// ROUTE INDICATOR
+// ============================================================================
+
+const RouteIndicator = memo(function RouteIndicator() {
+  const route = useRTGameStore(s => s.route)
+  const routeDestination = useRTGameStore(s => s.routeDestination)
+
+  if (route.length === 0 || !routeDestination) return null
+
+  const jumpsRemaining = Math.max(0, route.length - 1)
+
+  return (
+    <div
+      className="fixed z-50"
+      style={{
+        left: '60px',
+        top: '44px',
+        background: 'rgba(10, 14, 20, 0.7)',
+        backdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255, 170, 0, 0.3)',
+        borderRadius: '4px',
+        padding: '4px 10px',
+      }}
+    >
+      <span className="text-[10px] text-amber-400">
+        {routeDestination} ({jumpsRemaining} jump{jumpsRemaining !== 1 ? 's' : ''})
+      </span>
+    </div>
+  )
+})
+
+// ============================================================================
 // HUD OVERLAY (fixed position, not a managed window)
 // ============================================================================
 
@@ -141,8 +173,16 @@ export const HUDOverlay = memo(function HUDOverlay() {
 
   return (
     <>
-      {/* System name + Security - Top Left */}
-      <div className="fixed top-3 left-3 z-50 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm rounded px-3 py-1.5 border border-slate-700/50">
+      {/* System name + Security - Top Left (offset for Neocom) */}
+      <div
+        className="fixed top-3 z-50 flex items-center gap-2 rounded px-3 py-1.5"
+        style={{
+          left: '60px',
+          background: 'rgba(10, 14, 20, 0.75)',
+          backdropFilter: 'blur(12px) saturate(0.8)',
+          border: '1px solid rgba(80, 120, 160, 0.3)',
+        }}
+      >
         <span className="text-sm font-semibold text-slate-200">{systemName || 'Unknown'}</span>
         <span
           className={`text-xs font-bold px-1.5 py-0.5 rounded ${securityBg(securityLevel)} ${securityColor(securityLevel)}`}
@@ -151,6 +191,9 @@ export const HUDOverlay = memo(function HUDOverlay() {
         </span>
       </div>
 
+      {/* Route indicator - Top Left below system name */}
+      <RouteIndicator />
+
       {/* Locked targets - Top Right */}
       <div className="fixed top-3 right-3 z-50">
         <LockedTargets />
@@ -158,8 +201,16 @@ export const HUDOverlay = memo(function HUDOverlay() {
 
       {/* Bottom center HUD */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
-        {/* Ship HP bars */}
-        <div className="bg-slate-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-slate-700/50 space-y-1">
+        {/* Ship HP bars - Glassmorphism */}
+        <div
+          className="rounded-lg px-4 py-3 space-y-1"
+          style={{
+            background: 'rgba(10, 14, 20, 0.8)',
+            backdropFilter: 'blur(12px) saturate(0.8)',
+            border: '1px solid rgba(80, 120, 160, 0.25)',
+            boxShadow: '0 4px 30px rgba(0, 0, 0, 0.5)',
+          }}
+        >
           <ShipBar label="SH" percent={shieldPct} color="bg-blue-500" />
           <ShipBar label="AR" percent={armorPct} color="bg-orange-500" />
           <ShipBar label="HL" percent={hullPct} color="bg-red-500" />
