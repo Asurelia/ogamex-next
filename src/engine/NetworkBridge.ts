@@ -147,9 +147,49 @@ class NetworkBridge {
       // Future: trigger docking UI
     })
 
-    room.onMessage('system_transfer', (_data: { systemId: string }) => {
+    room.onMessage('system_transfer', (_data: { targetSystemId: string; targetSystemName: string }) => {
       this.disconnect()
       window.dispatchEvent(new CustomEvent('system_transfer', { detail: _data }))
+    })
+
+    room.onMessage('warp_start', (_data: unknown) => {
+      // Future: trigger warp VFX
+    })
+
+    room.onMessage('ship_destroyed', (_data: unknown) => {
+      // Future: trigger explosion VFX
+    })
+
+    room.onMessage('fleet_update', (data: { command: string; formationType: string }) => {
+      useRTGameStore.getState().setFleetFormation(data.formationType || 'line')
+    })
+
+    room.onMessage('target_locked', (data: { id: string; name: string; type: string; shieldPercent: number; armorPercent: number; hullPercent: number; distance: number }) => {
+      const s = useRTGameStore.getState()
+      if (!s.lockedTargets.find(t => t.id === data.id)) {
+        s.setLockedTargets([...s.lockedTargets, data])
+      }
+    })
+
+    room.onMessage('target_lost', (data: { id: string }) => {
+      const s = useRTGameStore.getState()
+      s.setLockedTargets(s.lockedTargets.filter(t => t.id !== data.id))
+    })
+
+    room.onMessage('skill_update', (_data: unknown) => {
+      // Future: update skill training UI
+    })
+
+    room.onMessage('fitting_update', (_data: unknown) => {
+      // Future: update fitting/module UI
+    })
+
+    room.onMessage('market_update', (_data: unknown) => {
+      // Future: update market order UI
+    })
+
+    room.onMessage('server_error', (data: { code: string; message: string }) => {
+      console.error(`[Server] ${data.code}: ${data.message}`)
     })
 
     store.setConnected(true)

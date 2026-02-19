@@ -51,7 +51,7 @@ function HPBar({ label, percent, color }: { label: string; percent: number; colo
 const SelectedItemContent = memo(function SelectedItemContent() {
   const {
     selectedTargetId, ships, asteroids, stations, myShipId,
-    approach, orbit, warpTo, setSelectedTarget, attack, mine, dock,
+    approach, orbit, warpTo, setSelectedTarget, attack, mine, dock, lockTarget,
   } = useRTGameStore()
 
   const myShip = ships.get(myShipId)
@@ -181,7 +181,7 @@ const SelectedItemContent = memo(function SelectedItemContent() {
           Warp To
         </button>
         <button
-          onClick={() => setSelectedTarget(selectedTargetId)}
+          onClick={() => lockTarget(selectedTargetId!)}
           className="px-2.5 py-1.5 bg-yellow-700/50 hover:bg-yellow-600/50 text-yellow-300 rounded transition-colors"
         >
           Lock

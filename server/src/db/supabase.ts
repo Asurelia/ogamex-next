@@ -35,6 +35,12 @@ export function getSupabaseAdmin(): SupabaseClient {
 // SHIP OPERATIONS
 // ============================================================================
 
+/** Default starter system (Jita) */
+const STARTER_SYSTEM_ID = '7127c86d-a096-4b4e-8de1-755a22bb168a'
+
+/** Default starter ship type */
+const STARTER_SHIP_TYPE = 'caldari_frigate'
+
 export async function loadShipForPlayer(userId: string) {
   const db = getSupabaseAdmin()
   const { data, error } = await db
@@ -44,10 +50,41 @@ export async function loadShipForPlayer(userId: string) {
     .eq('is_active', true)
     .single()
 
-  if (error) throw new Error(`Failed to load ship: ${error.message}`)
-  // Ship type definition is resolved from static constants, not from the database join.
-  const shipType = getShipTypeOrDefault(data?.ship_type_id ?? '')
-  return { ...data, rt_ship_types: shipType }
+  if (data) {
+    const shipType = getShipTypeOrDefault(data.ship_type_id ?? '')
+    return { ...data, rt_ship_types: shipType }
+  }
+
+  // No active ship found - create a starter ship
+  if (error && error.code !== 'PGRST116') {
+    // PGRST116 = "no rows returned" - expected for new players
+    throw new Error(`Failed to load ship: ${error.message}`)
+  }
+
+  console.log(`[DB] Creating starter ship for new player ${userId}`)
+  const starterType = getShipTypeOrDefault(STARTER_SHIP_TYPE)
+
+  const { data: newShip, error: createError } = await db
+    .from('rt_ships')
+    .insert({
+      owner_id: userId,
+      ship_type_id: STARTER_SHIP_TYPE,
+      system_id: STARTER_SYSTEM_ID,
+      position_x: (Math.random() - 0.5) * 10000,
+      position_y: (Math.random() - 0.5) * 2000,
+      position_z: (Math.random() - 0.5) * 10000,
+      current_hp: starterType.baseHp,
+      current_shield: starterType.baseShield,
+      current_armor: starterType.baseArmor,
+      is_active: true,
+      is_docked: false,
+    })
+    .select('*')
+    .single()
+
+  if (createError) throw new Error(`Failed to create starter ship: ${createError.message}`)
+
+  return { ...newShip, rt_ship_types: starterType }
 }
 
 export async function saveShipState(shipId: string, state: {

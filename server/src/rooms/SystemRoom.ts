@@ -93,6 +93,9 @@ export class SystemRoom extends Room<SystemState> {
     // Periodic save to Supabase
     this.saveTimer = setInterval(() => this.persistAllShips(), CONFIG.SAVE_INTERVAL_MS)
 
+    // Register all message handlers
+    this.registerMessages()
+
     this.roomId = systemId
     console.log(`[Room] System "${system.name}" (${systemId}) created. Security: ${system.security_level}`)
   }
@@ -397,6 +400,147 @@ export class SystemRoom extends Room<SystemState> {
       })
 
       console.log(`[Room] Ship ${client.sessionId} warping to ${targetSystemName} (${msg.targetSystemId})`)
+    })
+
+    // ------------------------------------------------------------------
+    // Fleet command - broadcast to fleet members
+    // ------------------------------------------------------------------
+    this.onMessage('fleet_command', (client, msg: { command: string; targetId?: string; formationType?: string }) => {
+      const ship = this.state.ships.get(client.sessionId)
+      if (!ship || ship.isDocked) return
+
+      // For now, just broadcast the command to all fleet members
+      // Full fleet system needs fleet groups tracked in memory
+      this.broadcast('fleet_update', {
+        leaderId: client.sessionId,
+        command: msg.command,
+        formationType: msg.formationType || 'line',
+      })
+    })
+
+    // ------------------------------------------------------------------
+    // Train skill - acknowledge and defer to skill-ticker
+    // ------------------------------------------------------------------
+    this.onMessage('train_skill', async (client, msg: { skillId: string }) => {
+      const meta = this.playerMeta.get(client.sessionId)
+      if (!meta) return
+
+      // Acknowledge to client - actual training handled by skill-ticker on interval
+      client.send('skill_update', {
+        action: 'training_started',
+        skillId: msg.skillId,
+        characterId: meta.userId,
+      })
+    })
+
+    // ------------------------------------------------------------------
+    // Toggle module - activate/deactivate ship modules
+    // ------------------------------------------------------------------
+    this.onMessage('toggle_module', (client, msg: { moduleId: string }) => {
+      const ship = this.state.ships.get(client.sessionId)
+      if (!ship || ship.isDocked) return
+
+      // Module activation consumes capacitor
+      const capCost = 10 // Base cap cost per module activation
+      if (ship.capacitor < capCost) {
+        client.send('server_error', { code: 'NO_CAPACITOR', message: 'Insufficient capacitor' })
+        return
+      }
+
+      ship.capacitor -= capCost
+
+      client.send('fitting_update', {
+        action: 'module_toggled',
+        moduleId: msg.moduleId,
+        capacitor: ship.capacitor,
+      })
+    })
+
+    // ------------------------------------------------------------------
+    // Market order - place buy/sell orders while docked
+    // ------------------------------------------------------------------
+    this.onMessage('market_order', async (client, msg: { itemName: string; price: number; quantity: number; type: 'buy' | 'sell' }) => {
+      const ship = this.state.ships.get(client.sessionId)
+      if (!ship || !ship.isDocked) {
+        client.send('server_error', { code: 'NOT_DOCKED', message: 'Must be docked to place market orders' })
+        return
+      }
+
+      const meta = this.playerMeta.get(client.sessionId)
+      if (!meta) return
+
+      // For now, acknowledge - full market uses economy.ts matchOrders()
+      client.send('market_update', {
+        action: 'order_placed',
+        itemName: msg.itemName,
+        price: msg.price,
+        quantity: msg.quantity,
+        type: msg.type,
+      })
+    })
+
+    // ------------------------------------------------------------------
+    // Lock target - validate target and send lock confirmation
+    // ------------------------------------------------------------------
+    this.onMessage('lock_target', (client, msg: { targetId: string }) => {
+      const ship = this.state.ships.get(client.sessionId)
+      if (!ship || ship.isDocked) return
+
+      // Verify target exists
+      const targetShip = this.state.ships.get(msg.targetId)
+      const targetAsteroid = this.state.asteroids.get(msg.targetId)
+      const targetStation = this.state.stations.get(msg.targetId)
+
+      if (!targetShip && !targetAsteroid && !targetStation) {
+        client.send('server_error', { code: 'INVALID_TARGET', message: 'Target not found' })
+        return
+      }
+
+      // Send lock confirmation
+      let targetName = 'Unknown'
+      let targetType = 'unknown'
+      let targetShield = 100, targetArmor = 100, targetHull = 100
+      let targetX = 0, targetY = 0, targetZ = 0
+
+      if (targetShip) {
+        targetName = targetShip.ownerName || targetShip.id.slice(0, 8)
+        targetType = targetShip.shipTypeId
+        targetShield = targetShip.shieldMax > 0 ? (targetShip.shield / targetShip.shieldMax) * 100 : 100
+        targetArmor = targetShip.armorMax > 0 ? (targetShip.armor / targetShip.armorMax) * 100 : 100
+        targetHull = targetShip.hpMax > 0 ? (targetShip.hp / targetShip.hpMax) * 100 : 100
+        targetX = targetShip.x; targetY = targetShip.y; targetZ = targetShip.z
+      } else if (targetAsteroid) {
+        targetName = `${targetAsteroid.oreType} Asteroid`
+        targetType = 'asteroid'
+        targetX = targetAsteroid.x; targetY = targetAsteroid.y; targetZ = targetAsteroid.z
+      } else if (targetStation) {
+        targetName = targetStation.name
+        targetType = 'station'
+        targetX = targetStation.x; targetY = targetStation.y; targetZ = targetStation.z
+      }
+
+      // Calculate distance
+      const dx = targetX - ship.x
+      const dy = targetY - ship.y
+      const dz = targetZ - ship.z
+      const distance = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+      client.send('target_locked', {
+        id: msg.targetId,
+        name: targetName,
+        type: targetType,
+        shieldPercent: targetShield,
+        armorPercent: targetArmor,
+        hullPercent: targetHull,
+        distance,
+      })
+    })
+
+    // ------------------------------------------------------------------
+    // Unlock target - release target lock
+    // ------------------------------------------------------------------
+    this.onMessage('unlock_target', (client, msg: { targetId: string }) => {
+      client.send('target_lost', { id: msg.targetId })
     })
   }
 

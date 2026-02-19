@@ -91,6 +91,71 @@ export function setupStateSync(room: Room): () => void {
     console.log(`[Docking] Ship ${msg.shipId} ${msg.action}`)
   })
 
+  // Skills
+  room.onMessage('skill_update', (msg) => {
+    console.log(`[Skills] ${msg.action}: ${msg.skillId}`)
+  })
+
+  // Fitting / Modules
+  room.onMessage('fitting_update', (msg) => {
+    console.log(`[Fitting] ${msg.action}: ${msg.moduleId}`)
+  })
+
+  // Market
+  room.onMessage('market_update', (msg) => {
+    console.log(`[Market] ${msg.action}: ${msg.itemName} x${msg.quantity} @ ${msg.price}`)
+  })
+
+  // Fleet
+  room.onMessage('fleet_update', (msg) => {
+    console.log(`[Fleet] Command: ${msg.command}, Formation: ${msg.formationType}`)
+    useRTGameStore.getState().setFleetFormation(msg.formationType || 'line')
+  })
+
+  // Target locking
+  room.onMessage('target_locked', (msg) => {
+    const store = useRTGameStore.getState()
+    const current = store.lockedTargets
+    // Add to locked targets if not already there
+    if (!current.find(t => t.id === msg.id)) {
+      store.setLockedTargets([...current, {
+        id: msg.id,
+        name: msg.name,
+        type: msg.type,
+        shieldPercent: msg.shieldPercent,
+        armorPercent: msg.armorPercent,
+        hullPercent: msg.hullPercent,
+        distance: msg.distance,
+      }])
+    }
+  })
+
+  room.onMessage('target_lost', (msg) => {
+    const store = useRTGameStore.getState()
+    store.setLockedTargets(store.lockedTargets.filter(t => t.id !== msg.id))
+  })
+
+  // Warp notifications
+  room.onMessage('warp_start', (msg) => {
+    console.log(`[Warp] Ship ${msg.shipId} warping to ${msg.destinationSystemId || 'destination'}`)
+  })
+
+  // Ship destroyed
+  room.onMessage('ship_destroyed', (msg) => {
+    console.log(`[Combat] Ship ${msg.shipId} destroyed by ${msg.killerId}`)
+  })
+
+  // System transfer (cross-system warp)
+  room.onMessage('system_transfer', (msg) => {
+    console.log(`[Warp] Transferring to system ${msg.targetSystemName} (${msg.targetSystemId})`)
+    // The space page should handle reconnection to the new system room
+  })
+
+  // Server errors
+  room.onMessage('server_error', (msg) => {
+    console.error(`[Server Error] ${msg.code}: ${msg.message}`)
+  })
+
   // Cleanup function
   return () => {
     // Room cleanup is handled by Colyseus client

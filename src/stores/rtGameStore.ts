@@ -252,6 +252,8 @@ interface RTGameState {
   placeOrder: (itemName: string, price: number, quantity: number, type: 'buy' | 'sell') => void
   trainSkill: (skillId: string) => void
   toggleModule: (moduleId: string) => void
+  lockTarget: (targetId: string) => void
+  unlockTarget: (targetId: string) => void
 
   // Reset
   reset: () => void
@@ -385,6 +387,8 @@ export const useRTGameStore = create<RTGameState>((set, get) => ({
   placeOrder: (itemName, price, quantity, type) => sendMessage('market_order', { itemName, price, quantity, type }),
   trainSkill: (skillId) => sendMessage('train_skill', { skillId }),
   toggleModule: (moduleId) => sendMessage('toggle_module', { moduleId }),
+  lockTarget: (targetId) => sendMessage('lock_target', { targetId }),
+  unlockTarget: (targetId) => sendMessage('unlock_target', { targetId }),
 
   reset: () => set({
     ...initialState,
