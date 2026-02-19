@@ -61,6 +61,11 @@ nul
 *.log
 .cache/
 
+# Server build/data
+server/dist/
+server/data/
+server/node_modules/
+
 # Temp/archive folders
 _archived/
 evemu_Crucible/

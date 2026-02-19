@@ -45,6 +45,9 @@
       ],
       "@/store/*": [
         "./src/store/*"
+      ],
+      "@shared/*": [
+        "./shared/*"
       ]
     },
     "target": "ES2017"

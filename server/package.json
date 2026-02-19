@@ -1,0 +1,33 @@
+{
+  "name": "ogamex-server",
+  "version": "1.0.0",
+  "description": "OGameX EVE-style Colyseus game server",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "colyseus": "^0.15.0",
+    "@colyseus/schema": "^2.0.0",
+    "@colyseus/ws-transport": "^0.15.0",
+    "@colyseus/monitor": "^0.15.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "better-sqlite3": "^12.6.2",
+    "jsonwebtoken": "^9.0.0",
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.0"
+  }
+}

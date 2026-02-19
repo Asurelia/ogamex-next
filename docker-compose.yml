@@ -1,0 +1,41 @@
+services:
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_COLYSEUS_URL=ws://server:2567
+    volumes:
+      - ./src:/app/src
+      - ./shared:/app/shared
+    depends_on:
+      - server
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "2567:2567"
+    environment:
+      - COLYSEUS_PORT=2567
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - NODE_ENV=development
+    volumes:
+      - ./server/src:/app/src
+      - ./shared:/app/../shared
+      - server-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2567/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  server-data:
