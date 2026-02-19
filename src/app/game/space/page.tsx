@@ -9,7 +9,8 @@ import { GameEngine } from '@/engine/GameEngine'
 import { networkBridge } from '@/engine/NetworkBridge'
 import { joinSystem } from '@/lib/colyseus/client'
 
-const DEFAULT_SYSTEM_ID = 'sys_caldari_0'
+/** Starter system: Jita (1.0 security) */
+const DEFAULT_SYSTEM_ID = '7127c86d-a096-4b4e-8de1-755a22bb168a'
 
 export default function SpacePage() {
   const [loading, setLoading] = useState(true)

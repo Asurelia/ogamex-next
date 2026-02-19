@@ -83,11 +83,11 @@ interface ContextMenuProps {
 }
 
 function ContextMenu({ x, y, entity, onClose }: ContextMenuProps) {
-  const { approach, orbit, warpTo, setSelectedTarget, attack, mine, dock } = useRTGameStore()
+  const { approach, orbit, warpTo, setSelectedTarget, lockTarget, attack, mine, dock } = useRTGameStore()
 
   const actions = useMemo(() => {
     const base = [
-      { label: 'Lock Target', action: () => setSelectedTarget(entity.id) },
+      { label: 'Lock Target', action: () => lockTarget(entity.id) },
     ]
 
     if (entity.entityType === 'ship' || entity.entityType === 'npc') {
@@ -112,7 +112,7 @@ function ContextMenu({ x, y, entity, onClose }: ContextMenuProps) {
     }
 
     return base
-  }, [entity, approach, orbit, warpTo, setSelectedTarget, attack, mine, dock])
+  }, [entity, approach, orbit, warpTo, setSelectedTarget, lockTarget, attack, mine, dock])
 
   return (
     <>
