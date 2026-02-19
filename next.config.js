@@ -4,6 +4,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for Docker deployments
+  output: 'standalone',
   // NOTE: cacheComponents is disabled because it conflicts with dynamic pages
   // that use cookies() for locale detection. The 'use cache' directive still
   // works for individual functions in config-cache.ts
@@ -17,7 +19,7 @@ const nextConfig = {
     ],
   },
   // Transpile Three.js for proper ESM handling
-  transpilePackages: ['three'],
+  transpilePackages: ['three', 'colyseus.js'],
   // Enable experimental features for better performance
   experimental: {
     // Enable server actions

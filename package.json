@@ -9,6 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
+    "server:dev": "cd server && npm run dev",
+    "server:build": "cd server && npm run build",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server:dev\"",
     "db:generate": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.ts",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset"
@@ -35,6 +38,7 @@
     "three": "^0.182.0",
     "three.quarks": "^0.17.0",
     "uuid": "^13.0.0",
+    "colyseus.js": "^0.15.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
@@ -46,6 +50,7 @@
     "@types/react-dom": "^19.0.0",
     "@types/three": "^0.182.0",
     "@types/uuid": "^10.0.0",
+    "concurrently": "^9.1.0",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.6",
