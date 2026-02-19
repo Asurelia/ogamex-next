@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, memo } from 'react'
 import { ManagedWindow } from '../WindowManager'
 import { useRTGameStore } from '@/stores/rtGameStore'
 import type { ShipData, AsteroidData, StationData } from '@/stores/rtGameStore'
+import { getFactionColor } from '@/data/faction-identities'
 
 // ============================================================================
 // TYPES
@@ -31,9 +32,15 @@ interface OverviewEntity {
 
 function getShipIcon(ship: ShipData): string {
   if (ship.isNpc) return '🔴'
-  if (ship.faction === 'friendly') return '🟢'
-  if (ship.faction === 'hostile') return '🔴'
-  return '🟡'
+  // Faction-colored icons
+  switch (ship.faction) {
+    case 'amarr': return '🟡'
+    case 'caldari': return '🔵'
+    case 'gallente': return '🟢'
+    case 'minmatar': return '🟠'
+    case 'pirate': return '🔴'
+    default: return '⚪'
+  }
 }
 
 function getEntityColor(entity: OverviewEntity): string {

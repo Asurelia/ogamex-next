@@ -1,5 +1,0 @@
-export { ResourcesWindow, ResourcesWindowContent } from './ResourcesWindow'
-export { ShipyardWindow, ShipyardWindowContent } from './ShipyardWindow'
-export { ResearchWindow, ResearchWindowContent } from './ResearchWindow'
-export { DefenseWindow, DefenseWindowContent } from './DefenseWindow'
-export { FleetWindow, FleetWindowContent } from './FleetWindow'

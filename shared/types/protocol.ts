@@ -198,6 +198,25 @@ export type EntityType = 'ship' | 'asteroid' | 'station' | 'wreck' | 'container'
 // UNION TYPES
 // ============================================================================
 
+// ============================================================================
+// CROSS-SYSTEM WARP MESSAGES
+// ============================================================================
+
+export interface WarpCrossSystemMessage {
+  type: 'warp_cross_system'
+  targetSystemId: string
+}
+
+export interface SystemTransferNotification {
+  type: 'system_transfer'
+  targetSystemId: string
+  targetSystemName: string
+}
+
+// ============================================================================
+// UNION TYPES
+// ============================================================================
+
 export type ClientMessage =
   | NavigateMessage
   | WarpMessage
@@ -215,6 +234,7 @@ export type ClientMessage =
   | ActivateModuleMessage
   | DeactivateModuleMessage
   | FleetCommandMessage
+  | WarpCrossSystemMessage
 
 export type ServerMessage =
   | SystemChatMessage
@@ -225,3 +245,4 @@ export type ServerMessage =
   | MiningYieldNotification
   | DockingNotification
   | ServerErrorMessage
+  | SystemTransferNotification

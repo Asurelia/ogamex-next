@@ -220,6 +220,13 @@ interface RTGameState {
   modules: ModuleSlot[]
   setModules: (modules: ModuleSlot[]) => void
 
+  // Route (cross-system navigation)
+  route: string[]
+  routeDestination: string
+  setRoute: (path: string[]) => void
+  setRouteDestination: (name: string) => void
+  warpCrossSystem: (targetSystemId: string) => void
+
   // Entity sync (called by state-sync bridge)
   setShip: (id: string, data: ShipData) => void
   removeShip: (id: string) => void
@@ -274,6 +281,8 @@ const initialState = {
   fitting: null as ShipFitting | null,
   lockedTargets: [] as LockedTarget[],
   modules: [] as ModuleSlot[],
+  route: [] as string[],
+  routeDestination: '',
 }
 
 export const useRTGameStore = create<RTGameState>((set, get) => ({
@@ -354,6 +363,11 @@ export const useRTGameStore = create<RTGameState>((set, get) => ({
   // HUD modules
   setModules: (modules) => set({ modules }),
 
+  // Route
+  setRoute: (path) => set({ route: path }),
+  setRouteDestination: (name) => set({ routeDestination: name }),
+  warpCrossSystem: (targetSystemId) => sendMessage('warp_cross_system', { targetSystemId }),
+
   // Actions
   navigate: (x, y, z) => sendMessage('navigate', { x, y, z }),
   warpTo: (targetId) => sendMessage('warp', { targetEntityId: targetId }),
@@ -377,5 +391,7 @@ export const useRTGameStore = create<RTGameState>((set, get) => ({
     ships: new Map(),
     asteroids: new Map(),
     stations: new Map(),
+    route: [],
+    routeDestination: '',
   }),
 }))
