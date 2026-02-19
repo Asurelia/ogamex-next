@@ -1,0 +1,85 @@
+============================================================================
+ASSET LICENSES
+============================================================================
+
+All assets in this directory are free to use. Most are CC0 (public domain).
+
+============================================================================
+KENNEY ASSETS (CC0 1.0 - Public Domain)
+============================================================================
+Source: https://kenney.nl
+License: Creative Commons Zero (CC0 1.0)
+No attribution required.
+
+Packs included:
+- Space Kit (3D models: ships, stations, turrets, satellites)
+- Simple Space (2D sprites: ships, meteors, effects)
+- Space Shooter Redux (2D sprites: ships, meteors, UI elements)
+- Sci-Fi Sounds (OGG: engines, explosions, lasers, computers)
+- Impact Sounds (OGG: hit/collision effects)
+- Interface Sounds (OGG: UI clicks, notifications, alerts)
+- Game Icons (PNG: 117 general game icons)
+- UI Pack Sci-Fi / Space Expansion (PNG: sci-fi themed UI elements)
+- Particle Pack (PNG: particle/effect sprites)
+
+============================================================================
+QUATERNIUS ASSETS (CC0 1.0 - Public Domain)
+============================================================================
+Source: https://quaternius.com / https://opengameart.org
+License: Creative Commons Zero (CC0 1.0)
+No attribution required.
+
+Packs included:
+- Ultimate Space Kit (GLB: spaceships, planets, enemies, buildings, mechs)
+
+============================================================================
+OPENGAMEART.ORG SOUND EFFECTS (CC0 1.0)
+============================================================================
+Source: https://opengameart.org
+License: Creative Commons Zero (CC0 1.0)
+No attribution required.
+
+Packs included:
+- 60 CC0 Sci-Fi SFX
+- 50 CC0 Sci-Fi SFX
+- 50 CC0 Retro/Synth SFX
+- 100 CC0 SFX
+
+============================================================================
+OPENGAMEART.ORG MUSIC (CC0 1.0)
+============================================================================
+Source: https://opengameart.org
+License: Creative Commons Zero (CC0 1.0)
+No attribution required.
+
+Tracks:
+- space_out_there.ogg - "Space Music: Out There"
+- ambient_monoliths.mp3 - "Monoliths" (ambient/loading)
+- ambient_caller.mp3 - "Caller" (ambient/loading)
+- ambient_booya.mp3 - "Booya-B" (ambient/loading)
+- scifi_city_loop.ogg - "Scifi City Ambient Loop"
+
+============================================================================
+POLY HAVEN HDRI SKYBOXES (CC0 1.0)
+============================================================================
+Source: https://polyhaven.com
+License: Creative Commons Zero (CC0 1.0)
+No attribution required.
+
+Files:
+- rogland_clear_night_2k.hdr - Night sky with Milky Way
+- dikhololo_night_2k.hdr - Clear starry night
+
+============================================================================
+SPACESPHEREMAPS HDRI SKYBOXES (Free for commercial use)
+============================================================================
+Source: https://www.spacespheremaps.com
+License: Free for commercial and personal use
+
+Files (in skyboxes/large/ - gitignored, download separately):
+- HDR_multi_nebulae_1.hdr - Colorful multi-nebula scene
+- HDR_blue_nebulae.hdr - Blue nebula
+- HDR_galactic_plane.hdr - Milky Way galactic plane
+- HDR_asteroid_field.hdr - Asteroid field environment
+- HDR_silver_gold_nebulae.hdr - Silver & gold nebula
+- HDR_hazy_nebulae.hdr - Hazy nebula atmosphere
