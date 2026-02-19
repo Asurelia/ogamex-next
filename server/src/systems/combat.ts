@@ -7,8 +7,19 @@
  */
 
 import { SystemState, ShipState, ShipStateEnum } from '../schema/GameState'
-import { DAMAGE_EFFECTIVENESS } from '../../../src/lib/battle/damage-types'
-import { FACTIONS, getFactionDamageProfile } from '../../../src/data/faction-identities'
+import { getFactionDamageProfile } from '../../../src/data/faction-identities'
+
+/**
+ * Damage effectiveness multipliers per damage type vs defense layer.
+ * Ballistic: effective vs armor/hull, weak vs shields
+ * Ionic: effective vs shields, weak vs armor
+ * Explosive: weak vs shields, effective vs armor
+ */
+const DAMAGE_EFFECTIVENESS = {
+  ballistic: { vsShield: 0.8, vsArmor: 1.0, vsHull: 1.0 },
+  ionic:     { vsShield: 1.2, vsArmor: 0.6, vsHull: 0.8 },
+  explosive: { vsShield: 0.6, vsArmor: 1.2, vsHull: 1.0 },
+} as const
 
 type CombatCallback = (
   attackerId: string,
