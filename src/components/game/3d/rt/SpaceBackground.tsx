@@ -50,15 +50,13 @@ export function SpaceBackground() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
+          args={[starPositions.positions, 3]}
           count={10000}
-          array={starPositions.positions}
-          itemSize={3}
         />
         <bufferAttribute
           attach="attributes-color"
+          args={[starPositions.colors, 3]}
           count={10000}
-          array={starPositions.colors}
-          itemSize={3}
         />
       </bufferGeometry>
       <pointsMaterial
