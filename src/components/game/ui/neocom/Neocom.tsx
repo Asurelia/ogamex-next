@@ -35,6 +35,16 @@ const NEOCOM_ITEMS: NeocomItem[] = [
   { id: 'skills', windowId: 'rt-skills', icon: '📖', label: 'Skills' },
   { id: 'chat', windowId: 'rt-chat', icon: '💬', label: 'Chat' },
   { id: 'route', windowId: 'rt-route', icon: '🧭', label: 'Route' },
+  { id: 'corp', windowId: 'rt-corp', icon: '🏢', label: 'Corporation' },
+  { id: 'clones', windowId: 'rt-clones', icon: '🧬', label: 'Clones' },
+  { id: 'implants', windowId: 'rt-implants', icon: '🧠', label: 'Implants' },
+  { id: 'industry', windowId: 'rt-industry', icon: '🏭', label: 'Industry' },
+  { id: 'pi', windowId: 'rt-pi', icon: '🌍', label: 'Planets' },
+  { id: 'scanner', windowId: 'rt-scanner', icon: '🔍', label: 'Scanner' },
+  { id: 'contracts', windowId: 'rt-contracts', icon: '📜', label: 'Contracts' },
+  { id: 'sovereignty', windowId: 'rt-sovereignty', icon: '⚔️', label: 'Sovereignty' },
+  { id: 'settings', windowId: 'rt-settings', icon: '⚙️', label: 'Settings' },
+  { id: 'tutorial', windowId: 'rt-tutorial', icon: '❓', label: 'Tutorial' },
   { id: 'devtools', windowId: 'rt-devtools', icon: '🛠️', label: 'DevTools' },
 ]
 
@@ -116,6 +126,10 @@ export const Neocom = memo(function Neocom() {
   const handleClick = useCallback((item: NeocomItem) => {
     if (item.id === 'devtools') {
       window.dispatchEvent(new CustomEvent('toggle-devpanel'))
+      return
+    }
+    if (item.id === 'tutorial') {
+      window.dispatchEvent(new CustomEvent('open-tutorial'))
       return
     }
     toggleWindow(item.windowId)

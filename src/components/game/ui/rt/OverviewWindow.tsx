@@ -83,7 +83,14 @@ interface ContextMenuProps {
 }
 
 function ContextMenu({ x, y, entity, onClose }: ContextMenuProps) {
-  const { approach, orbit, warpTo, setSelectedTarget, lockTarget, attack, mine, dock } = useRTGameStore()
+  // Select only the action functions we need (stable references, never change)
+  const approach = useRTGameStore((s) => s.approach)
+  const orbit = useRTGameStore((s) => s.orbit)
+  const warpTo = useRTGameStore((s) => s.warpTo)
+  const lockTarget = useRTGameStore((s) => s.lockTarget)
+  const attack = useRTGameStore((s) => s.attack)
+  const mine = useRTGameStore((s) => s.mine)
+  const dock = useRTGameStore((s) => s.dock)
 
   const actions = useMemo(() => {
     const base = [
@@ -112,7 +119,7 @@ function ContextMenu({ x, y, entity, onClose }: ContextMenuProps) {
     }
 
     return base
-  }, [entity, approach, orbit, warpTo, setSelectedTarget, lockTarget, attack, mine, dock])
+  }, [entity, approach, orbit, warpTo, lockTarget, attack, mine, dock])
 
   return (
     <>
@@ -152,6 +159,35 @@ const TABS: { key: TabType; label: string }[] = [
   { key: 'asteroids', label: 'Asteroids' },
   { key: 'stations', label: 'Stations' },
 ]
+
+// ============================================================================
+// MEMOIZED ROW COMPONENT - prevents full list re-render when only selection changes
+// ============================================================================
+
+interface OverviewRowProps {
+  entity: OverviewEntity
+  isSelected: boolean
+  onSelect: (id: string) => void
+  onContextMenu: (e: React.MouseEvent, entity: OverviewEntity) => void
+}
+
+const OverviewRow = memo(function OverviewRow({ entity, isSelected, onSelect, onContextMenu }: OverviewRowProps) {
+  return (
+    <div
+      className={`grid grid-cols-[24px_1fr_80px_80px_60px] gap-1 px-2 py-1 cursor-pointer transition-colors hover:bg-cyan-900/20 ${
+        isSelected ? 'bg-cyan-900/40 border-l-2 border-cyan-400' : ''
+      }`}
+      onClick={() => onSelect(entity.id)}
+      onContextMenu={(e) => onContextMenu(e, entity)}
+    >
+      <span className="text-center">{entity.icon}</span>
+      <span className={`truncate ${entity.color}`}>{entity.name}</span>
+      <span className="text-slate-400 truncate">{entity.type}</span>
+      <span className="text-right text-slate-300">{formatDistance(entity.distance)}</span>
+      <span className="text-right text-slate-300">{entity.velocity.toFixed(0)}</span>
+    </div>
+  )
+})
 
 // ============================================================================
 // MAIN COMPONENT
@@ -311,20 +347,13 @@ const OverviewContent = memo(function OverviewContent() {
           <div className="text-center text-slate-500 py-4">No entities in range</div>
         )}
         {sorted.map((entity) => (
-          <div
+          <OverviewRow
             key={entity.id}
-            className={`grid grid-cols-[24px_1fr_80px_80px_60px] gap-1 px-2 py-1 cursor-pointer transition-colors hover:bg-cyan-900/20 ${
-              selectedTargetId === entity.id ? 'bg-cyan-900/40 border-l-2 border-cyan-400' : ''
-            }`}
-            onClick={() => setSelectedTarget(entity.id)}
-            onContextMenu={(e) => handleContextMenu(e, entity)}
-          >
-            <span className="text-center">{entity.icon}</span>
-            <span className={`truncate ${entity.color}`}>{entity.name}</span>
-            <span className="text-slate-400 truncate">{entity.type}</span>
-            <span className="text-right text-slate-300">{formatDistance(entity.distance)}</span>
-            <span className="text-right text-slate-300">{entity.velocity.toFixed(0)}</span>
-          </div>
+            entity={entity}
+            isSelected={selectedTargetId === entity.id}
+            onSelect={setSelectedTarget}
+            onContextMenu={handleContextMenu}
+          />
         ))}
       </div>
 

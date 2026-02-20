@@ -3,12 +3,19 @@
  *
  * One room per solar system. Manages all entities within that system.
  * Authoritative simulation at 20Hz with physics, combat, mining, NPC AI.
+ *
+ * All persistence is synchronous SQLite via persistence.ts.
+ * Supabase is used only for static bootstrap (solar system + station data).
  */
 
 import { Room, Client } from 'colyseus'
 import { SystemState, ShipState, AsteroidState, StationState, ShipStateEnum } from '../schema/GameState'
 import { validateSupabaseJWT, type DecodedToken } from '../auth/jwt-validator'
-import { loadSolarSystem, loadSystemStations, loadShipForPlayer, saveShipState, batchSaveShips } from '../db/supabase'
+import { loadSolarSystem, loadSystemStations } from '../db/supabase'
+import {
+  loadShipForPlayer, saveShipState, batchSaveShips,
+  getOrCreatePlayer,
+} from '../services/persistence'
 import { logChat, logCombat } from '../db/sqlite'
 import { CONFIG } from '../config'
 import { updatePhysics } from '../systems/physics'
@@ -16,6 +23,16 @@ import { updateCombat } from '../systems/combat'
 import { updateMining } from '../systems/mining'
 import { updateNpcAI } from '../systems/npc-ai'
 import { validateCrossSystemWarp, initiateCrossSystemWarp } from '../systems/warp'
+import { registerCorpHandlers } from '../handlers/corp-handlers'
+import { registerCloneHandlers } from '../handlers/clone-handlers'
+import { registerContractHandlers } from '../handlers/contract-handlers'
+import { generateNpcOrders, matchOrders, aggregatePriceHistory } from '../systems/economy'
+import { placePlayerOrder, getStationOrders, getPlayerOrders, getPlayerBalance, debitPlayer, creditPlayer, cleanupDepletedOrders } from '../services/persistence'
+import { tickIndustry } from '../systems/industry-ticker'
+import { tickPlanetaryInteraction } from '../systems/pi-ticker'
+import { tickWormholeLifecycle } from '../systems/wormhole-lifecycle'
+import { tickContracts } from '../systems/contract-ticker'
+import { tickSovereignty } from '../systems/sovereignty-ticker'
 import { SeededRandom } from '../../../src/lib/galaxy/prng'
 import type { OreType } from '../../../shared/types/ship-types'
 
@@ -27,7 +44,7 @@ interface PlayerMeta {
   userId: string
   email?: string
   shipId: string
-  dbShipId: string // UUID from Supabase
+  dbShipId: string // UUID from SQLite
 }
 
 const ORE_TYPES: OreType[] = [
@@ -42,6 +59,7 @@ const ORE_TYPES: OreType[] = [
 export class SystemRoom extends Room<SystemState> {
   private playerMeta = new Map<string, PlayerMeta>()
   private saveTimer: ReturnType<typeof setInterval> | null = null
+  private tickerTimers: ReturnType<typeof setInterval>[] = []
   private npcTickCounter = 0
   private npcTickInterval: number
 
@@ -64,14 +82,14 @@ export class SystemRoom extends Room<SystemState> {
     // Initialize state
     this.setState(new SystemState())
 
-    // Load system from Supabase
+    // Load system from Supabase (static bootstrap)
     const system = await loadSolarSystem(systemId)
     this.state.systemId = system.id
     this.state.systemName = system.name
     this.state.securityLevel = parseFloat(system.security_level)
     this.state.starType = system.star_type
 
-    // Load stations
+    // Load stations (static bootstrap)
     const stations = await loadSystemStations(systemId)
     for (const station of stations) {
       const s = new StationState()
@@ -84,17 +102,41 @@ export class SystemRoom extends Room<SystemState> {
       this.state.stations.set(station.id, s)
     }
 
+    // Generate NPC market orders for each station
+    for (const station of stations) {
+      try { generateNpcOrders(station.id) } catch (e) { console.error('[Room] NPC orders error:', e) }
+    }
+
     // Spawn asteroids from seed
     this.spawnAsteroids(system.asteroid_belt_seed || system.seed)
 
     // Set simulation frequency
     this.setSimulationInterval((dt) => this.update(dt), 1000 / CONFIG.TICK_RATE)
 
-    // Periodic save to Supabase
+    // Periodic save to SQLite
     this.saveTimer = setInterval(() => this.persistAllShips(), CONFIG.SAVE_INTERVAL_MS)
 
     // Register all message handlers
     this.registerMessages()
+
+    // Register feature handlers
+    const getPlayerMeta = (sessionId: string) => this.playerMeta.get(sessionId)
+    registerCorpHandlers(this as unknown as import('colyseus').Room, getPlayerMeta)
+    registerCloneHandlers(this as unknown as import('colyseus').Room, getPlayerMeta)
+    registerContractHandlers(this as unknown as import('colyseus').Room, getPlayerMeta)
+
+    // Start background tickers (60s interval)
+    this.tickerTimers.push(
+      setInterval(() => { try { tickIndustry() } catch (e) { console.error('[Ticker] Industry error:', e) } }, 60_000),
+      setInterval(() => { try { tickPlanetaryInteraction() } catch (e) { console.error('[Ticker] PI error:', e) } }, 60_000),
+      setInterval(() => { try { tickContracts() } catch (e) { console.error('[Ticker] Contracts error:', e) } }, 300_000),
+    )
+    // 5-minute tickers
+    this.tickerTimers.push(
+      setInterval(() => { try { tickWormholeLifecycle() } catch (e) { console.error('[Ticker] WH error:', e) } }, 300_000),
+      setInterval(() => { try { tickSovereignty() } catch (e) { console.error('[Ticker] Sov error:', e) } }, 300_000),
+      setInterval(() => { try { aggregatePriceHistory(); cleanupDepletedOrders() } catch (e) { console.error('[Ticker] Economy error:', e) } }, 300_000),
+    )
 
     this.roomId = systemId
     console.log(`[Room] System "${system.name}" (${systemId}) created. Security: ${system.security_level}`)
@@ -112,36 +154,39 @@ export class SystemRoom extends Room<SystemState> {
     console.log(`[Room] Player ${userId} joining system ${this.state.systemName}`)
 
     try {
-      // Load player's active ship from Supabase
-      const shipData = await loadShipForPlayer(userId)
-      const shipTypeData = shipData.rt_ship_types
+      // Ensure player record exists in SQLite
+      getOrCreatePlayer(userId, auth.email)
+
+      // Load player's active ship from SQLite (sync)
+      const shipData = loadShipForPlayer(userId)
+      const shipTypeData = shipData.rt_ship_types as Record<string, unknown>
 
       // Create ship state
       const ship = new ShipState()
       ship.id = client.sessionId
       ship.ownerId = userId
       ship.ownerName = auth.email?.split('@')[0] || 'Pilot'
-      ship.shipTypeId = shipData.ship_type_id
-      ship.faction = shipTypeData?.faction || 'caldari'
+      ship.shipTypeId = shipData.ship_type_id as string
+      ship.faction = (shipTypeData?.faction as string) || 'caldari'
 
       // Position
-      ship.x = shipData.position_x || 0
-      ship.y = shipData.position_y || 0
-      ship.z = shipData.position_z || 0
+      ship.x = (shipData.position_x as number) || 0
+      ship.y = (shipData.position_y as number) || 0
+      ship.z = (shipData.position_z as number) || 0
 
       // Stats from ship type
-      ship.hpMax = shipTypeData?.base_hp || 500
-      ship.hp = Math.min(shipData.current_hp, ship.hpMax)
-      ship.shieldMax = shipTypeData?.base_shield || 500
-      ship.shield = Math.min(shipData.current_shield, ship.shieldMax)
-      ship.armorMax = shipTypeData?.base_armor || 500
-      ship.armor = Math.min(shipData.current_armor, ship.armorMax)
-      ship.maxSpeed = shipTypeData?.max_velocity || 300
-      ship.capacitorMax = shipTypeData?.capacitor || 250
+      ship.hpMax = (shipTypeData?.base_hp as number) || 500
+      ship.hp = Math.min(shipData.current_hp as number, ship.hpMax)
+      ship.shieldMax = (shipTypeData?.base_shield as number) || 500
+      ship.shield = Math.min(shipData.current_shield as number, ship.shieldMax)
+      ship.armorMax = (shipTypeData?.base_armor as number) || 500
+      ship.armor = Math.min(shipData.current_armor as number, ship.armorMax)
+      ship.maxSpeed = (shipTypeData?.max_velocity as number) || 300
+      ship.capacitorMax = (shipTypeData?.capacitor as number) || 250
       ship.capacitor = ship.capacitorMax
 
       // State
-      ship.isDocked = shipData.is_docked
+      ship.isDocked = shipData.is_docked as boolean
       ship.state = shipData.is_docked ? ShipStateEnum.DOCKED : ShipStateEnum.IDLE
       ship.isNpc = false
 
@@ -153,7 +198,7 @@ export class SystemRoom extends Room<SystemState> {
         userId,
         email: auth.email,
         shipId: client.sessionId,
-        dbShipId: shipData.id,
+        dbShipId: shipData.id as string,
       })
 
       console.log(`[Room] Player ${userId} joined with ship ${shipData.ship_type_id}`)
@@ -167,11 +212,11 @@ export class SystemRoom extends Room<SystemState> {
     const meta = this.playerMeta.get(client.sessionId)
     if (!meta) return
 
-    // Save ship state to Supabase
+    // Save ship state to SQLite (sync)
     const ship = this.state.ships.get(client.sessionId)
     if (ship) {
       try {
-        await saveShipState(meta.dbShipId, {
+        saveShipState(meta.dbShipId, {
           system_id: this.state.systemId,
           position_x: ship.x,
           position_y: ship.y,
@@ -199,8 +244,14 @@ export class SystemRoom extends Room<SystemState> {
       clearInterval(this.saveTimer)
     }
 
-    // Persist all ships one last time
-    await this.persistAllShips()
+    // Clear all feature tickers
+    for (const timer of this.tickerTimers) {
+      clearInterval(timer)
+    }
+    this.tickerTimers = []
+
+    // Persist all ships one last time (sync)
+    this.persistAllShips()
     console.log(`[Room] System "${this.state.systemName}" disposed`)
   }
 
@@ -356,7 +407,7 @@ export class SystemRoom extends Room<SystemState> {
       logChat(this.state.systemId, chatMsg.channel, chatMsg.senderId, chatMsg.senderName, chatMsg.content)
     })
 
-    this.onMessage('warp_cross_system', async (client, msg: { targetSystemId: string }) => {
+    this.onMessage('warp_cross_system', (client, msg: { targetSystemId: string }) => {
       const ship = this.state.ships.get(client.sessionId)
       if (!ship) return
 
@@ -368,11 +419,11 @@ export class SystemRoom extends Room<SystemState> {
 
       const { targetSystemName } = initiateCrossSystemWarp(ship, msg.targetSystemId)
 
-      // Save ship to new system in Supabase before transfer
+      // Save ship to new system in SQLite before transfer (sync)
       const meta = this.playerMeta.get(client.sessionId)
       if (meta) {
         try {
-          await saveShipState(meta.dbShipId, {
+          saveShipState(meta.dbShipId, {
             system_id: msg.targetSystemId,
             position_x: 0,
             position_y: 0,
@@ -421,7 +472,7 @@ export class SystemRoom extends Room<SystemState> {
     // ------------------------------------------------------------------
     // Train skill - acknowledge and defer to skill-ticker
     // ------------------------------------------------------------------
-    this.onMessage('train_skill', async (client, msg: { skillId: string }) => {
+    this.onMessage('train_skill', (client, msg: { skillId: string }) => {
       const meta = this.playerMeta.get(client.sessionId)
       if (!meta) return
 
@@ -459,7 +510,7 @@ export class SystemRoom extends Room<SystemState> {
     // ------------------------------------------------------------------
     // Market order - place buy/sell orders while docked
     // ------------------------------------------------------------------
-    this.onMessage('market_order', async (client, msg: { itemName: string; price: number; quantity: number; type: 'buy' | 'sell' }) => {
+    this.onMessage('market_order', (client, msg: { itemName: string; price: number; quantity: number; type: 'buy' | 'sell' }) => {
       const ship = this.state.ships.get(client.sessionId)
       if (!ship || !ship.isDocked) {
         client.send('server_error', { code: 'NOT_DOCKED', message: 'Must be docked to place market orders' })
@@ -469,13 +520,87 @@ export class SystemRoom extends Room<SystemState> {
       const meta = this.playerMeta.get(client.sessionId)
       if (!meta) return
 
-      // For now, acknowledge - full market uses economy.ts matchOrders()
+      if (!msg.itemName || !msg.price || msg.price <= 0 || !msg.quantity || msg.quantity <= 0) {
+        client.send('server_error', { code: 'INVALID_ORDER', message: 'Invalid order parameters' })
+        return
+      }
+
+      const isBuy = msg.type === 'buy'
+
+      // For buy orders, verify and debit the player's wallet (escrow)
+      if (isBuy) {
+        const totalCost = msg.price * msg.quantity
+        const balRow = getPlayerBalance(meta.userId)
+        const balance = (balRow as Record<string, unknown>)?.balance as number || 0
+        if (balance < totalCost) {
+          client.send('server_error', { code: 'INSUFFICIENT_ISK', message: `Need ${totalCost} ISK, have ${balance}` })
+          return
+        }
+        debitPlayer(meta.userId, totalCost, 'market_buy', `Buy order: ${msg.quantity}x ${msg.itemName}`)
+      }
+
+      // Find station the player is docked at
+      let dockedStationId = ''
+      for (const [stationId, station] of this.state.stations) {
+        const dx = station.x - ship.x, dy = station.y - ship.y, dz = station.z - ship.z
+        if (Math.sqrt(dx * dx + dy * dy + dz * dz) < 3000) { dockedStationId = stationId; break }
+      }
+      if (!dockedStationId && this.state.stations.size > 0) {
+        dockedStationId = this.state.stations.keys().next().value!
+      }
+
+      // Place order in SQLite
+      try {
+        placePlayerOrder(dockedStationId, msg.itemName, isBuy, msg.price, msg.quantity, meta.userId)
+
+        // Run order matching for this item at this station
+        const trades = matchOrders(dockedStationId, msg.itemName)
+
+        // Credit sellers for completed trades
+        for (const trade of trades) {
+          creditPlayer(meta.userId, trade.price * trade.quantity, 'market_sell', `Trade: ${trade.quantity}x ${trade.itemTypeId}`)
+        }
+
+        // Send updated market state to client
+        const orders = getStationOrders(dockedStationId)
+        const myOrders = getPlayerOrders(meta.userId)
+        client.send('market_update', {
+          action: 'order_placed',
+          itemName: msg.itemName,
+          price: msg.price,
+          quantity: msg.quantity,
+          type: msg.type,
+          tradesExecuted: trades.length,
+          orders: orders.slice(0, 100),
+          myOrders: myOrders.slice(0, 50),
+        })
+      } catch (e) {
+        console.error('[Market] Order error:', e)
+        // Refund if buy order failed
+        if (isBuy) creditPlayer(meta.userId, msg.price * msg.quantity, 'market_buy', 'Order refund')
+        client.send('server_error', { code: 'ORDER_FAILED', message: 'Failed to place order' })
+      }
+    })
+
+    // ------------------------------------------------------------------
+    // Browse market - get orders for a station
+    // ------------------------------------------------------------------
+    this.onMessage('browse_market', (client, msg: { stationId?: string }) => {
+      const meta = this.playerMeta.get(client.sessionId)
+      if (!meta) return
+
+      let stationId = msg.stationId
+      if (!stationId && this.state.stations.size > 0) {
+        stationId = this.state.stations.keys().next().value!
+      }
+      if (!stationId) return
+
+      const orders = getStationOrders(stationId)
+      const myOrders = getPlayerOrders(meta.userId)
       client.send('market_update', {
-        action: 'order_placed',
-        itemName: msg.itemName,
-        price: msg.price,
-        quantity: msg.quantity,
-        type: msg.type,
+        action: 'browse',
+        orders: orders.slice(0, 200),
+        myOrders: myOrders.slice(0, 50),
       })
     })
 
@@ -566,14 +691,9 @@ export class SystemRoom extends Room<SystemState> {
 
     // Mining (every tick - 20Hz)
     updateMining(this.state, deltaSeconds, (minerId, asteroidId, oreType, amount) => {
-      // Find the client for this miner and send them the yield
-      for (const [sessionId, meta] of this.playerMeta) {
-        if (this.state.ships.get(sessionId)?.id === minerId) {
-          const client = this.clients.find(c => c.sessionId === sessionId)
-          client?.send('mining_yield', { asteroidId, oreType, amount })
-          break
-        }
-      }
+      // minerId is the ship.id which equals client.sessionId, so direct lookup O(1)
+      const client = this.clients.find(c => c.sessionId === minerId)
+      client?.send('mining_yield', { asteroidId, oreType, amount })
     })
 
     // NPC AI (at NPC_AI_TICK_RATE Hz)
@@ -622,7 +742,7 @@ export class SystemRoom extends Room<SystemState> {
     }
   }
 
-  private async persistAllShips() {
+  private persistAllShips() {
     const shipsToSave: Array<{
       id: string
       system_id: string
@@ -654,7 +774,7 @@ export class SystemRoom extends Room<SystemState> {
 
     if (shipsToSave.length > 0) {
       try {
-        await batchSaveShips(shipsToSave)
+        batchSaveShips(shipsToSave)
       } catch (error) {
         console.error('[Room] Failed to batch save ships:', error)
       }

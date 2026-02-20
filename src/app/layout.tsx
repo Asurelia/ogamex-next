@@ -12,6 +12,13 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
   },
+  manifest: '/manifest.json',
+  other: {
+    'theme-color': '#0ea5e9',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
 export default async function RootLayout({
@@ -25,6 +32,9 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+      </head>
       <body className={`${inter.className} bg-ogame-bg text-ogame-text min-h-screen`} suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
           {children}

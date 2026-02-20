@@ -12,6 +12,13 @@ const _quat = new THREE.Quaternion()
 const _scale = new THREE.Vector3(1, 1, 1)
 const _color = new THREE.Color()
 
+// Pre-allocated zero matrix for hiding unused instances (avoids per-frame allocation)
+const _zeroMatrix = new THREE.Matrix4().compose(
+  new THREE.Vector3(0, 0, 0),
+  new THREE.Quaternion(),
+  new THREE.Vector3(0, 0, 0)
+)
+
 const FACTION_COLORS: readonly number[] = [
   0xffd700, // 0 amarr
   0x3399ff, // 1 caldari
@@ -57,12 +64,9 @@ export function renderSyncSystem(engine: GameEngine, _dt: number): void {
     instanceIdx++
   }
 
-  // Hide unused instances
-  const zeroScale = new THREE.Vector3(0, 0, 0)
-  const identityQuat = new THREE.Quaternion()
-  const zeroMatrix = new THREE.Matrix4().compose(new THREE.Vector3(), identityQuat, zeroScale)
+  // Hide unused instances (reuse pre-allocated matrix)
   for (let j = instanceIdx; j < _instancedMesh.count; j++) {
-    _instancedMesh.setMatrixAt(j, zeroMatrix)
+    _instancedMesh.setMatrixAt(j, _zeroMatrix)
   }
 
   _instancedMesh.instanceMatrix.needsUpdate = true

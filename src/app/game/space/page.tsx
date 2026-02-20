@@ -5,6 +5,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import { SpaceScene } from '@/components/game/3d/rt/SpaceScene'
 import { RTWindowLayout } from '@/components/game/ui/rt/RTWindowLayout'
 import { DevPanel } from '@/components/game/ui/dev/DevPanel'
+import { SoundController } from '@/components/game/SoundController'
+import { TutorialOverlay } from '@/components/game/ui/TutorialOverlay'
 import { GameEngine } from '@/engine/GameEngine'
 import { networkBridge } from '@/engine/NetworkBridge'
 import { joinSystem } from '@/lib/colyseus/client'
@@ -135,6 +137,8 @@ export default function SpacePage() {
     <div className="w-full h-screen relative">
       <SpaceScene />
       <RTWindowLayout />
+      <SoundController />
+      <TutorialOverlay />
       <DevPanel />
     </div>
   )

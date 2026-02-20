@@ -35,15 +35,15 @@ export function AsteroidField() {
     if (!meshRef.current) return
 
     let index = 0
-    const asteroidArray = Array.from(asteroids.values())
 
-    for (const asteroid of asteroidArray) {
-      if (index >= meshRef.current.count) break
+    // Iterate map directly instead of creating a new Array each frame
+    asteroids.forEach((asteroid) => {
+      if (index >= meshRef.current!.count) return
 
       const scale = asteroid.radius
       tempMatrix.makeScale(scale, scale * 0.7, scale) // Slightly flattened
       tempMatrix.setPosition(asteroid.x, asteroid.y, asteroid.z)
-      meshRef.current.setMatrixAt(index, tempMatrix)
+      meshRef.current!.setMatrixAt(index, tempMatrix)
 
       // Color by ore type, highlight if selected
       const isSelected = asteroid.id === selectedTargetId
@@ -55,9 +55,9 @@ export function AsteroidField() {
         tempColor.set(baseColor)
       }
 
-      meshRef.current.setColorAt(index, tempColor)
+      meshRef.current!.setColorAt(index, tempColor)
       index++
-    }
+    })
 
     meshRef.current.count = index
     meshRef.current.instanceMatrix.needsUpdate = true

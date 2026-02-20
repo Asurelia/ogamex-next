@@ -1,14 +1,16 @@
 /**
- * Supabase Admin Client
+ * Supabase Admin Client — Bootstrap Only
  *
- * Uses service_role key to bypass RLS for server-side operations.
+ * Used exclusively for:
+ *   1. Auth JWT validation (via jwt-validator.ts)
+ *   2. Loading static solar system / station data at room creation
+ *   3. One-time bootstrap of skill definitions, implant types, etc.
+ *
+ * All gameplay state persistence goes through persistence.ts → SQLite.
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { CONFIG } from '../config'
-// Ship types are now loaded from static constants instead of Supabase.
-// Use getShipTypeOrDefault from @shared/data/ship-type-lookup for all ship type lookups.
-import { getShipTypeOrDefault } from '@shared/data/ship-type-lookup'
 
 let supabaseAdmin: SupabaseClient | null = null
 
@@ -32,109 +34,7 @@ export function getSupabaseAdmin(): SupabaseClient {
 }
 
 // ============================================================================
-// SHIP OPERATIONS
-// ============================================================================
-
-/** Default starter system (Jita) */
-const STARTER_SYSTEM_ID = '7127c86d-a096-4b4e-8de1-755a22bb168a'
-
-/** Default starter ship type */
-const STARTER_SHIP_TYPE = 'caldari_frigate'
-
-export async function loadShipForPlayer(userId: string) {
-  const db = getSupabaseAdmin()
-  const { data, error } = await db
-    .from('rt_ships')
-    .select('*')
-    .eq('owner_id', userId)
-    .eq('is_active', true)
-    .single()
-
-  if (data) {
-    const shipType = getShipTypeOrDefault(data.ship_type_id ?? '')
-    return { ...data, rt_ship_types: shipType }
-  }
-
-  // No active ship found - create a starter ship
-  if (error && error.code !== 'PGRST116') {
-    // PGRST116 = "no rows returned" - expected for new players
-    throw new Error(`Failed to load ship: ${error.message}`)
-  }
-
-  console.log(`[DB] Creating starter ship for new player ${userId}`)
-  const starterType = getShipTypeOrDefault(STARTER_SHIP_TYPE)
-
-  const { data: newShip, error: createError } = await db
-    .from('rt_ships')
-    .insert({
-      owner_id: userId,
-      ship_type_id: STARTER_SHIP_TYPE,
-      system_id: STARTER_SYSTEM_ID,
-      position_x: (Math.random() - 0.5) * 10000,
-      position_y: (Math.random() - 0.5) * 2000,
-      position_z: (Math.random() - 0.5) * 10000,
-      current_hp: starterType.baseHp,
-      current_shield: starterType.baseShield,
-      current_armor: starterType.baseArmor,
-      is_active: true,
-      is_docked: false,
-    })
-    .select('*')
-    .single()
-
-  if (createError) throw new Error(`Failed to create starter ship: ${createError.message}`)
-
-  return { ...newShip, rt_ship_types: starterType }
-}
-
-export async function saveShipState(shipId: string, state: {
-  system_id: string
-  position_x: number
-  position_y: number
-  position_z: number
-  current_hp: number
-  current_shield: number
-  current_armor: number
-  is_docked: boolean
-  fitting?: unknown[]
-  cargo?: unknown[]
-}) {
-  const db = getSupabaseAdmin()
-  const { error } = await db
-    .from('rt_ships')
-    .update({ ...state, updated_at: new Date().toISOString() })
-    .eq('id', shipId)
-
-  if (error) throw new Error(`Failed to save ship: ${error.message}`)
-}
-
-export async function batchSaveShips(ships: Array<{
-  id: string
-  system_id: string
-  position_x: number
-  position_y: number
-  position_z: number
-  current_hp: number
-  current_shield: number
-  current_armor: number
-  is_docked: boolean
-}>) {
-  const db = getSupabaseAdmin()
-  const now = new Date().toISOString()
-
-  // Supabase upsert for batch save
-  const { error } = await db
-    .from('rt_ships')
-    .upsert(
-      ships.map(s => ({ ...s, updated_at: now })),
-      { onConflict: 'id' }
-    )
-
-  if (error) throw new Error(`Failed to batch save ships: ${error.message}`)
-}
-
-// ============================================================================
-// SYSTEM OPERATIONS
+// STATIC BOOTSTRAP DATA (read once from Supabase at startup)
 // ============================================================================
 
 export async function loadSolarSystem(systemId: string) {
@@ -160,18 +60,82 @@ export async function loadSystemStations(systemId: string) {
   return data ?? []
 }
 
-export async function loadShipsInSystem(systemId: string) {
+/**
+ * Load all skill definitions from Supabase (one-time at boot).
+ */
+export async function loadSkillDefinitions(): Promise<Array<Record<string, unknown>>> {
   const db = getSupabaseAdmin()
   const { data, error } = await db
-    .from('rt_ships')
-    .select('*')
-    .eq('system_id', systemId)
-    .eq('is_docked', false)
+    .from('rt_skill_definitions')
+    .select('type_id, name, rank, primary_attribute, secondary_attribute, description')
 
-  if (error) throw new Error(`Failed to load ships in system: ${error.message}`)
-  // Ship type definitions are resolved from static constants, not from the database join.
-  return (data ?? []).map(ship => ({
-    ...ship,
-    rt_ship_types: getShipTypeOrDefault(ship.ship_type_id ?? ''),
-  }))
+  if (error) {
+    console.error('[Bootstrap] Failed to load skill definitions:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
+/**
+ * Load all implant types from Supabase (one-time at boot).
+ */
+export async function loadImplantTypes(): Promise<Array<Record<string, unknown>>> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db
+    .from('rt_implant_types')
+    .select('id, name, slot, attribute, bonus, description')
+
+  if (error) {
+    console.error('[Bootstrap] Failed to load implant types:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
+/**
+ * Load wormhole system definitions from Supabase (one-time at boot).
+ */
+export async function loadWormholeSystems(): Promise<Array<Record<string, unknown>>> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db
+    .from('rt_wormhole_systems')
+    .select('system_id, wh_class, effect, static_connection_type')
+
+  if (error) {
+    console.error('[Bootstrap] Failed to load wormhole systems:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
+/**
+ * Load planet resources from Supabase (one-time at boot).
+ */
+export async function loadPlanetResources(): Promise<Array<Record<string, unknown>>> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db
+    .from('rt_planet_resources')
+    .select('id, planet_id, resource_type, abundance')
+
+  if (error) {
+    console.error('[Bootstrap] Failed to load planet resources:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
+/**
+ * Load all solar systems (for wormhole destination selection).
+ */
+export async function loadAllSolarSystemIds(): Promise<string[]> {
+  const db = getSupabaseAdmin()
+  const { data, error } = await db
+    .from('rt_solar_systems')
+    .select('id')
+
+  if (error) {
+    console.error('[Bootstrap] Failed to load solar system IDs:', error.message)
+    return []
+  }
+  return (data ?? []).map(r => r.id)
 }

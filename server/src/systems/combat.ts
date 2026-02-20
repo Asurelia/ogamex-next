@@ -56,9 +56,21 @@ export function updateCombat(
   dt: number,
   onDamage: CombatCallback
 ): void {
+  // Single pass: combat + shield/capacitor regeneration (avoids iterating all ships twice)
   state.ships.forEach((ship) => {
+    // Skip destroyed and docked ships entirely
+    if (ship.hp <= 0 || ship.isDocked) return
+
+    // --- Shield + Capacitor regeneration (for ALL alive undocked ships) ---
+    if (ship.shield < ship.shieldMax) {
+      ship.shield = Math.min(ship.shieldMax, ship.shield + ship.shieldMax * 0.02 * dt)
+    }
+    if (ship.capacitor < ship.capacitorMax) {
+      ship.capacitor = Math.min(ship.capacitorMax, ship.capacitor + ship.capacitorMax * 0.01 * dt)
+    }
+
+    // --- Combat (only for attacking ships) ---
     if (ship.state !== ShipStateEnum.ATTACKING || !ship.targetId) return
-    if (ship.isDocked || ship.hp <= 0) return
 
     const target = state.ships.get(ship.targetId)
     if (!target || target.hp <= 0 || target.isDocked) {
@@ -71,9 +83,10 @@ export function updateCombat(
     const dx = target.x - ship.x
     const dy = target.y - ship.y
     const dz = target.z - ship.z
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+    const distSq = dx * dx + dy * dy + dz * dz
 
-    if (dist > MAX_WEAPON_RANGE) return // Out of range
+    // Use squared distance to avoid sqrt when possible
+    if (distSq > MAX_WEAPON_RANGE * MAX_WEAPON_RANGE) return // Out of range
 
     // Calculate DPS for this tick
     const dps = getShipDPS(ship)
@@ -128,19 +141,6 @@ export function updateCombat(
       isCritical,
       isKill
     )
-  })
-
-  // Shield regeneration for all non-destroyed ships
-  state.ships.forEach((ship) => {
-    if (ship.hp <= 0 || ship.isDocked) return
-
-    // Shield regens at ~2% per second
-    const shieldRegen = ship.shieldMax * 0.02 * dt
-    ship.shield = Math.min(ship.shieldMax, ship.shield + shieldRegen)
-
-    // Capacitor regens at ~1% per second
-    const capRegen = ship.capacitorMax * 0.01 * dt
-    ship.capacitor = Math.min(ship.capacitorMax, ship.capacitor + capRegen)
   })
 }
 

@@ -51,13 +51,15 @@ export function updatePhysics(state: SystemState, dt: number): void {
         break
     }
 
-    // Apply velocity to position
-    ship.x += ship.vx * dt
-    ship.y += ship.vy * dt
-    ship.z += ship.vz * dt
+    // Apply velocity to position (skip if stationary to avoid unnecessary float ops)
+    if (ship.vx !== 0 || ship.vy !== 0 || ship.vz !== 0) {
+      ship.x += ship.vx * dt
+      ship.y += ship.vy * dt
+      ship.z += ship.vz * dt
 
-    // Update speed scalar
-    ship.speed = Math.sqrt(ship.vx * ship.vx + ship.vy * ship.vy + ship.vz * ship.vz)
+      // Update speed scalar
+      ship.speed = Math.sqrt(ship.vx * ship.vx + ship.vy * ship.vy + ship.vz * ship.vz)
+    }
   })
 }
 
@@ -91,13 +93,17 @@ function updateApproach(ship: ShipState, state: SystemState, dt: number) {
   const dx = target.x - ship.x
   const dy = target.y - ship.y
   const dz = target.z - ship.z
-  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+  const distSq = dx * dx + dy * dy + dz * dz
 
-  if (dist <= APPROACH_THRESHOLD) {
+  // Use squared distance to avoid sqrt for threshold check
+  if (distSq <= APPROACH_THRESHOLD * APPROACH_THRESHOLD) {
     ship.state = ShipStateEnum.IDLE
     decelerateShip(ship, dt)
     return
   }
+
+  // Only compute sqrt when we actually need normalized direction
+  const dist = Math.sqrt(distSq)
 
   // Accelerate toward target
   const accel = ship.maxSpeed * 2 // Reach max speed in ~0.5s
@@ -125,14 +131,16 @@ function updateApproachStop(ship: ShipState, state: SystemState, dt: number, sto
   const dx = target.x - ship.x
   const dy = target.y - ship.y
   const dz = target.z - ship.z
-  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+  const distSq = dx * dx + dy * dy + dz * dz
 
-  if (dist <= stopRange) {
+  // Use squared distance to avoid sqrt when within range
+  if (distSq <= stopRange * stopRange) {
     decelerateShip(ship, dt)
     return
   }
 
-  // Move toward target
+  // Only compute sqrt when we need normalized direction
+  const dist = Math.sqrt(distSq)
   const speed = ship.maxSpeed
   ship.vx = (dx / dist) * speed
   ship.vy = (dy / dist) * speed
