@@ -37,7 +37,6 @@ app.get('/health', (_req, res) => {
   res.json({
     status: 'ok',
     uptime: process.uptime(),
-    rooms: gameServer.rooms.size,
     timestamp: Date.now(),
   })
 })
@@ -73,9 +72,9 @@ async function bootstrapStaticData(): Promise<void> {
     const skillDefs = await loadSkillDefinitions()
     for (const def of skillDefs) {
       cacheSkillDefinition(
-        def.type_id as number,
+        def.id as number,
         (def.name as string) || '',
-        (def.rank as number) || 1,
+        (def.training_multiplier as number) || 1,
         def.primary_attribute as number,
         def.secondary_attribute as number,
         (def.description as string) || ''
@@ -94,8 +93,8 @@ async function bootstrapStaticData(): Promise<void> {
         imp.id as string,
         (imp.name as string) || '',
         (imp.slot as number) || 0,
-        (imp.attribute as string) || null,
-        (imp.bonus as number) || 0,
+        (imp.attribute_bonus_type as string) || null,
+        (imp.attribute_bonus_value as number) || 0,
         (imp.description as string) || ''
       )
     }
@@ -114,7 +113,7 @@ async function bootstrapStaticData(): Promise<void> {
     `)
     const tx = db.transaction(() => {
       for (const wh of whSystems) {
-        stmt.run(wh.system_id, wh.wh_class, wh.effect || null, wh.static_connection_type || null)
+        stmt.run(wh.system_id, wh.wh_class, wh.wh_effect || null, wh.static_connection_type || null)
       }
     })
     tx()
@@ -133,7 +132,7 @@ async function bootstrapStaticData(): Promise<void> {
     `)
     const tx = db.transaction(() => {
       for (const r of resources) {
-        stmt.run(r.id, r.planet_id, r.resource_type, r.abundance)
+        stmt.run(r.id, r.system_id, r.resource_type, r.abundance)
       }
     })
     tx()

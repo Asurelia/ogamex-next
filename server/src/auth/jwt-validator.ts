@@ -28,6 +28,14 @@ export function validateSupabaseJWT(token: string): DecodedToken {
   // Remove "Bearer " prefix if present
   const cleanToken = token.startsWith('Bearer ') ? token.slice(7) : token
 
+  // Dev mode: if no JWT secret configured, decode without verification
+  if (!CONFIG.SUPABASE_JWT_SECRET && CONFIG.NODE_ENV === 'development') {
+    const decoded = jwt.decode(cleanToken) as DecodedToken | null
+    if (decoded?.sub) return decoded
+    // Allow raw userId as token in dev mode
+    return { sub: cleanToken, role: 'authenticated', aud: 'authenticated', iat: 0, exp: 0 }
+  }
+
   try {
     const decoded = jwt.verify(cleanToken, CONFIG.SUPABASE_JWT_SECRET, {
       algorithms: ['HS256'],

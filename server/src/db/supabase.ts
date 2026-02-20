@@ -67,7 +67,7 @@ export async function loadSkillDefinitions(): Promise<Array<Record<string, unkno
   const db = getSupabaseAdmin()
   const { data, error } = await db
     .from('rt_skill_definitions')
-    .select('type_id, name, rank, primary_attribute, secondary_attribute, description')
+    .select('id, name, training_multiplier, primary_attribute, secondary_attribute, description')
 
   if (error) {
     console.error('[Bootstrap] Failed to load skill definitions:', error.message)
@@ -83,7 +83,7 @@ export async function loadImplantTypes(): Promise<Array<Record<string, unknown>>
   const db = getSupabaseAdmin()
   const { data, error } = await db
     .from('rt_implant_types')
-    .select('id, name, slot, attribute, bonus, description')
+    .select('id, name, slot, attribute_bonus_type, attribute_bonus_value, description')
 
   if (error) {
     console.error('[Bootstrap] Failed to load implant types:', error.message)
@@ -99,7 +99,7 @@ export async function loadWormholeSystems(): Promise<Array<Record<string, unknow
   const db = getSupabaseAdmin()
   const { data, error } = await db
     .from('rt_wormhole_systems')
-    .select('system_id, wh_class, effect, static_connection_type')
+    .select('system_id, wh_class, wh_effect, static_connection_type')
 
   if (error) {
     console.error('[Bootstrap] Failed to load wormhole systems:', error.message)
@@ -115,7 +115,7 @@ export async function loadPlanetResources(): Promise<Array<Record<string, unknow
   const db = getSupabaseAdmin()
   const { data, error } = await db
     .from('rt_planet_resources')
-    .select('id, planet_id, resource_type, abundance')
+    .select('id, system_id, resource_type, abundance')
 
   if (error) {
     console.error('[Bootstrap] Failed to load planet resources:', error.message)
