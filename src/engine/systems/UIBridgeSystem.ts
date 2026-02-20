@@ -35,15 +35,8 @@ export function uiBridgeSystem(engine: GameEngine, _dt: number): void {
     const eid = entities[i]
     seenEids.add(eid)
 
-    // Resolve sessionId from ECS reverse lookup
-    const allSessions = ecs.getAllSessionIds()
-    let sessionId = `eid_${eid}`
-    for (const sid of allSessions) {
-      if (ecs.getEntity(sid) === eid) {
-        sessionId = sid
-        break
-      }
-    }
+    // O(1) reverse lookup via eidToSession map in ClientECS
+    const sessionId = ecs.getSessionId(eid) ?? `eid_${eid}`
 
     const factionIdx = ShipMeta.faction[eid]
     const factionName = FACTION_NAMES[factionIdx] ?? 'npc'
@@ -86,14 +79,7 @@ export function uiBridgeSystem(engine: GameEngine, _dt: number): void {
   // Remove ships that no longer exist in ECS
   for (const eid of _knownEids) {
     if (!seenEids.has(eid)) {
-      const allSessions = ecs.getAllSessionIds()
-      let sessionId = `eid_${eid}`
-      for (const sid of allSessions) {
-        if (ecs.getEntity(sid) === eid) {
-          sessionId = sid
-          break
-        }
-      }
+      const sessionId = ecs.getSessionId(eid) ?? `eid_${eid}`
       store.removeShip(sessionId)
       _knownEids.delete(eid)
     }

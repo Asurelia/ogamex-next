@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, memo, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, memo, type ReactNode } from 'react'
 import { WindowManagerProvider, useWindowManager } from '../WindowManager'
 import { Neocom } from '../neocom/Neocom'
 import { OverviewWindow } from './OverviewWindow'
@@ -12,6 +12,15 @@ import { SkillsWindow } from './SkillsWindow'
 import { FittingWindow } from './FittingWindow'
 import { SelectedItemWindow } from './SelectedItemWindow'
 import { RouteWindow } from './RouteWindow'
+import { CorpWindow } from './CorpWindow'
+import { ClonesWindow } from './ClonesWindow'
+import { ImplantsPanel } from './ImplantsPanel'
+import { IndustryWindow } from './IndustryWindow'
+import { PIWindow } from './PIWindow'
+import { ScannerWindow } from './ScannerWindow'
+import { ContractsWindow } from './ContractsWindow'
+import { SovereigntyWindow } from './SovereigntyWindow'
+import { SettingsWindow } from './SettingsWindow'
 import { HUDOverlay } from './HUDOverlay'
 import { DevPanel } from '../dev/DevPanel'
 
@@ -21,17 +30,16 @@ import { DevPanel } from '../dev/DevPanel'
 
 function WindowOpener() {
   const { openWindow, isWindowOpen } = useWindowManager()
+  const hasOpened = useRef(false)
 
-  const opened = useCallback(() => {
+  useEffect(() => {
+    if (hasOpened.current) return
+    hasOpened.current = true
     const defaults = ['rt-overview', 'rt-chat', 'rt-selecteditem']
     defaults.forEach((id) => {
       if (!isWindowOpen(id)) openWindow(id)
     })
   }, [openWindow, isWindowOpen])
-
-  if (typeof window !== 'undefined') {
-    requestAnimationFrame(opened)
-  }
 
   return null
 }
@@ -63,6 +71,15 @@ export function RTWindowLayout({ children }: { children?: ReactNode }) {
       <FittingWindow />
       <SelectedItemWindow />
       <RouteWindow />
+      <CorpWindow />
+      <ClonesWindow />
+      <ImplantsPanel />
+      <IndustryWindow />
+      <PIWindow />
+      <ScannerWindow />
+      <ContractsWindow />
+      <SovereigntyWindow />
+      <SettingsWindow />
 
       {/* HUD overlay (not a managed window) */}
       <HUDOverlay />

@@ -47,22 +47,15 @@ export function clientPredictionSystem(engine: GameEngine, dt: number): void {
 
   // Remote entities: interpolation buffer
   const now = Date.now()
+
   for (const [eid, buf] of _interpolationBuffers) {
     if (eid === _ownShipEid) continue
 
     const snap = buf.getInterpolated(now)
     if (!snap) continue
 
-    // Verify entity still exists in ECS by checking eid is within bounds
-    const sessionIds = ecs.getAllSessionIds()
-    let found = false
-    for (const sid of sessionIds) {
-      if (ecs.getEntity(sid) === eid) {
-        found = true
-        break
-      }
-    }
-    if (!found) {
+    // O(1) existence check via reverse lookup map
+    if (ecs.getSessionId(eid) === undefined) {
       _interpolationBuffers.delete(eid)
       continue
     }

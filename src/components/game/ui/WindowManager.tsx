@@ -6,7 +6,7 @@
  * Handles z-index stacking, window registration, and global window state
  */
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import { DraggableWindow } from './DraggableWindow'
 
 // ============================================================================
@@ -47,6 +47,22 @@ interface WindowManagerContextType {
 // CONTEXT
 // ============================================================================
 
+const STORAGE_KEY = 'ogamex_window_states'
+
+function loadPersistedStates(): Record<string, WindowState> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return {}
+}
+
+function persistStates(states: Record<string, WindowState>): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(states))
+  } catch {}
+}
+
 const WindowManagerContext = createContext<WindowManagerContextType | null>(null)
 
 export function useWindowManager() {
@@ -66,8 +82,13 @@ interface WindowManagerProviderProps {
 }
 
 export function WindowManagerProvider({ children }: WindowManagerProviderProps) {
-  const [windowStates, setWindowStates] = useState<Record<string, WindowState>>({})
+  const [windowStates, setWindowStates] = useState<Record<string, WindowState>>(() => loadPersistedStates())
   const [topZIndex, setTopZIndex] = useState(100)
+
+  // Persist on change
+  useEffect(() => {
+    persistStates(windowStates)
+  }, [windowStates])
 
   const openWindow = useCallback((id: string) => {
     setWindowStates(prev => ({

@@ -35,13 +35,13 @@ export function updateMining(
       return
     }
 
-    // Range check
+    // Range check - use squared distance to avoid sqrt
     const dx = asteroid.x - ship.x
     const dy = asteroid.y - ship.y
     const dz = asteroid.z - ship.z
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+    const distSq = dx * dx + dy * dy + dz * dz
 
-    if (dist > MINING_RANGE) {
+    if (distSq > MINING_RANGE * MINING_RANGE) {
       // Out of range - stop mining
       return
     }

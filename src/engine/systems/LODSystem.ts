@@ -6,6 +6,11 @@ import * as THREE from 'three'
 
 let _cameraPosition: THREE.Vector3 = new THREE.Vector3()
 
+// Pre-compute squared thresholds to avoid sqrt per entity per frame
+const LOD_FULL_SQ = LOD_FULL * LOD_FULL
+const LOD_SIMPLE_SQ = LOD_SIMPLE * LOD_SIMPLE
+const LOD_BILLBOARD_SQ = LOD_BILLBOARD * LOD_BILLBOARD
+
 export function setLODCameraPosition(pos: THREE.Vector3): void {
   _cameraPosition.copy(pos)
 }
@@ -25,14 +30,15 @@ export function lodSystem(engine: GameEngine, _dt: number): void {
     const dx = Position.x[eid] - cx
     const dy = Position.y[eid] - cy
     const dz = Position.z[eid] - cz
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+    const distSq = dx * dx + dy * dy + dz * dz
 
+    // Compare squared distances to avoid sqrt
     let lod: number
-    if (dist < LOD_FULL) {
+    if (distSq < LOD_FULL_SQ) {
       lod = 0
-    } else if (dist < LOD_SIMPLE) {
+    } else if (distSq < LOD_SIMPLE_SQ) {
       lod = 1
-    } else if (dist < LOD_BILLBOARD) {
+    } else if (distSq < LOD_BILLBOARD_SQ) {
       lod = 2
     } else {
       lod = 3

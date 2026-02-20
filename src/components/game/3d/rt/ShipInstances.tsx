@@ -16,6 +16,7 @@ import { LOD_FULL, LOD_SIMPLE, LOD_BILLBOARD } from '@shared/types/game-constant
 const tempMatrix = new THREE.Matrix4()
 const tempPosition = new THREE.Vector3()
 const tempQuaternion = new THREE.Quaternion()
+const tempEuler = new THREE.Euler()
 const tempScale = new THREE.Vector3()
 const tempColor = new THREE.Color()
 
@@ -65,16 +66,16 @@ export function ShipInstances() {
 
     const camera = state.camera
     let instanceIndex = 0
-    const shipArray = Array.from(ships.values())
 
-    for (const ship of shipArray) {
-      if (ship.isDocked || instanceIndex >= meshRef.current.count) continue
+    // Iterate map directly instead of creating a new Array each frame
+    ships.forEach((ship) => {
+      if (ship.isDocked || instanceIndex >= meshRef.current!.count) return
 
       // Distance check for LOD
       tempPosition.set(ship.x, ship.y, ship.z)
       const distance = tempPosition.distanceTo(camera.position)
 
-      if (distance > LOD_BILLBOARD * 2) continue // Too far, skip
+      if (distance > LOD_BILLBOARD * 2) return // Too far, skip
 
       // Scale based on ship class
       const shipClass = ship.shipTypeId.split('_').pop() || 'frigate'
@@ -88,21 +89,22 @@ export function ShipInstances() {
         scale = baseScale * 0.5 // Billboard-ish
       }
 
-      // Set matrix
-      tempQuaternion.setFromEuler(new THREE.Euler(ship.rx, ship.ry, ship.rz))
+      // Set matrix - reuse pre-allocated tempEuler instead of creating new Euler each iteration
+      tempEuler.set(ship.rx, ship.ry, ship.rz)
+      tempQuaternion.setFromEuler(tempEuler)
       tempScale.set(scale, scale, scale)
       tempMatrix.compose(tempPosition, tempQuaternion, tempScale)
-      meshRef.current.setMatrixAt(instanceIndex, tempMatrix)
+      meshRef.current!.setMatrixAt(instanceIndex, tempMatrix)
 
       // Set color based on faction and ownership
       const color = ship.id === myShipId
         ? '#00ff44'
         : FACTION_COLORS[ship.faction] || '#888888'
       tempColor.set(color)
-      meshRef.current.setColorAt(instanceIndex, tempColor)
+      meshRef.current!.setColorAt(instanceIndex, tempColor)
 
       instanceIndex++
-    }
+    })
 
     meshRef.current.count = instanceIndex
     meshRef.current.instanceMatrix.needsUpdate = true

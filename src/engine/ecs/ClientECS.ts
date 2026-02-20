@@ -42,12 +42,14 @@ interface ShipSpawnOptions {
 export class ClientECS {
   private world: ReturnType<typeof createWorld> | null = null
   private sessionToEid: Map<string, number> = new Map()
+  private eidToSession: Map<number, string> = new Map()
   private sessionIndexCounter: number = 0
   private sessionIndexToId: Map<number, string> = new Map()
 
   createWorld() {
     this.world = createWorld()
     this.sessionToEid.clear()
+    this.eidToSession.clear()
     this.sessionIndexCounter = 0
     this.sessionIndexToId.clear()
     return this.world
@@ -108,6 +110,7 @@ export class ClientECS {
     RenderRef.lodLevel[eid] = 0
 
     this.sessionToEid.set(options.sessionId, eid)
+    this.eidToSession.set(eid, options.sessionId)
     this.sessionIndexToId.set(sessionIndex, options.sessionId)
 
     return eid
@@ -121,12 +124,18 @@ export class ClientECS {
     const sessionIndex = NetworkId.sessionIndex[eid]
     removeEntity(world, eid)
     this.sessionToEid.delete(sessionId)
+    this.eidToSession.delete(eid)
     this.sessionIndexToId.delete(sessionIndex)
     return true
   }
 
   getEntity(sessionId: string): number | undefined {
     return this.sessionToEid.get(sessionId)
+  }
+
+  /** O(1) reverse lookup: get sessionId from entity id */
+  getSessionId(eid: number): string | undefined {
+    return this.eidToSession.get(eid)
   }
 
   updateComponent<T extends Record<string, ArrayLike<number>>>(
@@ -151,6 +160,7 @@ export class ClientECS {
 
   destroy(): void {
     this.sessionToEid.clear()
+    this.eidToSession.clear()
     this.sessionIndexToId.clear()
     this.sessionIndexCounter = 0
     this.world = null
