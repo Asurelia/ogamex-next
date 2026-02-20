@@ -259,13 +259,6 @@ export class SystemRoom extends Room<SystemState> {
   // MESSAGE HANDLERS
   // ==========================================================================
 
-  onMessage(type: string, handler: (client: Client, message: unknown) => void): void
-  onMessage(client: Client, type: string, message: unknown): void
-  onMessage(...args: unknown[]): void {
-    // This is overridden by the message registration in onCreate
-  }
-
-  // Register all message handlers (called implicitly via Colyseus)
   registerMessages() {
     this.onMessage('navigate', (client, msg: { x: number; y: number; z: number }) => {
       const ship = this.state.ships.get(client.sessionId)

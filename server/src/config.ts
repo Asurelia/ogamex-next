@@ -7,6 +7,7 @@
 
 import dotenv from 'dotenv'
 dotenv.config({ path: '../.env' })
+dotenv.config({ path: '../.env.local' })
 
 // ============================================================================
 // ENVIRONMENT
@@ -34,7 +35,7 @@ export const CONFIG = {
 
   // Database
   SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   SUPABASE_JWT_SECRET: process.env.SUPABASE_JWT_SECRET || '',
 
   // SQLite (ephemeral data)
@@ -53,16 +54,13 @@ export const CONFIG = {
 // ============================================================================
 
 export function validateConfig(): void {
-  const required = [
-    'SUPABASE_URL',
-    'SUPABASE_SERVICE_ROLE_KEY',
-  ] as const
-
-  const missing = required.filter(key => !CONFIG[key])
-
-  if (missing.length > 0) {
-    console.error(`Missing required config: ${missing.join(', ')}`)
-    console.error('Make sure .env file is configured correctly.')
+  if (!CONFIG.SUPABASE_URL) {
+    console.error('Missing required config: SUPABASE_URL')
+    console.error('Make sure .env or .env.local is configured correctly.')
     process.exit(1)
+  }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('[Config] SUPABASE_SERVICE_ROLE_KEY not set — using anon key for bootstrap reads (dev mode)')
   }
 }
